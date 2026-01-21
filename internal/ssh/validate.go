@@ -1,0 +1,91 @@
+package ssh
+
+import (
+	"crypto/ed25519"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
+	"golang.org/x/crypto/ssh"
+)
+
+// ValidateEd25519Key validates that the given PEM data is an Ed25519 private key.
+// Returns nil if the key is a valid Ed25519 key (encrypted or not).
+// Returns an error if the key is not Ed25519 or cannot be parsed.
+func ValidateEd25519Key(pemData []byte) error {
+	// Try to parse the private key
+	key, err := ssh.ParseRawPrivateKey(pemData)
+	if err != nil {
+		// Check if it's a passphrase-protected key
+		passErr, ok := err.(*ssh.PassphraseMissingError)
+		if ok {
+			// Key is encrypted - check if it's Ed25519 via the public key
+			if passErr.PublicKey.Type() == ssh.KeyAlgoED25519 {
+				return nil // Valid encrypted Ed25519 key
+			}
+			return fmt.Errorf("key is not Ed25519: found %s", passErr.PublicKey.Type())
+		}
+		return fmt.Errorf("failed to parse private key: %w", err)
+	}
+
+	// Key parsed successfully - verify it's Ed25519
+	switch key.(type) {
+	case ed25519.PrivateKey:
+		return nil
+	case *ed25519.PrivateKey:
+		return nil
+	default:
+		return fmt.Errorf("key is not Ed25519: found %T", key)
+	}
+}
+
+// IsEncrypted checks if the given PEM data represents an encrypted private key.
+func IsEncrypted(pemData []byte) bool {
+	_, err := ssh.ParseRawPrivateKey(pemData)
+	if err == nil {
+		return false // Key parsed without passphrase, not encrypted
+	}
+
+	// Check if the error is because passphrase is required
+	_, ok := err.(*ssh.PassphraseMissingError)
+	return ok
+}
+
+// ValidateKeyPath validates an SSH key file at the given path.
+// Expands the path, checks the file exists, validates it's not a .pub file,
+// and verifies it's an Ed25519 key.
+func ValidateKeyPath(path string) error {
+	// Expand path (~ and env vars)
+	expandedPath, err := ExpandPath(path)
+	if err != nil {
+		return fmt.Errorf("failed to expand path: %w", err)
+	}
+
+	// Check file exists
+	info, err := os.Stat(expandedPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("key file not found: %s", expandedPath)
+		}
+		return fmt.Errorf("cannot access key file: %w", err)
+	}
+
+	// Check it's a file, not a directory
+	if info.IsDir() {
+		return fmt.Errorf("path is a directory, not a key file: %s", expandedPath)
+	}
+
+	// Check it's not a .pub file (common mistake)
+	if strings.HasSuffix(filepath.Base(expandedPath), ".pub") {
+		return fmt.Errorf("path points to a public key (.pub file); provide the private key path instead")
+	}
+
+	// Read and validate the key
+	data, err := os.ReadFile(expandedPath)
+	if err != nil {
+		return fmt.Errorf("failed to read key file: %w", err)
+	}
+
+	return ValidateEd25519Key(data)
+}
