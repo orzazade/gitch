@@ -37,4 +37,5 @@ var (
 	WarningStyle   = lipgloss.NewStyle().Foreground(WarningColor)
 	ErrorStyle     = lipgloss.NewStyle().Foreground(ErrorColor)
 	SuccessStyle   = lipgloss.NewStyle().Foreground(SuccessColor)
+	DimStyle       = lipgloss.NewStyle().Foreground(InactiveColor)
 )

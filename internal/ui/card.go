@@ -10,7 +10,8 @@ import (
 // If active: uses ActiveCardStyle with checkmark prefix.
 // If not active: uses CardStyle with space prefix.
 // If isDefault: appends "(default)" after the name.
-func RenderIdentityCard(name, email string, isActive, isDefault bool) string {
+// If hasSSHKey: shows SSH indicator on a third line.
+func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey bool) string {
 	var prefix string
 	var style = CardStyle
 
@@ -31,14 +32,23 @@ func RenderIdentityCard(name, email string, isActive, isDefault bool) string {
 	emailLine := "  " + EmailStyle.Render(email)
 
 	// Combine into card content
-	content := nameLine + "\n" + emailLine
+	var content strings.Builder
+	content.WriteString(nameLine)
+	content.WriteString("\n")
+	content.WriteString(emailLine)
+	if hasSSHKey {
+		content.WriteString("\n")
+		content.WriteString("  ")
+		content.WriteString(DimStyle.Render("SSH configured"))
+	}
 
-	return style.Render(content)
+	return style.Render(content.String())
 }
 
 // RenderIdentityList renders all identities as cards.
 // The active identity is determined by matching email to the activeEmail parameter.
 // The default identity is determined by matching name to the defaultName parameter.
+// SSH key status is determined by checking if identity.SSHKeyPath is set.
 func RenderIdentityList(identities []config.Identity, activeEmail, defaultName string) string {
 	if len(identities) == 0 {
 		return ""
@@ -48,7 +58,8 @@ func RenderIdentityList(identities []config.Identity, activeEmail, defaultName s
 	for _, identity := range identities {
 		isActive := strings.EqualFold(identity.Email, activeEmail)
 		isDefault := strings.EqualFold(identity.Name, defaultName)
-		card := RenderIdentityCard(identity.Name, identity.Email, isActive, isDefault)
+		hasSSHKey := identity.SSHKeyPath != ""
+		card := RenderIdentityCard(identity.Name, identity.Email, isActive, isDefault, hasSSHKey)
 		cards = append(cards, card)
 	}
 
