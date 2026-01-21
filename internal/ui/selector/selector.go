@@ -115,10 +115,10 @@ func renderSelectableCard(id config.Identity, active, def, ssh, cursor bool) str
 		style = ui.ActiveCardStyle
 	}
 
-	// Checkmark for active identity
+	// Checkmark for active identity (same as card.go)
 	var prefix string
 	if active {
-		prefix = ui.CheckmarkStyle.Render("* ") // checkmark indicator
+		prefix = ui.CheckmarkStyle.Render("\u2713 ") // checkmark indicator
 	} else {
 		prefix = "  "
 	}
