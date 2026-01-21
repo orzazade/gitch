@@ -13,8 +13,9 @@ const MaxNameLength = 50
 
 // Identity represents a git identity with name and email
 type Identity struct {
-	Name  string `mapstructure:"name" yaml:"name"`
-	Email string `mapstructure:"email" yaml:"email"`
+	Name       string `mapstructure:"name" yaml:"name"`
+	Email      string `mapstructure:"email" yaml:"email"`
+	SSHKeyPath string `mapstructure:"ssh_key_path" yaml:"ssh_key_path,omitempty"`
 }
 
 // nameRegex validates identity names: alphanumeric + hyphens, no leading/trailing hyphens

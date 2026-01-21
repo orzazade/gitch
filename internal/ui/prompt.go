@@ -2,12 +2,15 @@ package ui
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/mattn/go-isatty"
+	"golang.org/x/term"
 )
 
 // ErrNotInteractive is returned when stdin is not a TTY and confirmation is required.
@@ -48,4 +51,56 @@ func ConfirmPrompt(message string, skipConfirm bool) (bool, error) {
 	default:
 		return false, nil
 	}
+}
+
+// ReadPassphrase reads a passphrase from stdin without echoing.
+// Returns the passphrase bytes, or error if reading fails.
+func ReadPassphrase(prompt string) ([]byte, error) {
+	// Check if stdin is a TTY
+	if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+		return nil, ErrNotInteractive
+	}
+
+	// Print prompt
+	fmt.Print(prompt)
+
+	// Read password without echo
+	passphrase, err := term.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		return nil, fmt.Errorf("failed to read passphrase: %w", err)
+	}
+
+	// Print newline after hidden input
+	fmt.Println()
+
+	return passphrase, nil
+}
+
+// ReadPassphraseWithConfirm prompts for a passphrase with confirmation.
+// If the user enters an empty passphrase, returns nil (no passphrase).
+// Returns error if passphrases don't match.
+func ReadPassphraseWithConfirm() ([]byte, error) {
+	// First passphrase
+	passphrase, err := ReadPassphrase("Enter passphrase (empty for no passphrase): ")
+	if err != nil {
+		return nil, err
+	}
+
+	// Empty passphrase - no confirmation needed
+	if len(passphrase) == 0 {
+		return nil, nil
+	}
+
+	// Confirm passphrase
+	confirm, err := ReadPassphrase("Confirm passphrase: ")
+	if err != nil {
+		return nil, err
+	}
+
+	// Check match
+	if !bytes.Equal(passphrase, confirm) {
+		return nil, errors.New("passphrases do not match")
+	}
+
+	return passphrase, nil
 }
