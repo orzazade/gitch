@@ -44,18 +44,15 @@ changelog:
       - Merge pull request
       - Merge branch
 
-brews:
-  - repository:
-      owner: orzazade
-      name: homebrew-tap
-    directory: Formula
-    homepage: https://github.com/orzazade/gitch
-    description: Git identity manager - never commit with the wrong identity again
-    license: MIT
-    test: |
-      system "#{bin}/gitch", "--version"
-    install: |
-      bin.install "gitch"
+# Homebrew tap can be enabled later by creating orzazade/homebrew-tap repo
+# brews:
+#   - repository:
+#       owner: orzazade
+#       name: homebrew-tap
+#     directory: Formula
+#     homepage: https://github.com/orzazade/gitch
+#     description: Git identity manager - never commit with the wrong identity again
+#     license: MIT
 
 nfpms:
   - package_name: gitch
