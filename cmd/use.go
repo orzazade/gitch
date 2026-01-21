@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
+	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -48,9 +50,33 @@ func runUse(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to switch identity: %w", err)
 	}
 
+	// Add SSH key to agent if configured
+	if identity.SSHKeyPath != "" {
+		if err := addSSHKeyToAgent(identity.SSHKeyPath); err != nil {
+			// Print warning but don't fail the switch
+			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+		}
+	}
+
 	// Print success
 	msg := fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)
 	fmt.Println(ui.SuccessStyle.Render(msg))
+
+	return nil
+}
+
+// addSSHKeyToAgent adds an SSH key to the ssh-agent.
+// Returns an error if the key file doesn't exist or if adding fails.
+func addSSHKeyToAgent(keyPath string) error {
+	// Check if key file exists
+	if _, err := os.Stat(keyPath); os.IsNotExist(err) {
+		return fmt.Errorf("SSH key not found: %s", keyPath)
+	}
+
+	// Add to agent (will prompt for passphrase if needed)
+	if err := sshpkg.AddKeyToAgent(keyPath); err != nil {
+		return fmt.Errorf("failed to add SSH key to agent: %w", err)
+	}
 
 	return nil
 }
