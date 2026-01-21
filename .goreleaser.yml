@@ -48,7 +48,7 @@ brews:
   - repository:
       owner: orzazade
       name: homebrew-tap
-    folder: Formula
+      directory: Formula
     homepage: https://github.com/orzazade/gitch
     description: Git identity manager - never commit with the wrong identity again
     license: MIT
