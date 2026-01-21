@@ -3,12 +3,14 @@ package wizard
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/orzazade/gitch/internal/config"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
@@ -34,11 +36,18 @@ type Model struct {
 	progress        progress.Model
 	loading         bool
 	err             error
+	warning         string // non-fatal warning message
 	done            bool
 	Cancelled       bool
 	result          *WizardResult
 	passphrase      []byte
 }
+
+// titleStyle is the style for the wizard header
+var titleStyle = lipgloss.NewStyle().
+	Bold(true).
+	Foreground(ui.ActiveColor).
+	MarginBottom(1)
 
 // sshKeyGenerated is a message sent when SSH key generation completes
 type sshKeyGenerated struct {
@@ -149,7 +158,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			// Go back to previous step
 			m.err = nil
+			m.warning = ""
+			// If going back from confirm passphrase, go back to passphrase
+			// If going back from passphrase, go back to SSH choice
 			m.step--
+			// Reset confirm input when going back
+			if m.step == stepPassphrase {
+				m.confirmInput.Reset()
+			}
 			return m, m.focusCurrentInput()
 
 		case "enter":
@@ -213,6 +229,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 
 	case stepSSH:
 		m.err = nil
+		m.warning = ""
 		if m.sshChoice == sshChoiceSkip {
 			// Skip SSH, complete the wizard
 			m.result = &WizardResult{
@@ -222,6 +239,11 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			}
 			m.done = true
 			return m, tea.Quit
+		}
+		// Check if key already exists and warn
+		keyPath := sshpkg.DefaultSSHKeyPath(strings.TrimSpace(m.nameInput.Value()))
+		if _, err := os.Stat(keyPath); err == nil {
+			m.warning = fmt.Sprintf("SSH key already exists at %s (will be overwritten)", keyPath)
 		}
 		// Continue to passphrase step
 		m.step++
@@ -315,7 +337,13 @@ func (m Model) View() string {
 
 	var b strings.Builder
 
+	// Wizard header
+	b.WriteString("\n")
+	b.WriteString(titleStyle.Render("  gitch setup"))
+	b.WriteString("\n\n")
+
 	// Progress bar
+	b.WriteString("  ")
 	b.WriteString(m.renderProgress())
 	b.WriteString("\n\n")
 
@@ -338,6 +366,13 @@ func (m Model) View() string {
 	if hint != "" {
 		b.WriteString("  ")
 		b.WriteString(ui.DimStyle.Render(hint))
+		b.WriteString("\n\n")
+	}
+
+	// Warning message (non-fatal)
+	if m.warning != "" {
+		b.WriteString("  ")
+		b.WriteString(ui.WarningStyle.Render("Warning: " + m.warning))
 		b.WriteString("\n\n")
 	}
 
