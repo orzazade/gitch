@@ -11,9 +11,9 @@ import (
 // It creates a temp directory with a git repo and uses GIT_CONFIG_GLOBAL
 // to point to a temp config file, ensuring tests don't modify user's real config.
 type testGitEnv struct {
-	dir           string
-	globalConfig  string
-	origEnv       map[string]string
+	dir          string
+	globalConfig string
+	origEnv      map[string]string
 }
 
 // setupTestEnv creates an isolated git testing environment.

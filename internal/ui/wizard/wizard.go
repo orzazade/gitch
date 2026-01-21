@@ -18,9 +18,9 @@ import (
 
 // WizardResult holds the collected data from the wizard
 type WizardResult struct {
-	Name       string
-	Email      string
-	SSHKeyPath string
+	Name        string
+	Email       string
+	SSHKeyPath  string
 	GenerateSSH bool
 }
 
