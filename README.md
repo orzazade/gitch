@@ -4,6 +4,8 @@
 
 gitch is a git identity manager CLI that helps developers manage multiple git identities (work, personal, open source) without confusion. It provides automatic identity switching, SSH key management, and pre-commit hooks to prevent accidental commits with the wrong identity.
 
+[![CI](https://github.com/orzazade/gitch/actions/workflows/ci.yml/badge.svg)](https://github.com/orzazade/gitch/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/orzazade/gitch)](https://github.com/orzazade/gitch/releases/latest)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/orzazade/gitch)](https://go.dev/)
 [![License](https://img.shields.io/github/license/orzazade/gitch)](LICENSE)
 [![Go Report Card](https://goreportcard.com/badge/github.com/orzazade/gitch)](https://goreportcard.com/report/github.com/orzazade/gitch)
