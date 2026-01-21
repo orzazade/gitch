@@ -3,7 +3,7 @@ package ui
 import (
 	"strings"
 
-	"github.com/orkhanrz/gitch/internal/config"
+	"github.com/orzazade/gitch/internal/config"
 )
 
 // RenderIdentityCard renders a single identity as a styled card.

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/orkhanrz/gitch/internal/config"
-	"github.com/orkhanrz/gitch/internal/git"
-	"github.com/orkhanrz/gitch/internal/ui"
+	"github.com/orzazade/gitch/internal/config"
+	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
 

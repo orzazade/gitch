@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/orkhanrz/gitch/cmd"
+	"github.com/orzazade/gitch/cmd"
 )
 
 func main() {
