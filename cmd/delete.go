@@ -26,8 +26,9 @@ If the deleted identity is the default, the default is cleared.
 Examples:
   gitch delete work
   gitch rm personal --yes`,
-	Args: cobra.ExactArgs(1),
-	RunE: runDelete,
+	Args:              cobra.ExactArgs(1),
+	ValidArgsFunction: identityCompletionFunc,
+	RunE:              runDelete,
 }
 
 func init() {
