@@ -5,6 +5,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/orzazade/gitch/internal/config"
+	"github.com/orzazade/gitch/internal/prompt"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/orzazade/gitch/internal/ui/wizard"
 	"github.com/spf13/cobra"
@@ -74,6 +75,9 @@ func runSetup(cmd *cobra.Command, args []string) error {
 	if err := cfg.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
+
+	// Update prompt cache (wizard creates active identity)
+	_ = prompt.UpdateCache(data.Name) // Best effort
 
 	// Print success
 	fmt.Println()

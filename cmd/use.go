@@ -6,6 +6,7 @@ import (
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/prompt"
 	"github.com/orzazade/gitch/internal/rules"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
@@ -120,6 +121,11 @@ func runUse(cmd *cobra.Command, args []string) error {
 			// Print warning but don't fail the switch
 			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
 		}
+	}
+
+	// Update prompt cache (best effort - don't fail the switch)
+	if err := prompt.UpdateCache(identity.Name); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to update prompt cache: %v\n", err)
 	}
 
 	// Print success

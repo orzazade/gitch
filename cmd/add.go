@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
+	"github.com/orzazade/gitch/internal/prompt"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
@@ -153,6 +154,11 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	// Save config
 	if err := cfg.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	// If this is the first identity, update prompt cache (it becomes implicitly active)
+	if len(cfg.Identities) == 1 {
+		_ = prompt.UpdateCache(identity.Name) // Best effort
 	}
 
 	// Print success

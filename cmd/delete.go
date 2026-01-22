@@ -6,6 +6,7 @@ import (
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/prompt"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -76,6 +77,15 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	// Save config
 	if err := cfg.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	// Handle prompt cache if we deleted the active identity
+	if isActive {
+		// If no identities left, clear cache
+		if len(cfg.Identities) == 0 {
+			_ = prompt.ClearCache() // Best effort
+		}
+		// If other identities exist, leave cache as-is (user will switch)
 	}
 
 	// Print success
