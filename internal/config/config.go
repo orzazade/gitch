@@ -8,13 +8,15 @@ import (
 	"strings"
 
 	"github.com/adrg/xdg"
+	"github.com/orzazade/gitch/internal/rules"
 	"gopkg.in/yaml.v3"
 )
 
 // Config is the root configuration structure
 type Config struct {
-	Default    string     `mapstructure:"default" yaml:"default"`
-	Identities []Identity `mapstructure:"identities" yaml:"identities"`
+	Default    string       `mapstructure:"default" yaml:"default"`
+	Identities []Identity   `mapstructure:"identities" yaml:"identities"`
+	Rules      []rules.Rule `mapstructure:"rules" yaml:"rules,omitempty"`
 }
 
 // ConfigPath returns the XDG config file path for gitch
@@ -49,6 +51,11 @@ func Load() (*Config, error) {
 	// Ensure Identities is not nil
 	if cfg.Identities == nil {
 		cfg.Identities = []Identity{}
+	}
+
+	// Ensure Rules is not nil
+	if cfg.Rules == nil {
+		cfg.Rules = []rules.Rule{}
 	}
 
 	return &cfg, nil
@@ -166,3 +173,108 @@ func (c *Config) SetDefault(name string) error {
 
 // ErrIdentityNotFound is returned when an identity is not found
 var ErrIdentityNotFound = errors.New("identity not found")
+
+// ErrRuleNotFound is returned when a rule is not found
+var ErrRuleNotFound = errors.New("rule not found")
+
+// AddRule adds a new rule to the config
+// Validates the rule and checks for exact duplicates
+func (c *Config) AddRule(rule rules.Rule) error {
+	// Validate the rule pattern
+	if err := rule.ValidatePattern(); err != nil {
+		return err
+	}
+
+	// Check for exact duplicate (same pattern)
+	for _, existing := range c.Rules {
+		if existing.Pattern == rule.Pattern {
+			return fmt.Errorf("rule with pattern %q already exists", rule.Pattern)
+		}
+	}
+
+	c.Rules = append(c.Rules, rule)
+	return nil
+}
+
+// RemoveRule removes a rule by pattern (exact match)
+// Returns an error if the rule is not found
+func (c *Config) RemoveRule(pattern string) error {
+	for i, rule := range c.Rules {
+		if rule.Pattern == pattern {
+			c.Rules = append(c.Rules[:i], c.Rules[i+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("rule with pattern %q not found", pattern)
+}
+
+// ListRules returns all rules
+func (c *Config) ListRules() []rules.Rule {
+	return c.Rules
+}
+
+// FindOverlappingRules returns rules that might conflict with the new rule
+// For directory rules: checks if patterns share a common prefix or one is a subset of another
+// For remote rules: checks if patterns share the same host and overlapping org/repo paths
+func (c *Config) FindOverlappingRules(newRule rules.Rule) []rules.Rule {
+	var overlapping []rules.Rule
+
+	for _, existing := range c.Rules {
+		// Only compare rules of the same type
+		if existing.Type != newRule.Type {
+			continue
+		}
+
+		// Skip exact duplicates (handled separately)
+		if existing.Pattern == newRule.Pattern {
+			continue
+		}
+
+		if newRule.Type == rules.DirectoryRule {
+			// For directory rules, check for prefix overlap
+			if isDirectoryOverlap(existing.Pattern, newRule.Pattern) {
+				overlapping = append(overlapping, existing)
+			}
+		} else if newRule.Type == rules.RemoteRule {
+			// For remote rules, check for host/org overlap
+			if isRemoteOverlap(existing.Pattern, newRule.Pattern) {
+				overlapping = append(overlapping, existing)
+			}
+		}
+	}
+
+	return overlapping
+}
+
+// isDirectoryOverlap checks if two directory patterns might overlap
+func isDirectoryOverlap(pattern1, pattern2 string) bool {
+	// Normalize patterns by removing trailing wildcards for prefix comparison
+	p1 := strings.TrimSuffix(strings.TrimSuffix(pattern1, "/**"), "/*")
+	p2 := strings.TrimSuffix(strings.TrimSuffix(pattern2, "/**"), "/*")
+
+	// Check if one is a prefix of the other
+	return strings.HasPrefix(p1, p2) || strings.HasPrefix(p2, p1)
+}
+
+// isRemoteOverlap checks if two remote patterns might overlap
+func isRemoteOverlap(pattern1, pattern2 string) bool {
+	// Split patterns into host and path
+	parts1 := strings.SplitN(pattern1, "/", 2)
+	parts2 := strings.SplitN(pattern2, "/", 2)
+
+	// If different hosts, no overlap
+	if parts1[0] != parts2[0] {
+		return false
+	}
+
+	// Same host - check path overlap
+	if len(parts1) < 2 || len(parts2) < 2 {
+		return true // One pattern is just the host, overlaps with all on that host
+	}
+
+	path1 := strings.TrimSuffix(parts1[1], "/*")
+	path2 := strings.TrimSuffix(parts2[1], "/*")
+
+	// Check if one path is a prefix of the other
+	return strings.HasPrefix(path1, path2) || strings.HasPrefix(path2, path1)
+}
