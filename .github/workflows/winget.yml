@@ -1,0 +1,45 @@
+name: Publish to WinGet
+
+# =============================================================================
+# IMPORTANT: First Version Must Be Submitted Manually
+# =============================================================================
+# This workflow only works AFTER the first version has been accepted into
+# microsoft/winget-pkgs. Before the first release with this workflow:
+#
+# 1. Install wingetcreate:
+#    winget install wingetcreate
+#
+# 2. Create manifest for current release:
+#    wingetcreate new https://github.com/orzazade/gitch/releases/download/v2.0.0/gitch_2.0.0_windows_amd64.zip
+#
+# 3. Follow prompts:
+#    - PackageIdentifier: Orzazade.Gitch
+#    - Publisher: Orkhan Rzazade
+#    - PackageName: gitch
+#    - License: MIT
+#    - ShortDescription: Git identity manager - never commit with the wrong identity again
+#
+# 4. Submit PR:
+#    wingetcreate submit <manifest-path>
+#    Or manually create PR to microsoft/winget-pkgs
+#
+# 5. Wait for approval (can take 1-7 days)
+#
+# 6. After approval, this workflow will auto-submit updates for future releases
+# =============================================================================
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  winget:
+    name: Publish to WinGet
+    runs-on: windows-latest
+    steps:
+      - name: Publish to WinGet
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: Orzazade.Gitch
+          installers-regex: '_windows_amd64\.zip$'
+          token: ${{ secrets.WINGET_TOKEN }}
