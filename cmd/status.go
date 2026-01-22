@@ -2,13 +2,17 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/rules"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
+
+var statusVerbose bool
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
@@ -18,13 +22,17 @@ var statusCmd = &cobra.Command{
 Displays the name and email from git config and indicates if it's
 managed by gitch.
 
+Use -v to show which rule matches the current directory/remote.
+
 Examples:
-  gitch status`,
+  gitch status
+  gitch status -v`,
 	RunE: runStatus,
 }
 
 func init() {
 	rootCmd.AddCommand(statusCmd)
+	statusCmd.Flags().BoolVarP(&statusVerbose, "verbose", "v", false, "Show matched rule details")
 }
 
 func runStatus(cmd *cobra.Command, args []string) error {
@@ -70,5 +78,43 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		fmt.Println(ui.WarningStyle.Render("[not managed by gitch]"))
 	}
 
+	// Show verbose rule matching information
+	if statusVerbose {
+		showVerboseRuleInfo(cfg, email)
+	}
+
 	return nil
+}
+
+// showVerboseRuleInfo displays which rule matches the current directory/remote
+func showVerboseRuleInfo(cfg *config.Config, currentEmail string) {
+	// Get current directory and remote
+	cwd, err := os.Getwd()
+	if err != nil {
+		cwd = ""
+	}
+	remoteURL, _ := rules.GetGitRemoteURL()
+
+	// Find matching rule
+	matchedRule := rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
+
+	fmt.Println()
+	if matchedRule != nil {
+		fmt.Println(ui.DimStyle.Render("Matched rule:"))
+		fmt.Printf("  Type:     %s\n", matchedRule.Type)
+		fmt.Printf("  Pattern:  %s\n", matchedRule.Pattern)
+		fmt.Printf("  Identity: %s\n", matchedRule.Identity)
+
+		// Check if current identity matches expected
+		expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
+		if err == nil && expectedIdentity != nil {
+			if !strings.EqualFold(currentEmail, expectedIdentity.Email) {
+				fmt.Println()
+				fmt.Println(ui.WarningStyle.Render("Warning: Current identity does not match rule!"))
+				fmt.Printf("  Expected: %s (%s)\n", expectedIdentity.Name, expectedIdentity.Email)
+			}
+		}
+	} else {
+		fmt.Println(ui.DimStyle.Render("No rule matched for current directory"))
+	}
 }
