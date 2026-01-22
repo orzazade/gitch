@@ -1,6 +1,7 @@
 package portability
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -83,13 +84,13 @@ func TestExportToFile(t *testing.T) {
 	if !strings.Contains(content, "# Exported:") {
 		t.Error("expected exported timestamp in header")
 	}
-	if !strings.Contains(content, "# Version: 1") {
-		t.Error("expected version in header")
+	if !strings.Contains(content, fmt.Sprintf("# Version: %d", CurrentExportVersion)) {
+		t.Errorf("expected version %d in header", CurrentExportVersion)
 	}
 
 	// Verify YAML content
-	if !strings.Contains(content, "version: 1") {
-		t.Error("expected 'version: 1' in YAML")
+	if !strings.Contains(content, fmt.Sprintf("version: %d", CurrentExportVersion)) {
+		t.Errorf("expected 'version: %d' in YAML", CurrentExportVersion)
 	}
 	if !strings.Contains(content, "default: work") {
 		t.Error("expected 'default: work' in YAML")
