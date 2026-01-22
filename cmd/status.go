@@ -68,10 +68,12 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	// Try to find matching identity by email
 	var managed bool
 	var managedName string
-	for _, identity := range cfg.ListIdentities() {
+	var managedIdentity *config.Identity
+	for i, identity := range cfg.ListIdentities() {
 		if strings.EqualFold(identity.Email, email) {
 			managed = true
 			managedName = identity.Name
+			managedIdentity = &cfg.ListIdentities()[i]
 			break
 		}
 	}
@@ -80,6 +82,10 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	if managed {
 		msg := fmt.Sprintf("Active: %s (%s)", managedName, email)
 		fmt.Println(ui.SuccessStyle.Render(msg))
+		// Show GPG key status if configured
+		if managedIdentity != nil && managedIdentity.GPGKeyID != "" {
+			fmt.Printf("GPG Key: %s\n", managedIdentity.GPGKeyID)
+		}
 	} else {
 		if name != "" {
 			fmt.Printf("Active: %s (%s) ", name, email)
