@@ -24,6 +24,11 @@ When importing, if an identity or rule already exists:
 - You will be prompted to overwrite, skip, or abort
 - Use --force to overwrite all conflicts without prompting
 
+If the import file contains encrypted SSH keys:
+- You will be prompted for the decryption passphrase
+- Keys are written to their original paths with secure permissions (0600)
+- Existing key files prompt for overwrite confirmation
+
 Note: SSH key files must exist at the referenced paths for SSH features to work.
 
 Examples:
@@ -112,13 +117,63 @@ func runImport(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Handle encrypted SSH keys
+	var keyResult *portability.KeyExtractionResult
+	if portability.HasEncryptedKeys(export) {
+		fmt.Println()
+		fmt.Println("Encrypted SSH keys detected in import file.")
+
+		// Prompt for passphrase
+		passphrase, err := ui.ReadPassphrase("Enter passphrase to decrypt SSH keys: ")
+		if err != nil {
+			return fmt.Errorf("failed to read passphrase: %w", err)
+		}
+
+		// Check which key files already exist
+		overwriteKeys := make(map[string]bool)
+		keyPaths := portability.GetEncryptedKeyPaths(export)
+
+		for _, keyPath := range keyPaths {
+			if _, err := os.Stat(keyPath); err == nil {
+				// File exists, prompt for overwrite
+				if importForce {
+					overwriteKeys[keyPath] = true
+				} else {
+					fmt.Printf("\nSSH key file already exists: %s\n", keyPath)
+					fmt.Print("  [o]verwrite / [s]kip? ")
+
+					reader := bufio.NewReader(os.Stdin)
+					input, _ := reader.ReadString('\n')
+					input = strings.TrimSpace(strings.ToLower(input))
+					overwriteKeys[keyPath] = (input == "o" || input == "overwrite")
+				}
+			} else {
+				// File doesn't exist, will be created
+				overwriteKeys[keyPath] = true
+			}
+		}
+
+		// Extract keys
+		keyResult, err = portability.ExtractEncryptedKeys(export, passphrase, overwriteKeys)
+		if err != nil {
+			return fmt.Errorf("failed to extract SSH keys: %w", err)
+		}
+
+		// Print key extraction errors immediately
+		if len(keyResult.Errors) > 0 {
+			for _, errMsg := range keyResult.Errors {
+				fmt.Fprintf(os.Stderr, "  ! %s\n", errMsg)
+			}
+		}
+	}
+
 	// Save config
 	if err := cfg.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
 	// Print summary
-	printImportSummary(inputPath, result)
+	printImportSummary(inputPath, result, keyResult)
 
 	return nil
 }
@@ -173,7 +228,7 @@ func promptConflict(reader *bufio.Reader, c portability.Conflict) (overwrite boo
 	}
 }
 
-func printImportSummary(path string, result *portability.ImportResult) {
+func printImportSummary(path string, result *portability.ImportResult, keyResult *portability.KeyExtractionResult) {
 	fmt.Println()
 	fmt.Println(ui.SuccessStyle.Render("Import complete!"))
 	fmt.Printf("  File: %s\n", path)
@@ -215,6 +270,18 @@ func printImportSummary(path string, result *portability.ImportResult) {
 	if skippedRules > 0 {
 		fmt.Printf("  - %d rules skipped\n", skippedRules)
 		hasOutput = true
+	}
+
+	// Print key extraction results
+	if keyResult != nil {
+		if len(keyResult.ExtractedKeys) > 0 {
+			fmt.Printf("  + %d SSH keys extracted\n", len(keyResult.ExtractedKeys))
+			hasOutput = true
+		}
+		if len(keyResult.SkippedKeys) > 0 {
+			fmt.Printf("  - %d SSH keys skipped (already exist)\n", len(keyResult.SkippedKeys))
+			hasOutput = true
+		}
 	}
 
 	if !hasOutput {
