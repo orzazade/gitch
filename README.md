@@ -12,7 +12,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/orzazade/gitch)](https://goreportcard.com/report/github.com/orzazade/gitch)
 [![License](https://img.shields.io/github/license/orzazade/gitch?color=blue)](LICENSE)
 
-**A beautiful CLI for managing multiple git identities with SSH keys, auto-switching rules, and shell prompt integration.**
+**A beautiful CLI for managing multiple git identities with SSH keys, GPG signing, auto-switching rules, and shell prompt integration.**
 
 [Installation](#-installation) · [Quick Start](#-quick-start) · [Features](#-features) · [Commands](#-commands) · [Contributing](#-contributing)
 
@@ -53,6 +53,7 @@ You accidentally commit with the wrong email. Your work repo now has personal co
 │                                                             │
 │   ✓ Switched to "work" identity                             │
 │   ✓ SSH key loaded into agent                               │
+│   ✓ GPG signing configured                                  │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -70,6 +71,9 @@ Create, switch, and manage multiple git identities. Each identity stores name, e
 
 ### 🔐 SSH Key Integration
 Generate new SSH keys per identity or link existing ones. Keys auto-load into ssh-agent on switch.
+
+### ✍️ GPG Commit Signing
+Generate GPG keys or link existing ones. Git commit signing auto-configures on identity switch.
 
 ### 🎨 Beautiful TUI
 Interactive setup wizard and identity selector built with [Bubble Tea](https://github.com/charmbracelet/bubbletea). Terminal UI that sparks joy.
@@ -101,7 +105,7 @@ First-class tab completion for Bash, Zsh, and Fish. Never type a full command ag
 <td width="50%">
 
 ### 🔒 Secure by Default
-SSH keys stored in `~/.ssh/` with proper permissions. No credentials in plain text.
+SSH keys stored in `~/.ssh/` with proper permissions. GPG keys in system keyring. No credentials in plain text.
 
 </td>
 </tr>
@@ -152,6 +156,12 @@ gitch add --name "work" --email "you@company.com" --generate-ssh
 # Create another with an existing SSH key
 gitch add --name "personal" --email "you@gmail.com" --ssh-key ~/.ssh/id_personal
 
+# Create identity with GPG signing enabled
+gitch add --name "opensource" --email "you@github.com" --generate-gpg
+
+# Or use an existing GPG key
+gitch add --name "secure" --email "you@secure.com" --gpg-key ABCD1234EFGH5678
+
 # Switch between them
 gitch use work
 
@@ -168,7 +178,7 @@ gitch use
 | Command | Description |
 |:--------|:------------|
 | `gitch setup` | 🧙 Interactive setup wizard |
-| `gitch add` | ➕ Create a new identity |
+| `gitch add` | ➕ Create a new identity (with `--generate-ssh`, `--generate-gpg` options) |
 | `gitch list` | 📋 List all identities |
 | `gitch status` | 👁️ Show current active identity (`-v` for rule details) |
 | `gitch use [name]` | 🔀 Switch to an identity (interactive if no name) |
@@ -297,11 +307,13 @@ gitch stores configuration in the XDG config directory:
 
 SSH keys are stored in `~/.ssh/` with the naming convention `gitch_<identity-name>`.
 
+GPG keys are generated and imported into your system GPG keyring (`~/.gnupg/`).
+
 <br/>
 
 ## 🗺️ Roadmap
 
-All planned features have been implemented:
+### v1.x - Core Features (Complete)
 
 | Phase | Features |
 |:------|:---------|
@@ -311,6 +323,16 @@ All planned features have been implemented:
 | ✅ **Auto-Switching** | Directory/remote rules, pre-commit hooks, bypass support |
 | ✅ **Shell Prompt** | Fast prompt integration for Bash, Zsh, and Fish |
 | ✅ **Distribution** | Homebrew tap for easy macOS installation |
+| ✅ **GPG Signing** | GPG key generation, linking, and auto-configure on switch |
+
+### v2.0 - Security & Distribution (In Progress)
+
+| Phase | Features |
+|:------|:---------|
+| 🚧 **Import/Export** | YAML export/import for identity backup and migration |
+| 🚧 **SSH Config** | Auto-generate SSH config Host aliases per identity |
+| 🚧 **Encrypted Backup** | Age-encrypted SSH key export/import |
+| 🚧 **Cross-Platform** | Windows (Scoop, Chocolatey, winget) and Linux (APT) |
 
 <br/>
 
