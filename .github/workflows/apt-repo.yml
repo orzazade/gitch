@@ -1,4 +1,58 @@
 name: Update APT Repository
+# =============================================================================
+# APT Repository Setup (One-Time)
+# =============================================================================
+# This workflow requires a one-time setup of the apt-repo branch.
+# Run these commands locally before the first release:
+#
+# 1. Generate GPG key (no passphrase for CI):
+#    gpg --batch --gen-key <<EOF
+#    Key-Type: RSA
+#    Key-Length: 4096
+#    Name-Real: gitch APT Repository
+#    Name-Email: gitch@orzazade.github.io
+#    Expire-Date: 0
+#    %no-protection
+#    EOF
+#
+# 2. Get the key ID:
+#    gpg --list-keys --keyid-format long gitch@orzazade.github.io
+#    # Note the key ID (e.g., ABCD1234EFGH5678)
+#
+# 3. Export private key for GitHub secret:
+#    gpg --armor --export-secret-keys gitch@orzazade.github.io
+#    # Add this as APT_GPG_PRIVATE_KEY secret in GitHub
+#
+# 4. Create apt-repo branch with reprepro config:
+#    git checkout --orphan apt-repo
+#    git rm -rf .
+#    mkdir -p conf
+#    cat > conf/distributions <<EOF
+#    Origin: gitch
+#    Label: gitch
+#    Codename: stable
+#    Architectures: amd64 arm64
+#    Components: main
+#    Description: gitch - Git Identity Manager
+#    SignWith: YOUR_GPG_KEY_ID
+#    EOF
+#
+# 5. Export public key:
+#    gpg --armor --export gitch@orzazade.github.io > KEY.gpg
+#
+# 6. Commit and push:
+#    git add conf/distributions KEY.gpg
+#    git commit -m "Initialize APT repository"
+#    git push -u origin apt-repo
+#
+# 7. Enable GitHub Pages:
+#    Repository Settings -> Pages -> Source: Deploy from branch -> apt-repo -> / (root)
+#
+# User installation:
+#    curl -fsSL https://orzazade.github.io/gitch/KEY.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/gitch.gpg
+#    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/gitch.gpg] https://orzazade.github.io/gitch stable main" | sudo tee /etc/apt/sources.list.d/gitch.list
+#    sudo apt update && sudo apt install gitch
+# =============================================================================
 
 on:
   release:
