@@ -111,6 +111,12 @@ SSH keys stored in `~/.ssh/` with proper permissions. No credentials in plain te
 
 ## 📦 Installation
 
+### Homebrew (macOS)
+
+```bash
+brew install orzazade/tap/gitch
+```
+
 ### Using Go
 
 ```bash
@@ -123,12 +129,6 @@ go install github.com/orzazade/gitch@latest
 git clone https://github.com/orzazade/gitch.git
 cd gitch
 make build
-```
-
-### Homebrew (macOS)
-
-```bash
-brew install orzazade/tap/gitch
 ```
 
 <br/>
@@ -299,7 +299,7 @@ SSH keys are stored in `~/.ssh/` with the naming convention `gitch_<identity-nam
 
 <br/>
 
-## 🗺️ v1.0 Complete!
+## 🗺️ Roadmap
 
 All planned features have been implemented:
 
@@ -310,6 +310,7 @@ All planned features have been implemented:
 | ✅ **TUI Experience** | Interactive setup wizard, identity selector, shell completions |
 | ✅ **Auto-Switching** | Directory/remote rules, pre-commit hooks, bypass support |
 | ✅ **Shell Prompt** | Fast prompt integration for Bash, Zsh, and Fish |
+| ✅ **Distribution** | Homebrew tap for easy macOS installation |
 
 <br/>
 
