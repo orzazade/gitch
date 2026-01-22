@@ -3,9 +3,11 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/portability"
+	"github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -48,6 +50,14 @@ func runExport(cmd *cobra.Command, args []string) error {
 
 	// Export to file
 	outputPath := args[0]
+
+	// Check if file already exists and warn
+	if expandedPath, err := ssh.ExpandPath(outputPath); err == nil {
+		if _, statErr := os.Stat(expandedPath); statErr == nil {
+			fmt.Fprintf(os.Stderr, "Warning: Overwriting existing file: %s\n", outputPath)
+		}
+	}
+
 	if err := portability.ExportToFile(cfg, outputPath); err != nil {
 		return fmt.Errorf("failed to export: %w", err)
 	}

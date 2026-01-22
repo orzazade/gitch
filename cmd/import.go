@@ -8,6 +8,7 @@ import (
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/portability"
+	"github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -51,10 +52,20 @@ func runImport(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read import file: %w", err)
 	}
 
-	// Validate imported identities
+	// Validate imported identities and warn about missing SSH keys
 	for _, id := range export.Identities {
 		if err := id.Validate(); err != nil {
 			return fmt.Errorf("invalid identity %q in import file: %w", id.Name, err)
+		}
+
+		// Warn if SSH key path doesn't exist (but continue import)
+		if id.SSHKeyPath != "" {
+			expanded, err := ssh.ExpandPath(id.SSHKeyPath)
+			if err == nil {
+				if _, statErr := os.Stat(expanded); os.IsNotExist(statErr) {
+					fmt.Fprintf(os.Stderr, "Warning: SSH key not found: %s (identity: %s)\n", id.SSHKeyPath, id.Name)
+				}
+			}
 		}
 	}
 
