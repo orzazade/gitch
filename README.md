@@ -125,7 +125,7 @@ cd gitch
 make build
 ```
 
-### Homebrew <sup><sub>coming soon</sub></sup>
+### Homebrew (macOS)
 
 ```bash
 brew install orzazade/tap/gitch

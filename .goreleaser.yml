@@ -44,15 +44,16 @@ changelog:
       - Merge pull request
       - Merge branch
 
-# Homebrew tap can be enabled later by creating orzazade/homebrew-tap repo
-# brews:
-#   - repository:
-#       owner: orzazade
-#       name: homebrew-tap
-#     directory: Formula
-#     homepage: https://github.com/orzazade/gitch
-#     description: Git identity manager - never commit with the wrong identity again
-#     license: MIT
+homebrew_casks:
+  - name: gitch
+    repository:
+      owner: orzazade
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Casks
+    homepage: https://github.com/orzazade/gitch
+    description: Git identity manager - never commit with the wrong identity again
+    license: MIT
 
 nfpms:
   - package_name: gitch
