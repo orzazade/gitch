@@ -1,17 +1,20 @@
 package prompt
 
+import "fmt"
+
 // BashInit returns shell integration code for bash prompt.
 // The output should be evaled: eval "$(gitch init bash)"
 func BashInit() string {
-	return `# gitch shell integration for bash
+	cachePath, _ := CachePath()
+	return fmt.Sprintf(`# gitch shell integration for bash
 # Add to ~/.bashrc: eval "$(gitch init bash)"
 
 # Function to get current gitch identity
 _gitch_prompt() {
   local identity
-  identity=$(cat "${XDG_CACHE_HOME:-$HOME/.cache}/gitch/current-identity" 2>/dev/null)
+  identity=$(cat "%s" 2>/dev/null)
   if [[ -n "$identity" ]]; then
-    printf '\[\e[36m\][%s]\[\e[0m\] ' "$identity"
+    printf '\[\e[36m\][%%s]\[\e[0m\] ' "$identity"
   fi
 }
 
@@ -25,5 +28,5 @@ _gitch_update_ps1() {
 
 # Run on each prompt
 PROMPT_COMMAND="_gitch_update_ps1${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
-`
+`, cachePath)
 }
