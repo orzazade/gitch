@@ -6,12 +6,27 @@ import (
 	"github.com/orzazade/gitch/internal/config"
 )
 
+// buildIndicators creates a formatted string for SSH/GPG indicators.
+func buildIndicators(hasSSHKey, hasGPGKey bool) string {
+	var indicators []string
+	if hasSSHKey {
+		indicators = append(indicators, "SSH")
+	}
+	if hasGPGKey {
+		indicators = append(indicators, "GPG")
+	}
+	if len(indicators) > 0 {
+		return DimStyle.Render(strings.Join(indicators, " | ") + " configured")
+	}
+	return ""
+}
+
 // RenderIdentityCard renders a single identity as a styled card.
 // If active: uses ActiveCardStyle with checkmark prefix.
 // If not active: uses CardStyle with space prefix.
 // If isDefault: appends "(default)" after the name.
-// If hasSSHKey: shows SSH indicator on a third line.
-func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey bool) string {
+// If hasSSHKey or hasGPGKey: shows indicators on a third line.
+func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey, hasGPGKey bool) string {
 	var prefix string
 	var style = CardStyle
 
@@ -36,10 +51,10 @@ func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey bool)
 	content.WriteString(nameLine)
 	content.WriteString("\n")
 	content.WriteString(emailLine)
-	if hasSSHKey {
+	if indicators := buildIndicators(hasSSHKey, hasGPGKey); indicators != "" {
 		content.WriteString("\n")
 		content.WriteString("  ")
-		content.WriteString(DimStyle.Render("SSH configured"))
+		content.WriteString(indicators)
 	}
 
 	return style.Render(content.String())
@@ -48,7 +63,7 @@ func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey bool)
 // RenderIdentityList renders all identities as cards.
 // The active identity is determined by matching email to the activeEmail parameter.
 // The default identity is determined by matching name to the defaultName parameter.
-// SSH key status is determined by checking if identity.SSHKeyPath is set.
+// SSH/GPG key status is determined by checking identity fields.
 func RenderIdentityList(identities []config.Identity, activeEmail, defaultName string) string {
 	if len(identities) == 0 {
 		return ""
@@ -59,7 +74,8 @@ func RenderIdentityList(identities []config.Identity, activeEmail, defaultName s
 		isActive := strings.EqualFold(identity.Email, activeEmail)
 		isDefault := strings.EqualFold(identity.Name, defaultName)
 		hasSSHKey := identity.SSHKeyPath != ""
-		card := RenderIdentityCard(identity.Name, identity.Email, isActive, isDefault, hasSSHKey)
+		hasGPGKey := identity.GPGKeyID != ""
+		card := RenderIdentityCard(identity.Name, identity.Email, isActive, isDefault, hasSSHKey, hasGPGKey)
 		cards = append(cards, card)
 	}
 

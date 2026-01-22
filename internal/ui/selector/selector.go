@@ -92,9 +92,10 @@ func (m Model) View() string {
 		isActive := strings.EqualFold(identity.Email, m.activeEmail)
 		isDefault := strings.EqualFold(identity.Name, m.defaultName)
 		hasSSH := identity.SSHKeyPath != ""
+		hasGPG := identity.GPGKeyID != ""
 		isCursor := i == m.cursor
 
-		card := renderSelectableCard(identity, isActive, isDefault, hasSSH, isCursor)
+		card := renderSelectableCard(identity, isActive, isDefault, hasSSH, hasGPG, isCursor)
 		b.WriteString(card)
 		b.WriteString("\n")
 	}
@@ -108,7 +109,7 @@ func (m Model) View() string {
 // When cursor is on this card, use ActiveCardStyle (green border).
 // When this is the active identity, show checkmark.
 // Both can be true (cursor on active identity).
-func renderSelectableCard(id config.Identity, active, def, ssh, cursor bool) string {
+func renderSelectableCard(id config.Identity, active, def, ssh, gpg, cursor bool) string {
 	// Card style based on cursor position
 	style := ui.CardStyle
 	if cursor {
@@ -137,9 +138,18 @@ func renderSelectableCard(id config.Identity, active, def, ssh, cursor bool) str
 	content.WriteString(nameLine)
 	content.WriteString("\n")
 	content.WriteString(emailLine)
+
+	// Build indicators line
+	var indicators []string
 	if ssh {
+		indicators = append(indicators, "SSH")
+	}
+	if gpg {
+		indicators = append(indicators, "GPG")
+	}
+	if len(indicators) > 0 {
 		content.WriteString("\n  ")
-		content.WriteString(ui.DimStyle.Render("SSH configured"))
+		content.WriteString(ui.DimStyle.Render(strings.Join(indicators, " | ") + " configured"))
 	}
 
 	return style.Render(content.String())

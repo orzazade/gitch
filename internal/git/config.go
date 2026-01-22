@@ -121,3 +121,31 @@ func ApplyIdentity(name, email string) error {
 
 	return nil
 }
+
+// ApplySigningConfig configures git to use the specified GPG key for signing commits.
+// Sets user.signingkey and commit.gpgsign globally.
+func ApplySigningConfig(keyID string) error {
+	if err := SetConfig("user.signingkey", keyID, true); err != nil {
+		return fmt.Errorf("failed to set signing key: %w", err)
+	}
+
+	if err := SetConfig("commit.gpgsign", "true", true); err != nil {
+		return fmt.Errorf("failed to enable commit signing: %w", err)
+	}
+
+	return nil
+}
+
+// ClearSigningConfig removes GPG signing configuration from git global config.
+// This is idempotent - returns nil even if the keys were not set.
+func ClearSigningConfig() error {
+	if err := UnsetConfig("user.signingkey", true); err != nil {
+		return fmt.Errorf("failed to unset signing key: %w", err)
+	}
+
+	if err := UnsetConfig("commit.gpgsign", true); err != nil {
+		return fmt.Errorf("failed to unset commit signing: %w", err)
+	}
+
+	return nil
+}

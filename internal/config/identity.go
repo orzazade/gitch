@@ -23,6 +23,7 @@ type Identity struct {
 	Name       string `mapstructure:"name" yaml:"name"`
 	Email      string `mapstructure:"email" yaml:"email"`
 	SSHKeyPath string `mapstructure:"ssh_key_path" yaml:"ssh_key_path,omitempty"`
+	GPGKeyID   string `mapstructure:"gpg_key_id" yaml:"gpg_key_id,omitempty"`
 	HookMode   string `mapstructure:"hook_mode" yaml:"hook_mode,omitempty"`
 }
 
