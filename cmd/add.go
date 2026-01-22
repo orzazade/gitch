@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
+	gpgpkg "github.com/orzazade/gitch/internal/gpg"
 	"github.com/orzazade/gitch/internal/prompt"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
@@ -19,6 +20,8 @@ var (
 	addDefault     bool
 	addGenerateSSH bool
 	addSSHKey      string
+	addGenerateGPG bool
+	addGPGKey      string
 	addForce       bool
 )
 
@@ -35,11 +38,17 @@ SSH Key Options:
   --ssh-key            Link an existing SSH private key to this identity
   --force              Overwrite existing SSH key if it exists
 
+GPG Key Options:
+  --generate-gpg       Generate a new Ed25519 GPG key for commit signing
+  --gpg-key            Link an existing GPG key ID for commit signing
+
 Examples:
   gitch add --name work --email work@company.com
   gitch add -n personal -e me@example.com --default
   gitch add --name github --email me@github.com --generate-ssh
-  gitch add --name work --email work@co.com --ssh-key ~/.ssh/id_ed25519`,
+  gitch add --name work --email work@co.com --ssh-key ~/.ssh/id_ed25519
+  gitch add --name work --email work@co.com --generate-gpg
+  gitch add --name work --email work@co.com --gpg-key ABCD1234EFGH5678`,
 	RunE: runAdd,
 }
 
@@ -51,6 +60,8 @@ func init() {
 	addCmd.Flags().BoolVarP(&addDefault, "default", "d", false, "Set as default identity")
 	addCmd.Flags().BoolVarP(&addGenerateSSH, "generate-ssh", "s", false, "Generate new SSH keypair")
 	addCmd.Flags().StringVar(&addSSHKey, "ssh-key", "", "Path to existing SSH private key")
+	addCmd.Flags().BoolVar(&addGenerateGPG, "generate-gpg", false, "Generate new GPG key for signing")
+	addCmd.Flags().StringVar(&addGPGKey, "gpg-key", "", "GPG key ID to use for signing")
 	addCmd.Flags().BoolVar(&addForce, "force", false, "Overwrite existing SSH key if it exists")
 
 	_ = addCmd.MarkFlagRequired("name")
@@ -61,6 +72,11 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	// Validate SSH flags are mutually exclusive
 	if addGenerateSSH && addSSHKey != "" {
 		return errors.New("cannot use both --generate-ssh and --ssh-key")
+	}
+
+	// Validate GPG flags are mutually exclusive
+	if addGenerateGPG && addGPGKey != "" {
+		return errors.New("cannot use both --generate-gpg and --gpg-key")
 	}
 
 	// Load config
@@ -137,6 +153,55 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		fmt.Print(strings.TrimSuffix(string(publicKey), "\n"))
 		fmt.Println()
 		fmt.Println()
+	}
+
+	// Handle GPG key linking (existing key)
+	if addGPGKey != "" {
+		if err := gpgpkg.ValidateKeyID(addGPGKey); err != nil {
+			return fmt.Errorf("GPG key validation failed: %w", err)
+		}
+		identity.GPGKeyID = addGPGKey
+	}
+
+	// Handle GPG key generation
+	if addGenerateGPG {
+		// Check if gpg is available
+		if !gpgpkg.IsGPGAvailable() {
+			return errors.New("gpg command not found - install GPG to use signing features")
+		}
+
+		// Prompt for passphrase (same as SSH)
+		passphrase, err := ui.ReadPassphraseWithConfirm()
+		if err != nil {
+			return fmt.Errorf("failed to read passphrase: %w", err)
+		}
+
+		// Generate GPG key
+		keyInfo, err := gpgpkg.GenerateKey(addName, addEmail, passphrase)
+		if err != nil {
+			return fmt.Errorf("failed to generate GPG key: %w", err)
+		}
+
+		identity.GPGKeyID = keyInfo.ID
+
+		// Export public key for display
+		publicKey, err := gpgpkg.ExportPublicKey(keyInfo.ID)
+		if err != nil {
+			// Key was generated but export failed - warn but continue
+			fmt.Fprintf(os.Stderr, "Warning: failed to export public key: %v\n", err)
+		}
+
+		// Print key generation success info
+		fmt.Println(ui.SuccessStyle.Render("Generated GPG key:"))
+		fmt.Printf("  Key ID: %s\n", keyInfo.ID)
+		fmt.Printf("  Fingerprint: %s\n", keyInfo.Fingerprint)
+		fmt.Println()
+		if publicKey != "" {
+			fmt.Println("Public key (add to GitHub/GitLab):")
+			fmt.Print(strings.TrimSuffix(publicKey, "\n"))
+			fmt.Println()
+			fmt.Println()
+		}
 	}
 
 	// Add identity (handles validation and duplicate checks)
