@@ -50,7 +50,8 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	// Verify identity exists
 	identity, err := cfg.GetIdentity(name)
 	if err != nil {
-		return fmt.Errorf("identity '%s' not found. Use 'gitch list' to see available identities", name)
+		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("Identity '%s' not found, nothing to delete.", name)))
+		return nil
 	}
 
 	// Check if this is the currently active identity
