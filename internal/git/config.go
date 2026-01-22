@@ -63,6 +63,35 @@ func SetConfig(key, value string, global bool) error {
 	return nil
 }
 
+// UnsetConfig removes a git config key.
+// If global is true, removes from --global scope; otherwise removes from local repo.
+// Returns nil if the key was not set (idempotent).
+func UnsetConfig(key string, global bool) error {
+	args := []string{"config", "--unset"}
+	if global {
+		args = append(args, "--global")
+	}
+	args = append(args, key)
+
+	cmd := exec.Command("git", args...)
+	if err := cmd.Run(); err != nil {
+		// Check if git is not found
+		if errors.Is(err, exec.ErrNotFound) {
+			return ErrGitNotFound
+		}
+
+		// Exit code 5 means key was not set - this is not an error
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && exitErr.ExitCode() == 5 {
+			return nil
+		}
+
+		return fmt.Errorf("failed to unset git config %s: %w", key, err)
+	}
+
+	return nil
+}
+
 // GetCurrentIdentity returns the current git user.name and user.email from global config.
 // Either value may be empty if not set.
 func GetCurrentIdentity() (name string, email string, err error) {
