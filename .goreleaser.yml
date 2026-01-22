@@ -53,9 +53,11 @@ homebrew_casks:
     homepage: https://github.com/orzazade/gitch
     description: Git identity manager - never commit with the wrong identity again
     license: MIT
-    postflight: |
-      system_command "/usr/bin/xattr",
-                     args: ["-dr", "com.apple.quarantine", "#{staged_path}/gitch"]
+    hooks:
+      post:
+        install: |
+          system_command "/usr/bin/xattr",
+                         args: ["-dr", "com.apple.quarantine", "#{staged_path}/gitch"]
 
 nfpms:
   - package_name: gitch
