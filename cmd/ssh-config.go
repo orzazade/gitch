@@ -30,6 +30,8 @@ Examples:
   gitch ssh-config update --dry-run`,
 }
 
+var sshConfigDryRun bool
+
 var sshConfigGenerateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Print SSH config Host blocks for all identities with SSH keys",
@@ -50,9 +52,36 @@ Example output:
 	RunE: runSSHConfigGenerate,
 }
 
+var sshConfigUpdateCmd = &cobra.Command{
+	Use:   "update",
+	Short: "Update ~/.ssh/config with generated Host blocks",
+	Long: `Update your SSH config file with Host blocks for all identities with SSH keys.
+
+This command safely modifies ~/.ssh/config by:
+1. Creating a backup at ~/.ssh/config.gitch.backup
+2. Removing any existing gitch-managed block
+3. Appending the new Host blocks wrapped in markers
+
+The gitch-managed section is identified by markers:
+  # gitch:start - MANAGED BY GITCH, DO NOT EDIT
+  ... host blocks ...
+  # gitch:end
+
+Use --dry-run to preview changes without modifying files.
+
+Examples:
+  gitch ssh-config update              # Apply changes
+  gitch ssh-config update --dry-run    # Preview only`,
+	RunE: runSSHConfigUpdate,
+}
+
 func init() {
 	rootCmd.AddCommand(sshConfigCmd)
 	sshConfigCmd.AddCommand(sshConfigGenerateCmd)
+	sshConfigCmd.AddCommand(sshConfigUpdateCmd)
+
+	// Flags for update command
+	sshConfigUpdateCmd.Flags().BoolVar(&sshConfigDryRun, "dry-run", false, "Show what would be written without modifying files")
 }
 
 // collectHosts gathers HostConfigs from all identities with SSH keys
@@ -91,6 +120,49 @@ func runSSHConfigGenerate(cmd *cobra.Command, args []string) error {
 
 	// Print hint
 	fmt.Println("\n# To apply, run: gitch ssh-config update")
+
+	return nil
+}
+
+func runSSHConfigUpdate(cmd *cobra.Command, args []string) error {
+	// Load config
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Collect hosts from identities
+	hosts := collectHosts(cfg)
+
+	if len(hosts) == 0 {
+		fmt.Println("No identities with SSH keys found. Nothing to update.")
+		return nil
+	}
+
+	// Generate the config block
+	block := ssh.GenerateConfigBlock(hosts)
+
+	// Get config path for messages
+	configPath, err := ssh.SSHConfigPath()
+	if err != nil {
+		return fmt.Errorf("failed to determine SSH config path: %w", err)
+	}
+
+	// Handle dry-run
+	if sshConfigDryRun {
+		fmt.Printf("Would write to: %s\n\n", configPath)
+		fmt.Print(block)
+		return nil
+	}
+
+	// Update the SSH config
+	if err := ssh.UpdateSSHConfig(block); err != nil {
+		return fmt.Errorf("failed to update SSH config: %w", err)
+	}
+
+	// Print success
+	fmt.Printf("Updated %s\n", configPath)
+	fmt.Printf("Backup saved to: %s.gitch.backup\n", configPath)
 
 	return nil
 }
