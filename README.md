@@ -1,6 +1,8 @@
 <div align="center">
 
-# 🔀 gitch
+<img src="https://raw.githubusercontent.com/orzazade/gitch/main/.github/assets/logo.png" alt="gitch logo" width="120" />
+
+# gitch
 
 ### Never commit with the wrong git identity again.
 
@@ -10,9 +12,9 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/orzazade/gitch)](https://goreportcard.com/report/github.com/orzazade/gitch)
 [![License](https://img.shields.io/github/license/orzazade/gitch?color=blue)](LICENSE)
 
-**A beautiful CLI for managing multiple git identities with SSH keys, interactive TUI, and auto-switching.**
+**A beautiful CLI for managing multiple git identities with SSH keys, auto-switching rules, and shell prompt integration.**
 
-[Installation](#-installation) · [Quick Start](#-quick-start) · [Commands](#-commands) · [Contributing](#-contributing)
+[Installation](#-installation) · [Quick Start](#-quick-start) · [Features](#-features) · [Commands](#-commands) · [Contributing](#-contributing)
 
 ---
 
@@ -75,11 +77,28 @@ Interactive setup wizard and identity selector built with [Bubble Tea](https://g
 </td>
 <td width="50%">
 
-### ⚡ Instant Switching
-Switch identities in milliseconds. Git config updates globally, SSH key loads automatically.
+### ⚡ Auto-Switching Rules
+Define directory or remote-based rules. Enter `~/work/**` → automatically switch to work identity.
+
+### 🛡️ Pre-Commit Protection
+Install hooks that prevent wrong-identity commits. Configure per-identity: warn, block, or allow.
+
+### 🐚 Shell Prompt Integration
+See your current identity in your prompt. Ultra-fast (<5ms) cache-based updates for Bash, Zsh, and Fish.
+
+</td>
+</tr>
+</table>
+
+<table>
+<tr>
+<td width="50%">
 
 ### 🐚 Shell Completions
 First-class tab completion for Bash, Zsh, and Fish. Never type a full command again.
+
+</td>
+<td width="50%">
 
 ### 🔒 Secure by Default
 SSH keys stored in `~/.ssh/` with proper permissions. No credentials in plain text.
@@ -144,19 +163,98 @@ gitch use
 
 ## 📖 Commands
 
+### Core Commands
+
 | Command | Description |
 |:--------|:------------|
 | `gitch setup` | 🧙 Interactive setup wizard |
 | `gitch add` | ➕ Create a new identity |
 | `gitch list` | 📋 List all identities |
-| `gitch status` | 👁️ Show current active identity |
+| `gitch status` | 👁️ Show current active identity (`-v` for rule details) |
 | `gitch use [name]` | 🔀 Switch to an identity (interactive if no name) |
 | `gitch delete <name>` | 🗑️ Delete an identity |
-| `gitch completion <shell>` | 🐚 Generate shell completions |
+
+### Auto-Switching & Hooks
+
+| Command | Description |
+|:--------|:------------|
+| `gitch rule add <pattern> --use <identity>` | 📍 Add directory rule (e.g., `~/work/**`) |
+| `gitch rule add --remote <pattern> --use <identity>` | 🌐 Add remote rule (e.g., `github.com/company/*`) |
+| `gitch rule list` | 📋 List all switching rules |
+| `gitch rule remove <pattern>` | 🗑️ Remove a rule |
+| `gitch hook install` | 🛡️ Install pre-commit hook globally |
+| `gitch hook uninstall` | ❌ Remove pre-commit hook |
+| `gitch config hook-mode <identity> <mode>` | ⚙️ Set hook behavior (warn/block/allow) |
+
+### Shell Integration
+
+| Command | Description |
+|:--------|:------------|
+| `gitch init <shell>` | 🐚 Output shell prompt integration code (bash/zsh/fish) |
+| `gitch completion <shell>` | 📝 Generate shell completions |
 
 <br/>
 
-## 🐚 Shell Completions
+## 📍 Auto-Switching Rules
+
+Set up rules to automatically switch identities based on directory or remote:
+
+```bash
+# Switch to "work" when in any subdirectory of ~/work
+gitch rule add ~/work/** --use work
+
+# Switch to "opensource" for any github.com/orzazade/* repo
+gitch rule add --remote "github.com/orzazade/*" --use opensource
+
+# View all rules
+gitch rule list
+
+# Remove a rule
+gitch rule remove ~/work/**
+```
+
+<br/>
+
+## 🛡️ Pre-Commit Hooks
+
+Prevent accidental commits with the wrong identity:
+
+```bash
+# Install the pre-commit hook globally
+gitch hook install
+
+# When you commit with wrong identity, you'll see:
+#   ⚠ Identity mismatch: expected "work", but current is "personal"
+#   [S]witch to work / [C]ontinue anyway / [A]bort
+
+# Configure per-identity behavior
+gitch config hook-mode work block    # Always block wrong identity
+gitch config hook-mode personal warn # Just warn (default)
+gitch config hook-mode oss allow     # No checks for this identity
+
+# Bypass when needed
+GITCH_BYPASS=1 git commit -m "emergency fix"
+```
+
+<br/>
+
+## 🐚 Shell Prompt Integration
+
+See your current git identity right in your prompt:
+
+```bash
+# Add to your shell config:
+eval "$(gitch init zsh)"   # For Zsh (~/.zshrc)
+eval "$(gitch init bash)"  # For Bash (~/.bashrc)
+source (gitch init fish)   # For Fish (~/.config/fish/config.fish)
+
+# Your prompt will show:
+# [work] ~/projects/company $
+```
+
+<br/>
+
+## 📝 Shell Completions
 
 Enable tab completion for your shell:
 
@@ -201,15 +299,17 @@ SSH keys are stored in `~/.ssh/` with the naming convention `gitch_<identity-nam
 
 <br/>
 
-## 🗺️ Roadmap
+## 🗺️ v1.0 Complete!
 
-| Phase | Status | Features |
-|:------|:------:|:---------|
-| **Phase 1** | ✅ | Core identity management (add, list, status, use, delete) |
-| **Phase 2** | ✅ | SSH key generation and ssh-agent integration |
-| **Phase 3** | ✅ | Interactive TUI (setup wizard, identity selector, completions) |
-| **Phase 4** | 🚧 | Auto-switching rules and pre-commit hooks |
-| **Phase 5** | 📋 | Shell prompt integration |
+All planned features have been implemented:
+
+| Phase | Features |
+|:------|:---------|
+| ✅ **Foundation** | Core identity management (add, list, status, use, delete) |
+| ✅ **SSH Integration** | SSH key generation and ssh-agent integration |
+| ✅ **TUI Experience** | Interactive setup wizard, identity selector, shell completions |
+| ✅ **Auto-Switching** | Directory/remote rules, pre-commit hooks, bypass support |
+| ✅ **Shell Prompt** | Fast prompt integration for Bash, Zsh, and Fish |
 
 <br/>
 
