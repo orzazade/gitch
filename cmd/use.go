@@ -115,6 +115,19 @@ func runUse(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to switch identity: %w", err)
 	}
 
+	// Configure GPG signing if identity has GPG key
+	if identity.GPGKeyID != "" {
+		if err := git.ApplySigningConfig(identity.GPGKeyID); err != nil {
+			// Print warning but don't fail the switch
+			fmt.Fprintf(os.Stderr, "Warning: failed to configure GPG signing: %v\n", err)
+		}
+	} else {
+		// Clear signing config when switching to identity without GPG
+		if err := git.ClearSigningConfig(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to clear GPG signing config: %v\n", err)
+		}
+	}
+
 	// Add SSH key to agent if configured
 	if identity.SSHKeyPath != "" {
 		if err := addSSHKeyToAgent(identity.SSHKeyPath); err != nil {
