@@ -6,6 +6,7 @@ import (
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/rules"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/orzazade/gitch/internal/ui/selector"
@@ -80,7 +81,15 @@ func runUse(cmd *cobra.Command, args []string) error {
 		// Get current active email for highlighting
 		_, activeEmail, _ := git.GetCurrentIdentity()
 
-		selected, err := selector.Run(identities, activeEmail, cfg.Default)
+		// Check if a rule matches - use rule's identity as default selection
+		defaultName := cfg.Default
+		cwd, _ := os.Getwd()
+		remoteURL, _ := rules.GetGitRemoteURL()
+		if matchedRule := rules.FindBestMatch(cfg.Rules, cwd, remoteURL); matchedRule != nil {
+			defaultName = matchedRule.Identity
+		}
+
+		selected, err := selector.Run(identities, activeEmail, defaultName)
 		if err != nil {
 			return fmt.Errorf("selector error: %w", err)
 		}

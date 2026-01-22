@@ -36,7 +36,24 @@ func init() {
 }
 
 func runStatus(cmd *cobra.Command, args []string) error {
-	// Get current git identity
+	// Load config first for auto-switch
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Trigger auto-switch if rules match
+	result, _ := TryAutoSwitch(cfg)
+	if result != nil && result.Switched {
+		fmt.Println(ui.SuccessStyle.Render(
+			fmt.Sprintf("Switched to '%s' identity", result.ToIdentity),
+		))
+		fmt.Println()
+		// Reload config after switch (default may have changed)
+		cfg, _ = config.Load()
+	}
+
+	// Get current git identity (after potential switch)
 	name, email, err := git.GetCurrentIdentity()
 	if err != nil {
 		return fmt.Errorf("failed to get current identity: %w", err)
@@ -46,12 +63,6 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	if name == "" && email == "" {
 		fmt.Println("No active identity. Use 'gitch use <name>' to set one.")
 		return nil
-	}
-
-	// Load config to check if this identity is managed by gitch
-	cfg, err := config.Load()
-	if err != nil {
-		return fmt.Errorf("failed to load config: %w", err)
 	}
 
 	// Try to find matching identity by email
