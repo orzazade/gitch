@@ -30,8 +30,29 @@ Examples:
   gitch ssh-config update --dry-run`,
 }
 
+var sshConfigGenerateCmd = &cobra.Command{
+	Use:   "generate",
+	Short: "Print SSH config Host blocks for all identities with SSH keys",
+	Long: `Generate SSH config Host blocks for all identities that have SSH keys.
+
+The output can be manually added to ~/.ssh/config, or you can use the
+'update' command to automatically apply the changes with a backup.
+
+Each identity with an SSH key gets Host aliases for github.com and gitlab.com,
+allowing you to use different SSH keys for different accounts.
+
+Example output:
+  Host github-work
+      HostName github.com
+      User git
+      IdentityFile ~/.ssh/id_ed25519_work
+      IdentitiesOnly yes`,
+	RunE: runSSHConfigGenerate,
+}
+
 func init() {
 	rootCmd.AddCommand(sshConfigCmd)
+	sshConfigCmd.AddCommand(sshConfigGenerateCmd)
 }
 
 // collectHosts gathers HostConfigs from all identities with SSH keys
@@ -47,5 +68,29 @@ func collectHosts(cfg *config.Config) []ssh.HostConfig {
 	return hosts
 }
 
-// placeholder to avoid "declared but not used" errors during incremental build
-var _ = fmt.Sprint
+func runSSHConfigGenerate(cmd *cobra.Command, args []string) error {
+	// Load config
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Collect hosts from identities
+	hosts := collectHosts(cfg)
+
+	if len(hosts) == 0 {
+		fmt.Println("No identities with SSH keys found.")
+		return nil
+	}
+
+	// Generate the config block
+	block := ssh.GenerateConfigBlock(hosts)
+
+	// Print the block
+	fmt.Print(block)
+
+	// Print hint
+	fmt.Println("\n# To apply, run: gitch ssh-config update")
+
+	return nil
+}
