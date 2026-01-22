@@ -20,6 +20,7 @@ The wizard guides you through:
   1. Choosing an identity name
   2. Setting the email address
   3. Optionally generating an SSH key
+  4. Optionally generating a GPG key for commit signing
 
 Examples:
   gitch setup`,
@@ -64,6 +65,7 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		Name:       data.Name,
 		Email:      data.Email,
 		SSHKeyPath: data.SSHKeyPath,
+		GPGKeyID:   data.GPGKeyID,
 	}
 
 	// Add identity
@@ -86,6 +88,9 @@ func runSetup(cmd *cobra.Command, args []string) error {
 
 	if data.SSHKeyPath != "" {
 		fmt.Printf("SSH key: %s\n", data.SSHKeyPath)
+	}
+	if data.GPGKeyID != "" {
+		fmt.Printf("GPG key: %s\n", data.GPGKeyID)
 	}
 
 	// Suggest next steps

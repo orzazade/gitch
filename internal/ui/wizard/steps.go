@@ -3,11 +3,14 @@ package wizard
 
 // Step constants for the wizard flow
 const (
-	stepName        = 0
-	stepEmail       = 1
-	stepSSH         = 2
-	stepPassphrase  = 3
-	stepConfirmPass = 4
+	stepName           = 0
+	stepEmail          = 1
+	stepSSH            = 2
+	stepSSHPassphrase  = 3
+	stepSSHConfirmPass = 4
+	stepGPG            = 5
+	stepGPGPassphrase  = 6
+	stepGPGConfirmPass = 7
 )
 
 // sshOptions are the choices for SSH key handling
@@ -22,16 +25,44 @@ const sshChoiceGenerate = 0
 // sshChoiceSkip is the index for skipping SSH setup
 const sshChoiceSkip = 1
 
-// getTotalSteps returns the total number of steps based on SSH choice.
-// If generating SSH key, includes passphrase and optionally confirm steps.
-func getTotalSteps(sshChoice int, passphraseEmpty bool) int {
-	if sshChoice == sshChoiceSkip {
-		return 3 // name, email, ssh choice
+// gpgOptions are the choices for GPG key handling
+var gpgOptions = []string{
+	"Generate new GPG key for commit signing",
+	"Skip GPG setup (can add later)",
+}
+
+// gpgChoiceGenerate is the index for generating a new GPG key
+const gpgChoiceGenerate = 0
+
+// gpgChoiceSkip is the index for skipping GPG setup
+const gpgChoiceSkip = 1
+
+// getTotalSteps returns the total number of steps based on SSH and GPG choices.
+func getTotalSteps(sshChoice, gpgChoice int, sshPassphraseEmpty, gpgPassphraseEmpty bool) int {
+	total := 3 // name, email, ssh choice
+
+	// Add SSH steps if generating
+	if sshChoice == sshChoiceGenerate {
+		if sshPassphraseEmpty {
+			total++ // just passphrase step
+		} else {
+			total += 2 // passphrase + confirm
+		}
 	}
-	if passphraseEmpty {
-		return 4 // name, email, ssh choice, passphrase
+
+	// Always add GPG choice step
+	total++
+
+	// Add GPG steps if generating
+	if gpgChoice == gpgChoiceGenerate {
+		if gpgPassphraseEmpty {
+			total++ // just passphrase step
+		} else {
+			total += 2 // passphrase + confirm
+		}
 	}
-	return 5 // name, email, ssh choice, passphrase, confirm
+
+	return total
 }
 
 // getStepTitle returns the title/prompt for each step
@@ -43,10 +74,16 @@ func getStepTitle(step int) string {
 		return "What's your email address for this identity?"
 	case stepSSH:
 		return "Would you like to set up an SSH key?"
-	case stepPassphrase:
+	case stepSSHPassphrase:
 		return "Enter a passphrase for your SSH key (optional, press Enter to skip)"
-	case stepConfirmPass:
-		return "Confirm your passphrase"
+	case stepSSHConfirmPass:
+		return "Confirm your SSH passphrase"
+	case stepGPG:
+		return "Would you like to set up a GPG key for commit signing?"
+	case stepGPGPassphrase:
+		return "Enter a passphrase for your GPG key (optional, press Enter to skip)"
+	case stepGPGConfirmPass:
+		return "Confirm your GPG passphrase"
 	default:
 		return ""
 	}
@@ -61,9 +98,15 @@ func getStepHint(step int) string {
 		return "This will be used as your git user.email"
 	case stepSSH:
 		return ""
-	case stepPassphrase:
+	case stepSSHPassphrase:
 		return "Leave empty for no passphrase"
-	case stepConfirmPass:
+	case stepSSHConfirmPass:
+		return "Type your passphrase again to confirm"
+	case stepGPG:
+		return "GPG keys enable verified commit signing on GitHub/GitLab"
+	case stepGPGPassphrase:
+		return "Leave empty for no passphrase"
+	case stepGPGConfirmPass:
 		return "Type your passphrase again to confirm"
 	default:
 		return ""
