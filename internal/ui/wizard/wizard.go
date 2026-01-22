@@ -163,7 +163,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// If going back from passphrase, go back to SSH choice
 			m.step--
 			// Reset confirm input when going back
-			if m.step == stepPassphrase {
+			if m.step == stepSSHPassphrase {
 				m.confirmInput.Reset()
 			}
 			return m, m.focusCurrentInput()
@@ -195,9 +195,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.nameInput, cmd = m.nameInput.Update(msg)
 	case stepEmail:
 		m.emailInput, cmd = m.emailInput.Update(msg)
-	case stepPassphrase:
+	case stepSSHPassphrase:
 		m.passphraseInput, cmd = m.passphraseInput.Update(msg)
-	case stepConfirmPass:
+	case stepSSHConfirmPass:
 		m.confirmInput, cmd = m.confirmInput.Update(msg)
 	}
 
@@ -246,10 +246,10 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			m.warning = fmt.Sprintf("SSH key already exists at %s (will be overwritten)", keyPath)
 		}
 		// Continue to passphrase step
-		m.step++
+		m.step = stepSSHPassphrase
 		return m, m.passphraseInput.Focus()
 
-	case stepPassphrase:
+	case stepSSHPassphrase:
 		passphrase := m.passphraseInput.Value()
 		m.passphrase = []byte(passphrase)
 		m.err = nil
@@ -260,10 +260,10 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		}
 
 		// Continue to confirmation step
-		m.step++
+		m.step = stepSSHConfirmPass
 		return m, m.confirmInput.Focus()
 
-	case stepConfirmPass:
+	case stepSSHConfirmPass:
 		confirm := m.confirmInput.Value()
 		if confirm != m.passphraseInput.Value() {
 			m.err = fmt.Errorf("passphrases don't match")
@@ -321,9 +321,9 @@ func (m Model) focusCurrentInput() tea.Cmd {
 		return m.nameInput.Focus()
 	case stepEmail:
 		return m.emailInput.Focus()
-	case stepPassphrase:
+	case stepSSHPassphrase:
 		return m.passphraseInput.Focus()
-	case stepConfirmPass:
+	case stepSSHConfirmPass:
 		return m.confirmInput.Focus()
 	}
 	return nil
@@ -400,12 +400,12 @@ func (m Model) View() string {
 			b.WriteString("\n")
 		}
 
-	case stepPassphrase:
+	case stepSSHPassphrase:
 		b.WriteString("  > ")
 		b.WriteString(m.passphraseInput.View())
 		b.WriteString("\n")
 
-	case stepConfirmPass:
+	case stepSSHConfirmPass:
 		b.WriteString("  > ")
 		b.WriteString(m.confirmInput.View())
 		b.WriteString("\n")
@@ -429,7 +429,8 @@ func (m Model) View() string {
 // renderProgress renders the progress bar with step indicator
 func (m Model) renderProgress() string {
 	passphraseEmpty := m.passphraseInput.Value() == ""
-	total := getTotalSteps(m.sshChoice, passphraseEmpty)
+	// Wizard doesn't support GPG yet, so pass gpgChoiceSkip and true for gpgPassphraseEmpty
+	total := getTotalSteps(m.sshChoice, gpgChoiceSkip, passphraseEmpty, true)
 
 	// Adjust displayed step for progress calculation
 	displayStep := m.step + 1
