@@ -202,9 +202,23 @@ func runHookSwitch(cmd *cobra.Command, args []string) error {
 }
 
 func runHookMode(cmd *cobra.Command, args []string) error {
-	// For now, always return "warn" as the default mode
-	// PREV-02 will add per-identity hook mode configuration
-	fmt.Print("warn")
+	// Get validation result to find expected identity
+	result, err := hooks.Validate()
+	if err != nil {
+		// Default to warn on error
+		fmt.Print("warn")
+		return nil
+	}
+
+	// If no expected identity (no rule matched), default to warn
+	if result.ExpectedIdentity == nil {
+		fmt.Print("warn")
+		return nil
+	}
+
+	// Get the hook mode for this identity
+	mode := result.ExpectedIdentity.GetHookMode()
+	fmt.Print(mode)
 	return nil
 }
 
