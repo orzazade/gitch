@@ -25,6 +25,11 @@
         "command": "gitch.refreshIdentity",
         "title": "Refresh Identity",
         "category": "gitch"
+      },
+      {
+        "command": "gitch.switchIdentity",
+        "title": "Switch Identity",
+        "category": "gitch"
       }
     ],
     "configuration": {

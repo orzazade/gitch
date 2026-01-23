@@ -23,8 +23,8 @@ export class StatusBarManager implements vscode.Disposable {
       100
     );
 
-    // Command to switch identity (Phase 17 - for now just refresh)
-    this.statusBarItem.command = 'gitch.refreshIdentity';
+    // Command to switch identity via Quick Pick
+    this.statusBarItem.command = 'gitch.switchIdentity';
   }
 
   /**

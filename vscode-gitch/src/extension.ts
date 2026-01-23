@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { ensureBinary } from './cli/binary';
 import { StatusBarManager } from './ui/statusBar';
 import { getCurrentIdentity } from './cli/identity';
+import { registerSwitchIdentityCommand } from './commands/switchIdentity';
+import { registerAutoSwitch, checkAutoSwitch } from './features/autoSwitch';
 
 let statusBarManager: StatusBarManager | undefined;
 
@@ -24,6 +26,34 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       await updateScmPlaceholder(binaryPath);
     });
     context.subscriptions.push(refreshCmd);
+
+    // Register switch identity command (clicking status bar)
+    const switchCmd = registerSwitchIdentityCommand(
+      context,
+      binaryPath,
+      async () => {
+        await statusBarManager?.refresh();
+        await updateScmPlaceholder(binaryPath);
+      }
+    );
+    context.subscriptions.push(switchCmd);
+
+    // Register auto-switch on workspace change
+    const autoSwitchWatcher = registerAutoSwitch(
+      context,
+      binaryPath,
+      async () => {
+        await statusBarManager?.refresh();
+        await updateScmPlaceholder(binaryPath);
+      }
+    );
+    context.subscriptions.push(autoSwitchWatcher);
+
+    // Initial auto-switch check for current workspace
+    const initialFolder = vscode.workspace.workspaceFolders?.[0];
+    if (initialFolder) {
+      checkAutoSwitch(binaryPath, initialFolder.uri.fsPath);
+    }
 
     // Watch for workspace folder changes
     const workspaceWatcher = vscode.workspace.onDidChangeWorkspaceFolders(() => {
