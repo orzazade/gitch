@@ -14,6 +14,7 @@ var (
 	auditLimit   int
 	auditAll     bool
 	auditShowAll bool
+	auditFix     bool
 )
 
 var auditCmd = &cobra.Command{
@@ -32,7 +33,8 @@ Examples:
   gitch audit                    # Scan last 1000 commits
   gitch audit --limit 100        # Scan last 100 commits
   gitch audit --all              # Scan entire history
-  gitch audit --show-all         # Include matching commits in output`,
+  gitch audit --show-all         # Include matching commits in output
+  gitch audit --fix              # Fix mismatched commits (destructive!)`,
 	Args: cobra.NoArgs,
 	RunE: runAudit,
 }
@@ -42,6 +44,7 @@ func init() {
 	auditCmd.Flags().IntVar(&auditLimit, "limit", 0, "Maximum commits to scan (default 1000, 0 for default)")
 	auditCmd.Flags().BoolVar(&auditAll, "all", false, "Scan entire history (ignores --limit)")
 	auditCmd.Flags().BoolVar(&auditShowAll, "show-all", false, "Show all commits, not just mismatches")
+	auditCmd.Flags().BoolVar(&auditFix, "fix", false, "Rewrite mismatched commits with correct identity")
 }
 
 func runAudit(cmd *cobra.Command, args []string) error {
@@ -64,6 +67,18 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	result, err := audit.Scan(opts)
 	if err != nil {
 		return fmt.Errorf("audit failed: %w", err)
+	}
+
+	// If --fix flag, run fix workflow instead of just printing
+	if auditFix {
+		// Ensure we have mismatches to fix
+		if result.MismatchCount == 0 {
+			fmt.Println(ui.SuccessStyle.Render("No mismatched commits to fix."))
+			return nil
+		}
+
+		// Run fix workflow
+		return audit.Fix(result)
 	}
 
 	// Handle output
