@@ -11,19 +11,29 @@ const execFileAsync = promisify(execFile);
 const DEFAULT_TIMEOUT = 10000; // 10 seconds
 const MAX_BUFFER = 1024 * 1024; // 1MB
 
+export interface RunGitchOptions {
+  cwd?: string;
+}
+
 /**
  * Execute gitch CLI with arguments.
  *
  * @param binaryPath - Absolute path to gitch binary
  * @param args - Command line arguments
+ * @param options - Optional execution options (cwd)
  * @returns stdout output trimmed
  * @throws Error with stderr message on failure
  */
-export async function runGitch(binaryPath: string, args: string[]): Promise<string> {
+export async function runGitch(
+  binaryPath: string,
+  args: string[],
+  options?: RunGitchOptions
+): Promise<string> {
   try {
     const { stdout } = await execFileAsync(binaryPath, args, {
       timeout: DEFAULT_TIMEOUT,
       maxBuffer: MAX_BUFFER,
+      cwd: options?.cwd,
     });
     return stdout.trim();
   } catch (error) {
