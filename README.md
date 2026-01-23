@@ -70,7 +70,7 @@ You accidentally commit with the wrong email. Your work repo now has personal co
 Create, switch, and manage multiple git identities. Each identity stores name, email, and optional SSH key.
 
 ### 🔐 SSH Key Integration
-Generate new SSH keys per identity or link existing ones. Keys auto-load into ssh-agent on switch.
+Generate new SSH keys per identity or link existing ones. Keys auto-load into ssh-agent on switch. Choose key type (Ed25519 or RSA) with smart defaults for Azure DevOps.
 
 ### ✍️ GPG Commit Signing
 Generate GPG keys or link existing ones. Git commit signing auto-configures on identity switch.
@@ -111,14 +111,58 @@ SSH keys stored in `~/.ssh/` with proper permissions. GPG keys in system keyring
 </tr>
 </table>
 
+<table>
+<tr>
+<td width="50%">
+
+### 🔍 Commit History Audit
+Scan your repo for commits made with the wrong identity. See which commits are local-only vs already pushed.
+
+</td>
+<td width="50%">
+
+### 🔧 History Rewriting
+Fix mismatched commits with `gitch audit --fix`. Automatic backup, GPG warnings, typed confirmation, and remote removal for safety.
+
+</td>
+</tr>
+</table>
+
 <br/>
 
 ## 📦 Installation
 
-### Homebrew (macOS)
+### macOS (Homebrew)
 
 ```bash
 brew install orzazade/tap/gitch
+```
+
+### Windows
+
+```powershell
+# Scoop
+scoop bucket add gitch https://github.com/orzazade/scoop-bucket
+scoop install gitch
+
+# Chocolatey (coming soon)
+# choco install gitch
+
+# winget (coming soon)
+# winget install orzazade.gitch
+
+# Or download directly from GitHub Releases
+```
+
+### Linux
+
+```bash
+# Debian/Ubuntu (APT)
+curl -fsSL https://orzazade.github.io/apt-repo/pubkey.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/gitch.gpg
+echo "deb [signed-by=/etc/apt/keyrings/gitch.gpg] https://orzazade.github.io/apt-repo stable main" | sudo tee /etc/apt/sources.list.d/gitch.list
+sudo apt update && sudo apt install gitch
+
+# Or download .deb/.rpm directly from GitHub Releases
 ```
 
 ### Using Go
@@ -162,6 +206,9 @@ gitch add --name "opensource" --email "you@github.com" --generate-gpg
 # Or use an existing GPG key
 gitch add --name "secure" --email "you@secure.com" --gpg-key ABCD1234EFGH5678
 
+# For Azure DevOps, use RSA key type (auto-detected in repos)
+gitch add --name "azure" --email "you@company.com" --generate-ssh --key-type rsa
+
 # Switch between them
 gitch use work
 
@@ -195,6 +242,13 @@ gitch use
 | `gitch hook install` | 🛡️ Install pre-commit hook globally |
 | `gitch hook uninstall` | ❌ Remove pre-commit hook |
 | `gitch config hook-mode <identity> <mode>` | ⚙️ Set hook behavior (warn/block/allow) |
+
+### Audit & History
+
+| Command | Description |
+|:--------|:------------|
+| `gitch audit` | 🔍 Scan repo for commits with wrong identity |
+| `gitch audit --fix` | 🔧 Rewrite mismatched commits (with backup + confirmation) |
 
 ### Shell Integration
 
@@ -325,14 +379,30 @@ GPG keys are generated and imported into your system GPG keyring (`~/.gnupg/`).
 | ✅ **Distribution** | Homebrew tap for easy macOS installation |
 | ✅ **GPG Signing** | GPG key generation, linking, and auto-configure on switch |
 
-### v2.0 - Security & Distribution (In Progress)
+### v2.0 - Security & Distribution (Complete)
 
 | Phase | Features |
 |:------|:---------|
-| 🚧 **Import/Export** | YAML export/import for identity backup and migration |
-| 🚧 **SSH Config** | Auto-generate SSH config Host aliases per identity |
-| 🚧 **Encrypted Backup** | Age-encrypted SSH key export/import |
-| 🚧 **Cross-Platform** | Windows (Scoop, Chocolatey, winget) and Linux (APT) |
+| ✅ **Import/Export** | YAML export/import for identity backup and migration |
+| ✅ **SSH Config** | Auto-generate SSH config Host aliases per identity |
+| ✅ **Encrypted Backup** | Age-encrypted SSH key export/import |
+| ✅ **Cross-Platform** | Windows (Scoop, Chocolatey, winget) and Linux (APT) |
+
+### v2.1 - SSH Flexibility & Audit (Complete)
+
+| Phase | Features |
+|:------|:---------|
+| ✅ **SSH Key Types** | Choose Ed25519 or RSA, auto-detect Azure DevOps |
+| ✅ **Commit Audit** | Scan history for wrong-identity commits |
+| ✅ **History Rewrite** | Fix mismatched commits with safety guardrails |
+
+### Future
+
+| Phase | Features |
+|:------|:---------|
+| 🔮 **VS Code Extension** | Show identity in status bar, quick switcher |
+| 🔮 **Statistics** | Commits per identity, usage patterns |
+| 🔮 **Identity Templates** | Preset patterns for common setups |
 
 <br/>
 
