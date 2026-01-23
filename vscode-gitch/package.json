@@ -20,6 +20,13 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "gitch.refreshIdentity",
+        "title": "Refresh Identity",
+        "category": "gitch"
+      }
+    ],
     "configuration": {
       "title": "gitch",
       "properties": {
