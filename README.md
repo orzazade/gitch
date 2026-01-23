@@ -61,6 +61,26 @@ You accidentally commit with the wrong email. Your work repo now has personal co
 
 <br/>
 
+## 🔄 Why gitch?
+
+Git has `includeIf` for conditional configs. Tools like direnv exist. Why gitch?
+
+| Feature | gitch | git includeIf | direnv |
+|:--------|:-----:|:-------------:|:------:|
+| Auto-switch by directory | ✅ | ✅ | ✅ |
+| Auto-switch by remote URL | ✅ | ❌ | ❌ |
+| SSH key management | ✅ | ❌ | ❌ |
+| Auto-load SSH keys to agent | ✅ | ❌ | ❌ |
+| GPG key management | ✅ | ❌ | ❌ |
+| Pre-commit identity check | ✅ | ❌ | ❌ |
+| Interactive TUI | ✅ | ❌ | ❌ |
+| VS Code integration | ✅ | ❌ | ❌ |
+| Shell prompt integration | ✅ | ❌ | ✅ |
+| Commit history audit | ✅ | ❌ | ❌ |
+| Zero config after setup | ✅ | ⚠️ | ⚠️ |
+
+<br/>
+
 ## ✨ Features
 
 <table>
