@@ -104,3 +104,30 @@ func ReadPassphraseWithConfirm() ([]byte, error) {
 
 	return passphrase, nil
 }
+
+// TypedConfirm requires the user to type an exact phrase to confirm.
+// Used for destructive operations where accidental confirmation must be prevented.
+// Returns true only if the user types the exact phrase (case-sensitive).
+// Returns ErrNotInteractive if stdin is not a TTY.
+func TypedConfirm(message, phrase string) (bool, error) {
+	// Check if stdin is a TTY
+	if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+		return false, ErrNotInteractive
+	}
+
+	// Print message (caller styles the message)
+	fmt.Println(message)
+
+	// Prompt for typed confirmation
+	fmt.Printf("\nType '%s' to proceed: ", phrase)
+
+	// Read response
+	reader := bufio.NewReader(os.Stdin)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false, fmt.Errorf("failed to read response: %w", err)
+	}
+
+	// Check exact match (case-sensitive)
+	return strings.TrimSpace(response) == phrase, nil
+}
