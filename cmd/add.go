@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
+	gitpkg "github.com/orzazade/gitch/internal/git"
 	gpgpkg "github.com/orzazade/gitch/internal/gpg"
 	"github.com/orzazade/gitch/internal/prompt"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
@@ -20,6 +21,7 @@ var (
 	addDefault     bool
 	addGenerateSSH bool
 	addSSHKey      string
+	addKeyType     string
 	addGenerateGPG bool
 	addGPGKey      string
 	addForce       bool
@@ -34,9 +36,15 @@ The name is used to reference the identity in other commands.
 The email is the git user.email that will be used when this identity is active.
 
 SSH Key Options:
-  --generate-ssh (-s)  Generate a new Ed25519 SSH keypair for this identity
+  --generate-ssh (-s)  Generate a new SSH keypair for this identity
+  --key-type           SSH key type: ed25519 (default) or rsa
   --ssh-key            Link an existing SSH private key to this identity
   --force              Overwrite existing SSH key if it exists
+
+Key Type Auto-Detection:
+  When --key-type is not specified, gitch automatically detects Azure DevOps
+  remotes and defaults to RSA (which is required for Azure DevOps compatibility).
+  For all other remotes, Ed25519 is used by default.
 
 GPG Key Options:
   --generate-gpg       Generate a new Ed25519 GPG key for commit signing
@@ -46,6 +54,7 @@ Examples:
   gitch add --name work --email work@company.com
   gitch add -n personal -e me@example.com --default
   gitch add --name github --email me@github.com --generate-ssh
+  gitch add --name azuredev --email work@company.com --generate-ssh --key-type rsa
   gitch add --name work --email work@co.com --ssh-key ~/.ssh/id_ed25519
   gitch add --name work --email work@co.com --generate-gpg
   gitch add --name work --email work@co.com --gpg-key ABCD1234EFGH5678`,
@@ -60,6 +69,7 @@ func init() {
 	addCmd.Flags().BoolVarP(&addDefault, "default", "d", false, "Set as default identity")
 	addCmd.Flags().BoolVarP(&addGenerateSSH, "generate-ssh", "s", false, "Generate new SSH keypair")
 	addCmd.Flags().StringVar(&addSSHKey, "ssh-key", "", "Path to existing SSH private key")
+	addCmd.Flags().StringVar(&addKeyType, "key-type", "", "SSH key type: ed25519 (default) or rsa")
 	addCmd.Flags().BoolVar(&addGenerateGPG, "generate-gpg", false, "Generate new GPG key for signing")
 	addCmd.Flags().StringVar(&addGPGKey, "gpg-key", "", "GPG key ID to use for signing")
 	addCmd.Flags().BoolVar(&addForce, "force", false, "Overwrite existing SSH key if it exists")
@@ -119,14 +129,42 @@ func runAdd(cmd *cobra.Command, args []string) error {
 			}
 		}
 
+		// Determine key type
+		var keyType sshpkg.KeyType
+		isAzureDevOps, _ := gitpkg.GetCurrentRemoteType()
+
+		if addKeyType != "" {
+			// User explicitly specified key type
+			var err error
+			keyType, err = sshpkg.ParseKeyType(addKeyType)
+			if err != nil {
+				return fmt.Errorf("invalid --key-type: %w", err)
+			}
+
+			// Warn if using Ed25519 with Azure DevOps
+			if keyType == sshpkg.KeyTypeEd25519 && isAzureDevOps {
+				fmt.Println(ui.WarningStyle.Render("Warning: Ed25519 keys may not work with Azure DevOps. Consider using --key-type rsa"))
+				fmt.Println()
+			}
+		} else {
+			// Auto-detect based on remote
+			if isAzureDevOps {
+				keyType = sshpkg.KeyTypeRSA
+				fmt.Println(ui.DimStyle.Render("Using RSA key (Azure DevOps detected)"))
+				fmt.Println()
+			} else {
+				keyType = sshpkg.KeyTypeEd25519
+			}
+		}
+
 		// Prompt for passphrase
 		passphrase, err := ui.ReadPassphraseWithConfirm()
 		if err != nil {
 			return fmt.Errorf("failed to read passphrase: %w", err)
 		}
 
-		// Generate keypair
-		privateKey, publicKey, err := sshpkg.GenerateKeyPair(addEmail, passphrase)
+		// Generate keypair with specified type
+		privateKey, publicKey, err := sshpkg.GenerateKeyPairWithType(keyType, addEmail, passphrase)
 		if err != nil {
 			return fmt.Errorf("failed to generate SSH keypair: %w", err)
 		}
@@ -144,8 +182,12 @@ func runAdd(cmd *cobra.Command, args []string) error {
 
 		identity.SSHKeyPath = keyPath
 
-		// Print key generation success info
-		fmt.Println(ui.SuccessStyle.Render("Generated SSH key:"))
+		// Print key generation success info with key type
+		keyTypeLabel := "Ed25519"
+		if keyType == sshpkg.KeyTypeRSA {
+			keyTypeLabel = "RSA 4096-bit"
+		}
+		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Generated %s SSH key:", keyTypeLabel)))
 		fmt.Printf("  Path: %s\n", keyPath)
 		fmt.Printf("  Fingerprint: %s\n", fingerprint)
 		fmt.Println()
