@@ -1,0 +1,57 @@
+{
+  "name": "gitch",
+  "displayName": "gitch - Git Identity Manager",
+  "description": "Manage multiple git identities with automatic SSH key selection",
+  "version": "0.0.1",
+  "publisher": "orzazade",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orzazade/gitch"
+  },
+  "engines": {
+    "vscode": "^1.96.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "workspaceContains:.git"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "gitch",
+      "properties": {
+        "gitch.binaryPath": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to gitch binary. If empty, extension will search PATH or download automatically."
+        },
+        "gitch.autoDownload": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically download gitch binary if not found in PATH or cache."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package",
+    "vscode:prepublish": "node esbuild.js --production"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.7",
+    "@types/node": "^20.17.0",
+    "@types/vscode": "^1.96.0",
+    "@vscode/vsce": "^3.7.0",
+    "esbuild": "^0.27.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16",
+    "tar": "^7.4.0"
+  }
+}
