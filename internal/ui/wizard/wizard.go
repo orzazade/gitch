@@ -12,6 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/orzazade/gitch/internal/config"
+	gitpkg "github.com/orzazade/gitch/internal/git"
 	gpgpkg "github.com/orzazade/gitch/internal/gpg"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
@@ -22,6 +23,7 @@ type WizardResult struct {
 	Name        string
 	Email       string
 	SSHKeyPath  string
+	SSHKeyType  string // "ed25519" or "rsa"
 	GenerateSSH bool
 	GPGKeyID    string
 	GenerateGPG bool
@@ -33,6 +35,8 @@ type Model struct {
 	nameInput            textinput.Model
 	emailInput           textinput.Model
 	sshChoice            int
+	sshKeyTypeChoice     int  // 0 = Ed25519, 1 = RSA
+	isAzureDevOps        bool // auto-detected Azure DevOps remote
 	sshPassphraseInput   textinput.Model
 	sshConfirmInput      textinput.Model
 	gpgChoice            int
@@ -139,11 +143,20 @@ func New() Model {
 		progress.WithoutPercentage(),
 	)
 
+	// Detect Azure DevOps remote for key type default
+	isAzureDevOps, _ := gitpkg.GetCurrentRemoteType()
+	sshKeyTypeDefault := sshKeyTypeEd25519
+	if isAzureDevOps {
+		sshKeyTypeDefault = sshKeyTypeRSA
+	}
+
 	return Model{
 		step:               stepName,
 		nameInput:          nameInput,
 		emailInput:         emailInput,
 		sshChoice:          sshChoiceGenerate,
+		sshKeyTypeChoice:   sshKeyTypeDefault,
+		isAzureDevOps:      isAzureDevOps,
 		sshPassphraseInput: sshPassphraseInput,
 		sshConfirmInput:    sshConfirmInput,
 		gpgChoice:          gpgChoiceGenerate,
@@ -185,6 +198,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			Name:        strings.TrimSpace(m.nameInput.Value()),
 			Email:       strings.TrimSpace(m.emailInput.Value()),
 			SSHKeyPath:  m.generatedSSHKeyPath,
+			SSHKeyType:  m.getSSHKeyTypeString(),
 			GenerateSSH: m.sshChoice == sshChoiceGenerate,
 			GPGKeyID:    m.generatedGPGKeyID,
 			GenerateGPG: true,
@@ -232,6 +246,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, nil
 			}
+			if m.step == stepSSHKeyType {
+				if m.sshKeyTypeChoice > 0 {
+					m.sshKeyTypeChoice--
+				}
+				return m, nil
+			}
 			if m.step == stepGPG {
 				if m.gpgChoice > 0 {
 					m.gpgChoice--
@@ -243,6 +263,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.step == stepSSH {
 				if m.sshChoice < len(sshOptions)-1 {
 					m.sshChoice++
+				}
+				return m, nil
+			}
+			if m.step == stepSSHKeyType {
+				if m.sshKeyTypeChoice < len(sshKeyTypeOptions)-1 {
+					m.sshKeyTypeChoice++
 				}
 				return m, nil
 			}
@@ -281,8 +307,10 @@ func (m Model) getPreviousStep() int {
 		return stepName
 	case stepSSH:
 		return stepEmail
-	case stepSSHPassphrase:
+	case stepSSHKeyType:
 		return stepSSH
+	case stepSSHPassphrase:
+		return stepSSHKeyType
 	case stepSSHConfirmPass:
 		m.sshConfirmInput.Reset()
 		return stepSSHPassphrase
@@ -341,6 +369,18 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		if _, err := os.Stat(keyPath); err == nil {
 			m.warning = fmt.Sprintf("SSH key already exists at %s (will be overwritten)", keyPath)
 		}
+		// Continue to SSH key type step
+		m.step = stepSSHKeyType
+		return m, nil
+
+	case stepSSHKeyType:
+		m.err = nil
+		// Show warning if Ed25519 selected with Azure DevOps
+		if m.sshKeyTypeChoice == sshKeyTypeEd25519 && m.isAzureDevOps {
+			m.warning = "Ed25519 keys may not work with Azure DevOps"
+		} else {
+			m.warning = ""
+		}
 		// Continue to SSH passphrase step
 		m.step = stepSSHPassphrase
 		return m, m.sshPassphraseInput.Focus()
@@ -378,6 +418,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 				Name:        strings.TrimSpace(m.nameInput.Value()),
 				Email:       strings.TrimSpace(m.emailInput.Value()),
 				SSHKeyPath:  m.generatedSSHKeyPath,
+				SSHKeyType:  m.getSSHKeyTypeString(),
 				GenerateSSH: m.sshChoice == sshChoiceGenerate,
 				GenerateGPG: false,
 			}
@@ -424,7 +465,11 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 // startSSHKeyGeneration initiates SSH key generation
 func (m Model) startSSHKeyGeneration() (tea.Model, tea.Cmd) {
 	m.loading = true
-	m.loadingMessage = "Generating SSH key..."
+	keyTypeLabel := "Ed25519"
+	if m.sshKeyTypeChoice == sshKeyTypeRSA {
+		keyTypeLabel = "RSA 4096-bit"
+	}
+	m.loadingMessage = fmt.Sprintf("Generating %s SSH key...", keyTypeLabel)
 
 	return m, tea.Batch(
 		m.spinner.Tick,
@@ -432,6 +477,7 @@ func (m Model) startSSHKeyGeneration() (tea.Model, tea.Cmd) {
 			strings.TrimSpace(m.nameInput.Value()),
 			strings.TrimSpace(m.emailInput.Value()),
 			m.sshPassphrase,
+			m.sshKeyTypeChoice,
 		),
 	)
 }
@@ -452,14 +498,20 @@ func (m Model) startGPGKeyGeneration() (tea.Model, tea.Cmd) {
 }
 
 // generateSSHKeyCmd returns a command that generates an SSH keypair
-func generateSSHKeyCmd(name, email string, passphrase []byte) tea.Cmd {
+func generateSSHKeyCmd(name, email string, passphrase []byte, keyTypeChoice int) tea.Cmd {
 	return func() tea.Msg {
 		keyPath := sshpkg.DefaultSSHKeyPath(name)
 		if keyPath == "" {
 			return sshKeyError{fmt.Errorf("failed to determine SSH key path")}
 		}
 
-		privateKey, publicKey, err := sshpkg.GenerateKeyPair(email, passphrase)
+		// Convert choice to KeyType
+		keyType := sshpkg.KeyTypeEd25519
+		if keyTypeChoice == sshKeyTypeRSA {
+			keyType = sshpkg.KeyTypeRSA
+		}
+
+		privateKey, publicKey, err := sshpkg.GenerateKeyPairWithType(keyType, email, passphrase)
 		if err != nil {
 			return sshKeyError{err}
 		}
@@ -576,6 +628,24 @@ func (m Model) View() string {
 			b.WriteString("\n")
 		}
 
+	case stepSSHKeyType:
+		for i, option := range sshKeyTypeOptions {
+			if i == m.sshKeyTypeChoice {
+				b.WriteString("  ")
+				b.WriteString(ui.SuccessStyle.Render("> " + option))
+			} else {
+				b.WriteString("    ")
+				b.WriteString(ui.DimStyle.Render(option))
+			}
+			b.WriteString("\n")
+		}
+		// Show Azure DevOps detection info
+		if m.isAzureDevOps {
+			b.WriteString("\n  ")
+			b.WriteString(ui.DimStyle.Render("(Azure DevOps detected - RSA recommended)"))
+			b.WriteString("\n")
+		}
+
 	case stepSSHPassphrase:
 		b.WriteString("  > ")
 		b.WriteString(m.sshPassphraseInput.View())
@@ -653,19 +723,21 @@ func (m Model) getDisplayStep() int {
 		return 2
 	case stepSSH:
 		return 3
-	case stepSSHPassphrase:
+	case stepSSHKeyType:
 		return 4
-	case stepSSHConfirmPass:
+	case stepSSHPassphrase:
 		return 5
+	case stepSSHConfirmPass:
+		return 6
 	case stepGPG:
 		// GPG step number depends on whether SSH was generated
 		if m.sshChoice == sshChoiceSkip {
 			return 4
 		}
 		if m.sshPassphraseInput.Value() == "" {
-			return 5
+			return 6
 		}
-		return 6
+		return 7
 	case stepGPGPassphrase:
 		base := m.getGPGBaseStep()
 		return base + 1
@@ -682,10 +754,22 @@ func (m Model) getGPGBaseStep() int {
 	if m.sshChoice == sshChoiceSkip {
 		return 4
 	}
+	// SSH generating: 3 (ssh choice) + 1 (key type) + passphrase steps
 	if m.sshPassphraseInput.Value() == "" {
-		return 5
+		return 6 // ssh choice + key type + passphrase (no confirm)
 	}
-	return 6
+	return 7 // ssh choice + key type + passphrase + confirm
+}
+
+// getSSHKeyTypeString returns the key type as a string for the result
+func (m Model) getSSHKeyTypeString() string {
+	if m.sshChoice == sshChoiceSkip {
+		return ""
+	}
+	if m.sshKeyTypeChoice == sshKeyTypeRSA {
+		return "rsa"
+	}
+	return "ed25519"
 }
 
 // renderHints renders the keyboard hints based on current step
@@ -694,7 +778,7 @@ func (m Model) renderHints() string {
 	switch m.step {
 	case stepName:
 		hints = "Enter Continue  Esc Quit"
-	case stepSSH, stepGPG:
+	case stepSSH, stepSSHKeyType, stepGPG:
 		hints = "Up/Down Select  Enter Confirm  Esc Back"
 	default:
 		hints = "Enter Continue  Esc Back"

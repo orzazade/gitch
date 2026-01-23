@@ -6,11 +6,12 @@ const (
 	stepName           = 0
 	stepEmail          = 1
 	stepSSH            = 2
-	stepSSHPassphrase  = 3
-	stepSSHConfirmPass = 4
-	stepGPG            = 5
-	stepGPGPassphrase  = 6
-	stepGPGConfirmPass = 7
+	stepSSHKeyType     = 3
+	stepSSHPassphrase  = 4
+	stepSSHConfirmPass = 5
+	stepGPG            = 6
+	stepGPGPassphrase  = 7
+	stepGPGConfirmPass = 8
 )
 
 // sshOptions are the choices for SSH key handling
@@ -37,12 +38,25 @@ const gpgChoiceGenerate = 0
 // gpgChoiceSkip is the index for skipping GPG setup
 const gpgChoiceSkip = 1
 
+// sshKeyTypeOptions are the choices for SSH key type
+var sshKeyTypeOptions = []string{
+	"Ed25519 (recommended, modern)",
+	"RSA 4096-bit (Azure DevOps compatible)",
+}
+
+// sshKeyTypeEd25519 is the index for Ed25519 key type
+const sshKeyTypeEd25519 = 0
+
+// sshKeyTypeRSA is the index for RSA key type
+const sshKeyTypeRSA = 1
+
 // getTotalSteps returns the total number of steps based on SSH and GPG choices.
 func getTotalSteps(sshChoice, gpgChoice int, sshPassphraseEmpty, gpgPassphraseEmpty bool) int {
 	total := 3 // name, email, ssh choice
 
 	// Add SSH steps if generating
 	if sshChoice == sshChoiceGenerate {
+		total++ // key type step
 		if sshPassphraseEmpty {
 			total++ // just passphrase step
 		} else {
@@ -74,6 +88,8 @@ func getStepTitle(step int) string {
 		return "What's your email address for this identity?"
 	case stepSSH:
 		return "Would you like to set up an SSH key?"
+	case stepSSHKeyType:
+		return "Which SSH key type would you like?"
 	case stepSSHPassphrase:
 		return "Enter a passphrase for your SSH key (optional, press Enter to skip)"
 	case stepSSHConfirmPass:
@@ -98,6 +114,8 @@ func getStepHint(step int) string {
 		return "This will be used as your git user.email"
 	case stepSSH:
 		return ""
+	case stepSSHKeyType:
+		return "Ed25519 is recommended. Use RSA if you need Azure DevOps compatibility."
 	case stepSSHPassphrase:
 		return "Leave empty for no passphrase"
 	case stepSSHConfirmPass:
