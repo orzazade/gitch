@@ -213,10 +213,15 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 		return nil, fmt.Errorf("rule references unknown identity %q: %w", matchedRule.Identity, err)
 	}
 
-	// Default limit
+	// Handle limit:
+	// - limit > 0: scan that many commits
+	// - limit = 0: apply default (1000)
+	// - limit < 0: scan all commits (unlimited)
 	limit := opts.Limit
 	if limit == 0 {
-		limit = 1000
+		limit = 1000 // Default
+	} else if limit < 0 {
+		limit = 0 // Pass 0 to GetCommits = unlimited (no --max-count flag)
 	}
 
 	// Get commits
