@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -13,6 +14,16 @@ import (
 )
 
 var statusVerbose bool
+var statusJSON bool
+
+// statusOutput represents the JSON output structure for gitch status --json
+type statusOutput struct {
+	Name       string `json:"name"`
+	Email      string `json:"email"`
+	SSHKeyPath string `json:"ssh_key_path,omitempty"`
+	GPGKeyID   string `json:"gpg_key_id,omitempty"`
+	Managed    bool   `json:"managed"`
+}
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
@@ -33,6 +44,7 @@ Examples:
 func init() {
 	rootCmd.AddCommand(statusCmd)
 	statusCmd.Flags().BoolVarP(&statusVerbose, "verbose", "v", false, "Show matched rule details")
+	statusCmd.Flags().BoolVar(&statusJSON, "json", false, "Output in JSON format")
 }
 
 func runStatus(cmd *cobra.Command, args []string) error {
@@ -61,6 +73,20 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	// Check if git has any identity configured
 	if name == "" && email == "" {
+		if statusJSON {
+			// Output empty JSON for no identity case
+			output := statusOutput{
+				Name:    "",
+				Email:   "",
+				Managed: false,
+			}
+			jsonBytes, err := json.MarshalIndent(output, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal JSON: %w", err)
+			}
+			fmt.Println(string(jsonBytes))
+			return nil
+		}
 		fmt.Println("No active identity. Use 'gitch use <name>' to set one.")
 		return nil
 	}
@@ -76,6 +102,34 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			managedIdentity = &cfg.ListIdentities()[i]
 			break
 		}
+	}
+
+	// JSON output format
+	if statusJSON {
+		output := statusOutput{
+			Name:    managedName,
+			Email:   email,
+			Managed: managed,
+		}
+		// If not managed, use git config name
+		if !managed && name != "" {
+			output.Name = name
+		}
+		// Add SSH key path and GPG key ID if available
+		if managedIdentity != nil {
+			if managedIdentity.SSHKeyPath != "" {
+				output.SSHKeyPath = managedIdentity.SSHKeyPath
+			}
+			if managedIdentity.GPGKeyID != "" {
+				output.GPGKeyID = managedIdentity.GPGKeyID
+			}
+		}
+		jsonBytes, err := json.MarshalIndent(output, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+		fmt.Println(string(jsonBytes))
+		return nil
 	}
 
 	// Format output
