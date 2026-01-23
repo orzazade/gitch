@@ -2,8 +2,8 @@
   "name": "gitch",
   "displayName": "gitch - Git Identity Manager",
   "description": "Manage multiple git identities with automatic SSH key selection",
-  "version": "0.0.1",
-  "publisher": "orzazade",
+  "version": "2.2.0",
+  "publisher": "orkhan-rzazade",
   "license": "MIT",
   "repository": {
     "type": "git",

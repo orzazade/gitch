@@ -1,0 +1,55 @@
+name: VS Code Extension
+
+on:
+  push:
+    tags:
+      - 'vscode-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 2.3.0)'
+        required: false
+
+jobs:
+  publish:
+    name: Publish Extension
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vscode-gitch
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: vscode-gitch/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update version (if provided)
+        if: github.event.inputs.version
+        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+      - name: Extract version from tag
+        if: startsWith(github.ref, 'refs/tags/vscode-v')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/vscode-v}
+          npm version $VERSION --no-git-tag-version
+
+      - name: Package extension
+        run: npx vsce package
+
+      - name: Publish to Marketplace
+        run: npx vsce publish -p ${{ secrets.VSCE_PAT }}
+
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitch-vsix
+          path: vscode-gitch/*.vsix

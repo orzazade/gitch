@@ -1,76 +1,49 @@
-# gitch VS Code Extension
+# gitch - Git Identity Manager for VS Code
 
-VS Code extension for [gitch](https://github.com/orzazade/gitch) - Git Identity Manager.
+Never commit with the wrong git identity again.
 
 ## Features
 
-- Automatic gitch CLI binary management
-- Downloads correct binary for your platform from GitHub Releases
-- Binary cascade: PATH -> cached -> auto-download
+- **Status Bar Identity** - See your current git identity at a glance
+- **Quick Switch** - Click the status bar to switch between identities
+- **Auto-Switch** - Automatically switch identity based on workspace rules
+- **Mismatch Warnings** - Get notified when using an unmanaged identity
 
 ## Requirements
 
-- VS Code 1.96.0 or later
-- Git repository in workspace (extension activates on `workspaceContains:.git`)
+The extension automatically downloads the `gitch` CLI on first activation. Alternatively, install via:
+
+```bash
+# macOS
+brew install orzazade/tap/gitch
+
+# Linux (Debian/Ubuntu)
+curl -fsSL https://orzazade.github.io/gitch/apt/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/gitch.gpg
+echo "deb [signed-by=/usr/share/keyrings/gitch.gpg] https://orzazade.github.io/gitch/apt stable main" | sudo tee /etc/apt/sources.list.d/gitch.list
+sudo apt update && sudo apt install gitch
+
+# Windows
+scoop bucket add gitch https://github.com/orzazade/scoop-bucket
+scoop install gitch
+```
+
+## Usage
+
+1. Open a Git repository in VS Code
+2. Look at the status bar (bottom left) - you'll see your current identity
+3. Click the status bar to switch identities
+4. Set up auto-switch rules with `gitch rule add` in the terminal
 
 ## Extension Settings
 
-- `gitch.binaryPath`: Custom path to gitch binary (optional)
-- `gitch.autoDownload`: Auto-download binary if not found (default: true)
+- `gitch.binaryPath`: Custom path to gitch binary
+- `gitch.autoDownload`: Automatically download gitch if not found (default: true)
 
-## Development
+## Links
 
-### Prerequisites
-
-- Node.js 20+
-- npm
-
-### Setup
-
-```bash
-cd vscode-gitch
-npm install
-```
-
-### Build
-
-```bash
-npm run compile    # Single build
-npm run watch      # Watch mode
-```
-
-### Test in VS Code
-
-1. Open `vscode-gitch/` folder in VS Code
-2. Press F5 to launch Extension Development Host
-3. In new window, open a folder containing `.git`
-4. Observe extension activation in Output > Extension Host
-
-### Package
-
-```bash
-npm run package
-```
-
-Creates `.vsix` file for distribution.
-
-## Binary Cascade Logic
-
-1. Check `gitch.binaryPath` setting - if set and file exists, use it
-2. Check system PATH for `gitch` binary
-3. Check extension cache (`globalStorageUri/bin/gitch`)
-4. If not found and `gitch.autoDownload` enabled, download from GitHub Releases
-
-## Architecture
-
-```
-src/
-  extension.ts      - Entry point, calls ensureBinary on activate
-  cli/
-    platform.ts     - Platform/arch detection for GoReleaser assets
-    binary.ts       - Binary cascade and download logic
-    runner.ts       - CLI execution helper
-```
+- [GitHub Repository](https://github.com/orzazade/gitch)
+- [CLI Documentation](https://github.com/orzazade/gitch#readme)
+- [Report Issues](https://github.com/orzazade/gitch/issues)
 
 ## License
 
