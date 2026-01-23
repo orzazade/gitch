@@ -11,6 +11,7 @@
 [![Go Version](https://img.shields.io/github/go-mod/go-version/orzazade/gitch?color=00ADD8)](https://go.dev/)
 [![Go Report Card](https://goreportcard.com/badge/github.com/orzazade/gitch)](https://goreportcard.com/report/github.com/orzazade/gitch)
 [![License](https://img.shields.io/github/license/orzazade/gitch?color=blue)](LICENSE)
+[![VS Code](https://img.shields.io/visual-studio-marketplace/v/orkhan-rzazade.gitch?label=VS%20Code&color=007ACC)](https://marketplace.visualstudio.com/items?itemName=orkhan-rzazade.gitch)
 
 **A beautiful CLI for managing multiple git identities with SSH keys, GPG signing, auto-switching rules, and shell prompt integration.**
 
@@ -115,14 +116,14 @@ SSH keys stored in `~/.ssh/` with proper permissions. GPG keys in system keyring
 <tr>
 <td width="50%">
 
-### 🔍 Commit History Audit
-Scan your repo for commits made with the wrong identity. See which commits are local-only vs already pushed.
+### 💻 VS Code Extension
+See your current identity in the status bar. Click to switch identities instantly. Auto-switch when opening workspaces.
 
 </td>
 <td width="50%">
 
-### 🔧 History Rewriting
-Fix mismatched commits with `gitch audit --fix`. Automatic backup, GPG warnings, typed confirmation, and remote removal for safety.
+### 🔍 Commit History Audit
+Scan your repo for commits made with the wrong identity. See which commits are local-only vs already pushed.
 
 </td>
 </tr>
@@ -131,6 +132,18 @@ Fix mismatched commits with `gitch audit --fix`. Automatic backup, GPG warnings,
 <br/>
 
 ## 📦 Installation
+
+### VS Code Extension
+
+Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=orkhan-rzazade.gitch):
+
+```bash
+code --install-extension orkhan-rzazade.gitch
+```
+
+Or search "gitch" in the VS Code Extensions panel.
+
+The extension automatically downloads the CLI on first use, or you can install it separately:
 
 ### macOS (Homebrew)
 
@@ -396,13 +409,22 @@ GPG keys are generated and imported into your system GPG keyring (`~/.gnupg/`).
 | ✅ **Commit Audit** | Scan history for wrong-identity commits |
 | ✅ **History Rewrite** | Fix mismatched commits with safety guardrails |
 
+### v2.2 - VS Code Extension (Complete)
+
+| Phase | Features |
+|:------|:---------|
+| ✅ **Extension Core** | Auto-download CLI, platform detection |
+| ✅ **Status Bar** | Show identity with hover tooltip |
+| ✅ **Quick Switch** | Click status bar to switch identities |
+| ✅ **Auto-Switch** | Switch identity when opening workspace |
+
 ### Future
 
 | Phase | Features |
 |:------|:---------|
-| 🔮 **VS Code Extension** | Show identity in status bar, quick switcher |
 | 🔮 **Statistics** | Commits per identity, usage patterns |
 | 🔮 **Identity Templates** | Preset patterns for common setups |
+| 🔮 **Team Sharing** | Share identity configurations across teams |
 
 <br/>
 
