@@ -20,13 +20,15 @@ import (
 
 // WizardResult holds the collected data from the wizard
 type WizardResult struct {
-	Name        string
-	Email       string
-	SSHKeyPath  string
-	SSHKeyType  string // "ed25519" or "rsa"
-	GenerateSSH bool
-	GPGKeyID    string
-	GenerateGPG bool
+	Name           string
+	Email          string
+	SSHKeyPath     string
+	SSHKeyType     string // "ed25519" or "rsa"
+	GenerateSSH    bool
+	UseExistingSSH bool
+	GPGKeyID       string
+	GenerateGPG    bool
+	UseExistingGPG bool
 }
 
 // Model is the Bubble Tea model for the setup wizard
@@ -35,11 +37,13 @@ type Model struct {
 	nameInput            textinput.Model
 	emailInput           textinput.Model
 	sshChoice            int
-	sshKeyTypeChoice     int  // 0 = Ed25519, 1 = RSA
-	isAzureDevOps        bool // auto-detected Azure DevOps remote
+	sshKeyPathInput      textinput.Model // for existing SSH key path
+	sshKeyTypeChoice     int             // 0 = Ed25519, 1 = RSA
+	isAzureDevOps        bool            // auto-detected Azure DevOps remote
 	sshPassphraseInput   textinput.Model
 	sshConfirmInput      textinput.Model
 	gpgChoice            int
+	gpgKeyIDInput        textinput.Model // for existing GPG key ID
 	gpgPassphraseInput   textinput.Model
 	gpgConfirmInput      textinput.Model
 	spinner              spinner.Model
@@ -55,6 +59,8 @@ type Model struct {
 	gpgPassphrase        []byte
 	generatedSSHKeyPath  string // track SSH result for later
 	generatedGPGKeyID    string // track GPG result for later
+	existingSSHKeyPath   string // track existing SSH key path
+	existingGPGKeyID     string // track existing GPG key ID
 }
 
 // titleStyle is the style for the wizard header
@@ -99,6 +105,12 @@ func New() Model {
 	emailInput.CharLimit = 100
 	emailInput.Width = 40
 
+	// SSH Key Path input (for existing key)
+	sshKeyPathInput := textinput.New()
+	sshKeyPathInput.Placeholder = "~/.ssh/id_ed25519"
+	sshKeyPathInput.CharLimit = 200
+	sshKeyPathInput.Width = 40
+
 	// SSH Passphrase input (hidden)
 	sshPassphraseInput := textinput.New()
 	sshPassphraseInput.Placeholder = ""
@@ -114,6 +126,12 @@ func New() Model {
 	sshConfirmInput.EchoCharacter = '*'
 	sshConfirmInput.CharLimit = 100
 	sshConfirmInput.Width = 40
+
+	// GPG Key ID input (for existing key)
+	gpgKeyIDInput := textinput.New()
+	gpgKeyIDInput.Placeholder = "ABCD1234EFGH5678"
+	gpgKeyIDInput.CharLimit = 50
+	gpgKeyIDInput.Width = 40
 
 	// GPG Passphrase input (hidden)
 	gpgPassphraseInput := textinput.New()
@@ -155,11 +173,13 @@ func New() Model {
 		nameInput:          nameInput,
 		emailInput:         emailInput,
 		sshChoice:          sshChoiceGenerate,
+		sshKeyPathInput:    sshKeyPathInput,
 		sshKeyTypeChoice:   sshKeyTypeDefault,
 		isAzureDevOps:      isAzureDevOps,
 		sshPassphraseInput: sshPassphraseInput,
 		sshConfirmInput:    sshConfirmInput,
 		gpgChoice:          gpgChoiceGenerate,
+		gpgKeyIDInput:      gpgKeyIDInput,
 		gpgPassphraseInput: gpgPassphraseInput,
 		gpgConfirmInput:    gpgConfirmInput,
 		spinner:            s,
@@ -194,15 +214,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.loading = false
 		m.generatedGPGKeyID = msg.keyID
 		// GPG generation complete, finish wizard
-		m.result = &WizardResult{
-			Name:        strings.TrimSpace(m.nameInput.Value()),
-			Email:       strings.TrimSpace(m.emailInput.Value()),
-			SSHKeyPath:  m.generatedSSHKeyPath,
-			SSHKeyType:  m.getSSHKeyTypeString(),
-			GenerateSSH: m.sshChoice == sshChoiceGenerate,
-			GPGKeyID:    m.generatedGPGKeyID,
-			GenerateGPG: true,
-		}
+		m.result = m.buildResult(true, false)
 		m.done = true
 		return m, tea.Quit
 
@@ -287,10 +299,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.nameInput, cmd = m.nameInput.Update(msg)
 	case stepEmail:
 		m.emailInput, cmd = m.emailInput.Update(msg)
+	case stepSSHKeyPath:
+		m.sshKeyPathInput, cmd = m.sshKeyPathInput.Update(msg)
 	case stepSSHPassphrase:
 		m.sshPassphraseInput, cmd = m.sshPassphraseInput.Update(msg)
 	case stepSSHConfirmPass:
 		m.sshConfirmInput, cmd = m.sshConfirmInput.Update(msg)
+	case stepGPGKeyID:
+		m.gpgKeyIDInput, cmd = m.gpgKeyIDInput.Update(msg)
 	case stepGPGPassphrase:
 		m.gpgPassphraseInput, cmd = m.gpgPassphraseInput.Update(msg)
 	case stepGPGConfirmPass:
@@ -307,6 +323,8 @@ func (m Model) getPreviousStep() int {
 		return stepName
 	case stepSSH:
 		return stepEmail
+	case stepSSHKeyPath:
+		return stepSSH
 	case stepSSHKeyType:
 		return stepSSH
 	case stepSSHPassphrase:
@@ -315,14 +333,20 @@ func (m Model) getPreviousStep() int {
 		m.sshConfirmInput.Reset()
 		return stepSSHPassphrase
 	case stepGPG:
-		// Go back to SSH passphrase/confirm if generating, otherwise SSH choice
-		if m.sshChoice == sshChoiceGenerate {
+		// Go back based on SSH choice
+		switch m.sshChoice {
+		case sshChoiceGenerate:
 			if m.sshPassphraseInput.Value() == "" {
 				return stepSSHPassphrase
 			}
 			return stepSSHConfirmPass
+		case sshChoiceUseExisting:
+			return stepSSHKeyPath
+		default:
+			return stepSSH
 		}
-		return stepSSH
+	case stepGPGKeyID:
+		return stepGPG
 	case stepGPGPassphrase:
 		return stepGPG
 	case stepGPGConfirmPass:
@@ -359,18 +383,43 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case stepSSH:
 		m.err = nil
 		m.warning = ""
-		if m.sshChoice == sshChoiceSkip {
+		switch m.sshChoice {
+		case sshChoiceSkip:
 			// Skip SSH, continue to GPG step
 			m.step = stepGPG
 			return m, nil
+		case sshChoiceUseExisting:
+			// Use existing key, go to key path input
+			m.step = stepSSHKeyPath
+			return m, m.sshKeyPathInput.Focus()
+		default:
+			// Generate new key
+			// Check if key already exists and warn
+			keyPath := sshpkg.DefaultSSHKeyPath(strings.TrimSpace(m.nameInput.Value()))
+			if _, err := os.Stat(keyPath); err == nil {
+				m.warning = fmt.Sprintf("SSH key already exists at %s (will be overwritten)", keyPath)
+			}
+			// Continue to SSH key type step
+			m.step = stepSSHKeyType
+			return m, nil
 		}
-		// Check if key already exists and warn
-		keyPath := sshpkg.DefaultSSHKeyPath(strings.TrimSpace(m.nameInput.Value()))
-		if _, err := os.Stat(keyPath); err == nil {
-			m.warning = fmt.Sprintf("SSH key already exists at %s (will be overwritten)", keyPath)
+
+	case stepSSHKeyPath:
+		keyPath := strings.TrimSpace(m.sshKeyPathInput.Value())
+		if keyPath == "" {
+			m.err = fmt.Errorf("please enter a key path")
+			return m, nil
 		}
-		// Continue to SSH key type step
-		m.step = stepSSHKeyType
+		// Validate the key exists and is valid
+		if err := sshpkg.ValidateKeyPath(keyPath); err != nil {
+			m.err = err
+			return m, nil
+		}
+		// Store the path and continue to GPG
+		expandedPath, _ := sshpkg.ExpandPath(keyPath)
+		m.existingSSHKeyPath = expandedPath
+		m.err = nil
+		m.step = stepGPG
 		return m, nil
 
 	case stepSSHKeyType:
@@ -412,27 +461,49 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case stepGPG:
 		m.err = nil
 		m.warning = ""
-		if m.gpgChoice == gpgChoiceSkip {
+		switch m.gpgChoice {
+		case gpgChoiceSkip:
 			// Skip GPG, complete the wizard
-			m.result = &WizardResult{
-				Name:        strings.TrimSpace(m.nameInput.Value()),
-				Email:       strings.TrimSpace(m.emailInput.Value()),
-				SSHKeyPath:  m.generatedSSHKeyPath,
-				SSHKeyType:  m.getSSHKeyTypeString(),
-				GenerateSSH: m.sshChoice == sshChoiceGenerate,
-				GenerateGPG: false,
-			}
+			m.result = m.buildResult(false, false)
 			m.done = true
 			return m, tea.Quit
+		case gpgChoiceUseExisting:
+			// Use existing GPG key, go to key ID input
+			if !gpgpkg.IsGPGAvailable() {
+				m.err = fmt.Errorf("gpg command not found - install GPG to use GPG features")
+				return m, nil
+			}
+			m.step = stepGPGKeyID
+			return m, m.gpgKeyIDInput.Focus()
+		default:
+			// Generate new key
+			// Check if GPG is available
+			if !gpgpkg.IsGPGAvailable() {
+				m.err = fmt.Errorf("gpg command not found - install GPG to generate keys")
+				return m, nil
+			}
+			// Continue to GPG passphrase step
+			m.step = stepGPGPassphrase
+			return m, m.gpgPassphraseInput.Focus()
 		}
-		// Check if GPG is available
-		if !gpgpkg.IsGPGAvailable() {
-			m.err = fmt.Errorf("gpg command not found - install GPG to generate keys")
+
+	case stepGPGKeyID:
+		keyID := strings.TrimSpace(m.gpgKeyIDInput.Value())
+		if keyID == "" {
+			m.err = fmt.Errorf("please enter a GPG key ID")
 			return m, nil
 		}
-		// Continue to GPG passphrase step
-		m.step = stepGPGPassphrase
-		return m, m.gpgPassphraseInput.Focus()
+		// Validate the key exists
+		if err := gpgpkg.ValidateKeyID(keyID); err != nil {
+			m.err = err
+			return m, nil
+		}
+		// Store the key ID and complete wizard
+		m.existingGPGKeyID = keyID
+		m.err = nil
+		m.result = m.buildResult(false, true)
+		m.done = true
+		return m, tea.Quit
 
 	case stepGPGPassphrase:
 		passphrase := m.gpgPassphraseInput.Value()
@@ -543,10 +614,14 @@ func (m Model) focusCurrentInput() tea.Cmd {
 		return m.nameInput.Focus()
 	case stepEmail:
 		return m.emailInput.Focus()
+	case stepSSHKeyPath:
+		return m.sshKeyPathInput.Focus()
 	case stepSSHPassphrase:
 		return m.sshPassphraseInput.Focus()
 	case stepSSHConfirmPass:
 		return m.sshConfirmInput.Focus()
+	case stepGPGKeyID:
+		return m.gpgKeyIDInput.Focus()
 	case stepGPGPassphrase:
 		return m.gpgPassphraseInput.Focus()
 	case stepGPGConfirmPass:
@@ -628,6 +703,11 @@ func (m Model) View() string {
 			b.WriteString("\n")
 		}
 
+	case stepSSHKeyPath:
+		b.WriteString("  > ")
+		b.WriteString(m.sshKeyPathInput.View())
+		b.WriteString("\n")
+
 	case stepSSHKeyType:
 		for i, option := range sshKeyTypeOptions {
 			if i == m.sshKeyTypeChoice {
@@ -667,6 +747,11 @@ func (m Model) View() string {
 			}
 			b.WriteString("\n")
 		}
+
+	case stepGPGKeyID:
+		b.WriteString("  > ")
+		b.WriteString(m.gpgKeyIDInput.View())
+		b.WriteString("\n")
 
 	case stepGPGPassphrase:
 		b.WriteString("  > ")
@@ -723,27 +808,22 @@ func (m Model) getDisplayStep() int {
 		return 2
 	case stepSSH:
 		return 3
+	case stepSSHKeyPath:
+		return 4 // use existing path
 	case stepSSHKeyType:
-		return 4
+		return 4 // generate: key type selection
 	case stepSSHPassphrase:
 		return 5
 	case stepSSHConfirmPass:
 		return 6
 	case stepGPG:
-		// GPG step number depends on whether SSH was generated
-		if m.sshChoice == sshChoiceSkip {
-			return 4
-		}
-		if m.sshPassphraseInput.Value() == "" {
-			return 6
-		}
-		return 7
+		return m.getGPGBaseStep()
+	case stepGPGKeyID:
+		return m.getGPGBaseStep() + 1
 	case stepGPGPassphrase:
-		base := m.getGPGBaseStep()
-		return base + 1
+		return m.getGPGBaseStep() + 1
 	case stepGPGConfirmPass:
-		base := m.getGPGBaseStep()
-		return base + 2
+		return m.getGPGBaseStep() + 2
 	default:
 		return m.step + 1
 	}
@@ -751,25 +831,63 @@ func (m Model) getDisplayStep() int {
 
 // getGPGBaseStep returns the step number for the GPG choice step
 func (m Model) getGPGBaseStep() int {
-	if m.sshChoice == sshChoiceSkip {
-		return 4
+	base := 3 // name, email, ssh choice
+	switch m.sshChoice {
+	case sshChoiceSkip:
+		base++ // just ssh choice
+	case sshChoiceUseExisting:
+		base += 2 // ssh choice + key path
+	case sshChoiceGenerate:
+		base++ // key type step
+		if m.sshPassphraseInput.Value() == "" {
+			base++ // passphrase only
+		} else {
+			base += 2 // passphrase + confirm
+		}
 	}
-	// SSH generating: 3 (ssh choice) + 1 (key type) + passphrase steps
-	if m.sshPassphraseInput.Value() == "" {
-		return 6 // ssh choice + key type + passphrase (no confirm)
-	}
-	return 7 // ssh choice + key type + passphrase + confirm
+	return base
 }
 
 // getSSHKeyTypeString returns the key type as a string for the result
 func (m Model) getSSHKeyTypeString() string {
-	if m.sshChoice == sshChoiceSkip {
+	if m.sshChoice == sshChoiceSkip || m.sshChoice == sshChoiceUseExisting {
 		return ""
 	}
 	if m.sshKeyTypeChoice == sshKeyTypeRSA {
 		return "rsa"
 	}
 	return "ed25519"
+}
+
+// buildResult constructs the WizardResult based on current state
+func (m Model) buildResult(gpgGenerated, gpgExisting bool) *WizardResult {
+	// Determine SSH key path
+	sshKeyPath := ""
+	if m.sshChoice == sshChoiceGenerate {
+		sshKeyPath = m.generatedSSHKeyPath
+	} else if m.sshChoice == sshChoiceUseExisting {
+		sshKeyPath = m.existingSSHKeyPath
+	}
+
+	// Determine GPG key ID
+	gpgKeyID := ""
+	if gpgGenerated {
+		gpgKeyID = m.generatedGPGKeyID
+	} else if gpgExisting {
+		gpgKeyID = m.existingGPGKeyID
+	}
+
+	return &WizardResult{
+		Name:           strings.TrimSpace(m.nameInput.Value()),
+		Email:          strings.TrimSpace(m.emailInput.Value()),
+		SSHKeyPath:     sshKeyPath,
+		SSHKeyType:     m.getSSHKeyTypeString(),
+		GenerateSSH:    m.sshChoice == sshChoiceGenerate,
+		UseExistingSSH: m.sshChoice == sshChoiceUseExisting,
+		GPGKeyID:       gpgKeyID,
+		GenerateGPG:    gpgGenerated,
+		UseExistingGPG: gpgExisting,
+	}
 }
 
 // renderHints renders the keyboard hints based on current step
