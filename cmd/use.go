@@ -6,12 +6,15 @@ import (
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
-	"github.com/orzazade/gitch/internal/prompt"
 	"github.com/orzazade/gitch/internal/rules"
-	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/orzazade/gitch/internal/ui/selector"
 	"github.com/spf13/cobra"
+)
+
+var (
+	useLocalScope  bool
+	useGlobalScope bool
 )
 
 var useCmd = &cobra.Command{
@@ -22,8 +25,11 @@ var useCmd = &cobra.Command{
 When called without arguments, launches an interactive selector.
 When called with an identity name, switches directly.
 
-Updates the global git config (user.name and user.email) to use
-the specified identity.
+Applies the selected identity to git config, GPG signing, SSH selection,
+and prompt state.
+
+By default, gitch writes repo-local config when run inside a git repository
+and global config everywhere else. Use --local or --global to override.
 
 Examples:
   gitch use          # Interactive selector
@@ -59,6 +65,8 @@ func identityCompletionFunc(cmd *cobra.Command, args []string, toComplete string
 
 func init() {
 	rootCmd.AddCommand(useCmd)
+	useCmd.Flags().BoolVar(&useLocalScope, "local", false, "Apply identity to the current repository only")
+	useCmd.Flags().BoolVar(&useGlobalScope, "global", false, "Apply identity to global git config")
 }
 
 func runUse(cmd *cobra.Command, args []string) error {
@@ -79,8 +87,11 @@ func runUse(cmd *cobra.Command, args []string) error {
 			return nil
 		}
 
-		// Get current active email for highlighting
-		_, activeEmail, _ := git.GetCurrentIdentity()
+		// Resolve the exact active profile for highlighting.
+		activeProfileName := ""
+		if state, stateErr := resolveCurrentProfileState(cfg); stateErr == nil && state.ExactMatch != nil {
+			activeProfileName = state.ExactMatch.Name
+		}
 
 		// Check if a rule matches - use rule's identity as default selection
 		defaultName := cfg.Default
@@ -90,7 +101,7 @@ func runUse(cmd *cobra.Command, args []string) error {
 			defaultName = matchedRule.Identity
 		}
 
-		selected, err := selector.Run(identities, activeEmail, defaultName)
+		selected, err := selector.Run(identities, activeProfileName, defaultName)
 		if err != nil {
 			return fmt.Errorf("selector error: %w", err)
 		}
@@ -110,55 +121,24 @@ func runUse(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	// Apply identity to git config
-	if err := git.ApplyIdentity(identity.Name, identity.Email); err != nil {
+	scope, err := resolveApplyScope(useLocalScope, useGlobalScope)
+	if err != nil {
+		return err
+	}
+
+	// Apply the full profile to git config, signing config, ssh-agent, and prompt cache.
+	if err := applyConfiguredIdentity(identity, scope); err != nil {
 		return fmt.Errorf("failed to switch identity: %w", err)
-	}
-
-	// Configure GPG signing if identity has GPG key
-	if identity.GPGKeyID != "" {
-		if err := git.ApplySigningConfig(identity.GPGKeyID); err != nil {
-			// Print warning but don't fail the switch
-			fmt.Fprintf(os.Stderr, "Warning: failed to configure GPG signing: %v\n", err)
-		}
-	} else {
-		// Clear signing config when switching to identity without GPG
-		if err := git.ClearSigningConfig(); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to clear GPG signing config: %v\n", err)
-		}
-	}
-
-	// Add SSH key to agent if configured
-	if identity.SSHKeyPath != "" {
-		if err := addSSHKeyToAgent(identity.SSHKeyPath); err != nil {
-			// Print warning but don't fail the switch
-			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-		}
-	}
-
-	// Update prompt cache (best effort - don't fail the switch)
-	if err := prompt.UpdateCache(identity.Name); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to update prompt cache: %v\n", err)
 	}
 
 	// Print success
 	msg := fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)
 	fmt.Println(ui.SuccessStyle.Render(msg))
-
-	return nil
-}
-
-// addSSHKeyToAgent adds an SSH key to the ssh-agent.
-// Returns an error if the key file doesn't exist or if adding fails.
-func addSSHKeyToAgent(keyPath string) error {
-	// Check if key file exists
-	if _, err := os.Stat(keyPath); os.IsNotExist(err) {
-		return fmt.Errorf("SSH key not found: %s", keyPath)
-	}
-
-	// Add to agent (will prompt for passphrase if needed)
-	if err := sshpkg.AddKeyToAgent(keyPath); err != nil {
-		return fmt.Errorf("failed to add SSH key to agent: %w", err)
+	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
+	if scope == git.ScopeLocal {
+		fmt.Println("Scope: local repository")
+	} else {
+		fmt.Println("Scope: global")
 	}
 
 	return nil

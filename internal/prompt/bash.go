@@ -21,8 +21,16 @@ _gitch_prompt() {
 # Save original PS1 if not already saved
 [[ -z "$_GITCH_ORIGINAL_PS1" ]] && _GITCH_ORIGINAL_PS1="$PS1"
 
+_gitch_autoswitch() {
+  if [[ "$PWD" != "$_GITCH_LAST_PWD" ]]; then
+    _GITCH_LAST_PWD="$PWD"
+    gitch autoswitch --quiet >/dev/null 2>&1
+  fi
+}
+
 # Update PS1 with gitch identity
 _gitch_update_ps1() {
+  _gitch_autoswitch
   PS1="$(_gitch_prompt)${_GITCH_ORIGINAL_PS1}"
 }
 

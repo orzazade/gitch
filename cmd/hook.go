@@ -6,7 +6,6 @@ import (
 
 	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/hooks"
-	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -22,8 +21,10 @@ The hook will detect identity mismatches and prompt you to switch, continue, or 
 Use GITCH_BYPASS=1 environment variable to skip the hook.
 
 Examples:
-  gitch hook install --global
-  gitch hook uninstall --global`,
+	  gitch hook install
+	  gitch hook install --global
+	  gitch hook uninstall
+	  gitch hook uninstall --global`,
 }
 
 var hookInstallCmd = &cobra.Command{
@@ -31,13 +32,17 @@ var hookInstallCmd = &cobra.Command{
 	Short: "Install the gitch pre-commit hook",
 	Long: `Install the gitch pre-commit hook to validate identity before commits.
 
-Currently only global installation via core.hooksPath is supported.
-This sets up a pre-commit hook that runs 'gitch hook validate' before each commit.
+By default, gitch installs the hook in the current repository's .git/hooks directory.
+Use --global to install via core.hooksPath instead. Global install refuses to overwrite
+an existing non-gitch core.hooksPath.
+
+The hook runs 'gitch hook validate' before each commit.
 
 If the current identity doesn't match the expected identity for the repository,
 the hook will prompt you to [S]witch, [C]ontinue, or [A]bort.
 
 Examples:
+  gitch hook install
   gitch hook install --global`,
 	RunE: runHookInstall,
 }
@@ -47,9 +52,11 @@ var hookUninstallCmd = &cobra.Command{
 	Short: "Uninstall the gitch pre-commit hook",
 	Long: `Remove the gitch pre-commit hook.
 
-This removes the core.hooksPath configuration and deletes the hooks directory.
+By default, removes the hook from the current repository.
+Use --global to remove the gitch-managed global hook.
 
 Examples:
+  gitch hook uninstall
   gitch hook uninstall --global`,
 	RunE: runHookUninstall,
 }
@@ -87,67 +94,74 @@ func init() {
 	hookCmd.AddCommand(hookModeCmd)
 
 	// Flags
-	hookInstallCmd.Flags().BoolVar(&hookGlobal, "global", false, "Install hooks globally (required)")
-	_ = hookInstallCmd.MarkFlagRequired("global")
-
-	hookUninstallCmd.Flags().BoolVar(&hookGlobal, "global", false, "Uninstall global hooks (required)")
-	_ = hookUninstallCmd.MarkFlagRequired("global")
+	hookInstallCmd.Flags().BoolVar(&hookGlobal, "global", false, "Install hooks globally via core.hooksPath")
+	hookUninstallCmd.Flags().BoolVar(&hookGlobal, "global", false, "Uninstall the gitch-managed global hook")
 }
 
 func runHookInstall(cmd *cobra.Command, args []string) error {
-	if !hookGlobal {
-		return fmt.Errorf("only --global installation is currently supported")
+	if hookGlobal {
+		installed, err := hooks.IsInstalled()
+		if err != nil {
+			return fmt.Errorf("failed to check hook status: %w", err)
+		}
+		if installed {
+			fmt.Println("Gitch hooks are already installed globally.")
+			return nil
+		}
+		if err := hooks.InstallGlobal(); err != nil {
+			return fmt.Errorf("failed to install global hooks: %w", err)
+		}
+		hooksDir, _ := hooks.HooksDir()
+		fmt.Println(ui.SuccessStyle.Render("Global hooks installed at " + hooksDir))
+	} else {
+		installed, err := hooks.IsInstalledLocal()
+		if err != nil {
+			return fmt.Errorf("failed to check local hook status: %w", err)
+		}
+		if installed {
+			fmt.Println("Gitch hook is already installed in this repository.")
+			return nil
+		}
+		if err := hooks.InstallLocal(); err != nil {
+			return fmt.Errorf("failed to install local hook: %w", err)
+		}
+		fmt.Println(ui.SuccessStyle.Render("Local repository hook installed"))
 	}
 
-	// Check if already installed
-	installed, err := hooks.IsInstalled()
-	if err != nil {
-		return fmt.Errorf("failed to check hook status: %w", err)
-	}
-
-	if installed {
-		fmt.Println("Gitch hooks are already installed.")
-		return nil
-	}
-
-	// Install hooks
-	if err := hooks.InstallGlobal(); err != nil {
-		return fmt.Errorf("failed to install hooks: %w", err)
-	}
-
-	// Get hooks dir for display
-	hooksDir, _ := hooks.HooksDir()
-
-	fmt.Println(ui.SuccessStyle.Render("Global hooks installed at " + hooksDir))
 	fmt.Println(ui.DimStyle.Render("Git will now validate identity before each commit."))
 	fmt.Println(ui.DimStyle.Render("Use GITCH_BYPASS=1 to skip validation."))
-
 	return nil
 }
 
 func runHookUninstall(cmd *cobra.Command, args []string) error {
-	if !hookGlobal {
-		return fmt.Errorf("only --global uninstallation is currently supported")
-	}
-
-	// Check if installed
-	installed, err := hooks.IsInstalled()
-	if err != nil {
-		return fmt.Errorf("failed to check hook status: %w", err)
-	}
-
-	if !installed {
-		fmt.Println("Gitch hooks are not installed.")
+	if hookGlobal {
+		installed, err := hooks.IsInstalled()
+		if err != nil {
+			return fmt.Errorf("failed to check hook status: %w", err)
+		}
+		if !installed {
+			fmt.Println("Gitch global hooks are not installed.")
+			return nil
+		}
+		if err := hooks.UninstallGlobal(); err != nil {
+			return fmt.Errorf("failed to uninstall global hooks: %w", err)
+		}
+		fmt.Println(ui.SuccessStyle.Render("Global hooks removed"))
 		return nil
 	}
 
-	// Uninstall hooks
-	if err := hooks.UninstallGlobal(); err != nil {
-		return fmt.Errorf("failed to uninstall hooks: %w", err)
+	installed, err := hooks.IsInstalledLocal()
+	if err != nil {
+		return fmt.Errorf("failed to check local hook status: %w", err)
 	}
-
-	fmt.Println(ui.SuccessStyle.Render("Global hooks removed"))
-
+	if !installed {
+		fmt.Println("Gitch hook is not installed in this repository.")
+		return nil
+	}
+	if err := hooks.UninstallLocal(); err != nil {
+		return fmt.Errorf("failed to uninstall local hook: %w", err)
+	}
+	fmt.Println(ui.SuccessStyle.Render("Local repository hook removed"))
 	return nil
 }
 
@@ -181,22 +195,15 @@ func runHookSwitch(cmd *cobra.Command, args []string) error {
 
 	identity := result.ExpectedIdentity
 
-	// Apply identity to git config
-	if err := git.ApplyIdentity(identity.Name, identity.Email); err != nil {
+	// Apply the full profile to git config, signing config, ssh-agent, and prompt cache.
+	if err := applyConfiguredIdentity(identity, gitScopeForHook()); err != nil {
 		return fmt.Errorf("failed to switch identity: %w", err)
-	}
-
-	// Add SSH key to agent if configured
-	if identity.SSHKeyPath != "" {
-		if err := addSSHKeyForHook(identity.SSHKeyPath); err != nil {
-			// Print warning but don't fail the switch
-			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-		}
 	}
 
 	// Print success
 	msg := fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)
 	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
 
 	return nil
 }
@@ -222,18 +229,6 @@ func runHookMode(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// addSSHKeyForHook adds an SSH key to the ssh-agent
-// Duplicated from use.go to avoid circular dependencies in cmd package
-func addSSHKeyForHook(keyPath string) error {
-	// Check if key file exists
-	if _, err := os.Stat(keyPath); os.IsNotExist(err) {
-		return fmt.Errorf("SSH key not found: %s", keyPath)
-	}
-
-	// Add to agent (will prompt for passphrase if needed)
-	if err := sshpkg.AddKeyToAgent(keyPath); err != nil {
-		return fmt.Errorf("failed to add SSH key to agent: %w", err)
-	}
-
-	return nil
+func gitScopeForHook() git.Scope {
+	return git.ScopeLocal
 }

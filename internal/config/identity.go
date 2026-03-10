@@ -21,6 +21,7 @@ const (
 // Identity represents a git identity with name and email
 type Identity struct {
 	Name       string `mapstructure:"name" yaml:"name"`
+	GitName    string `mapstructure:"git_name" yaml:"git_name,omitempty"`
 	Email      string `mapstructure:"email" yaml:"email"`
 	SSHKeyPath string `mapstructure:"ssh_key_path" yaml:"ssh_key_path,omitempty"`
 	GPGKeyID   string `mapstructure:"gpg_key_id" yaml:"gpg_key_id,omitempty"`
@@ -106,9 +107,23 @@ func (i *Identity) Validate() error {
 		return err
 	}
 
+	if i.GitName != "" && strings.TrimSpace(i.GitName) == "" {
+		return errors.New("git author name cannot be empty")
+	}
+
 	if err := ValidateEmail(i.Email); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// GitAuthorName returns the git user.name value for the identity.
+// Older configs may not have git_name set, so fall back to the profile name.
+func (i Identity) GitAuthorName() string {
+	gitName := strings.TrimSpace(i.GitName)
+	if gitName != "" {
+		return gitName
+	}
+	return i.Name
 }

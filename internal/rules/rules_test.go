@@ -137,6 +137,27 @@ func TestMatchDirectory(t *testing.T) {
 	}
 }
 
+func TestMatchDirectory_NormalizesSymlinkAliases(t *testing.T) {
+	baseDir := t.TempDir()
+	realDir := filepath.Join(baseDir, "real", "project")
+	if err := os.MkdirAll(realDir, 0755); err != nil {
+		t.Fatalf("failed to create real directory: %v", err)
+	}
+
+	symlinkDir := filepath.Join(baseDir, "link")
+	if err := os.Symlink(realDir, symlinkDir); err != nil {
+		t.Skipf("symlinks are not available in this test environment: %v", err)
+	}
+
+	matched, err := MatchDirectory(symlinkDir, realDir)
+	if err != nil {
+		t.Fatalf("MatchDirectory returned error: %v", err)
+	}
+	if !matched {
+		t.Fatalf("expected symlinked directory %q to match real path %q", symlinkDir, realDir)
+	}
+}
+
 func TestParseRemote(t *testing.T) {
 	tests := []struct {
 		name     string

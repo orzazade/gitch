@@ -5,7 +5,6 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/orzazade/gitch/internal/config"
-	"github.com/orzazade/gitch/internal/prompt"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/orzazade/gitch/internal/ui/wizard"
 	"github.com/spf13/cobra"
@@ -63,6 +62,7 @@ func runSetup(cmd *cobra.Command, args []string) error {
 	// Create identity
 	identity := config.Identity{
 		Name:       data.Name,
+		GitName:    data.GitName,
 		Email:      data.Email,
 		SSHKeyPath: data.SSHKeyPath,
 		GPGKeyID:   data.GPGKeyID,
@@ -78,13 +78,11 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	// Update prompt cache (wizard creates active identity)
-	_ = prompt.UpdateCache(data.Name) // Best effort
-
 	// Print success
 	fmt.Println()
 	msg := fmt.Sprintf("Created identity '%s' (%s)", data.Name, data.Email)
 	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
 
 	if data.SSHKeyPath != "" {
 		fmt.Printf("SSH key: %s\n", data.SSHKeyPath)

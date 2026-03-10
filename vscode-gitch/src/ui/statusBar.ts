@@ -11,11 +11,13 @@ const DEBOUNCE_MS = 500;
 export class StatusBarManager implements vscode.Disposable {
   private statusBarItem: vscode.StatusBarItem;
   private binaryPath: string;
+  private getWorkspacePath: () => string | undefined;
   private updateTimer: NodeJS.Timeout | undefined;
   private disposed = false;
 
-  constructor(binaryPath: string) {
+  constructor(binaryPath: string, getWorkspacePath: () => string | undefined) {
     this.binaryPath = binaryPath;
+    this.getWorkspacePath = getWorkspacePath;
 
     // Create status bar item on left side, high priority (shows near git branch)
     this.statusBarItem = vscode.window.createStatusBarItem(
@@ -57,7 +59,7 @@ export class StatusBarManager implements vscode.Disposable {
   async refresh(): Promise<void> {
     if (this.disposed) return;
 
-    const identity = await getCurrentIdentity(this.binaryPath);
+    const identity = await getCurrentIdentity(this.binaryPath, this.getWorkspacePath());
     this.updateDisplay(identity);
   }
 
@@ -80,7 +82,8 @@ export class StatusBarManager implements vscode.Disposable {
     // Tooltip: Rich markdown with details
     const tooltip = new vscode.MarkdownString();
     tooltip.appendMarkdown(`**gitch Identity**\n\n`);
-    tooltip.appendMarkdown(`**Name:** ${identity.name}\n\n`);
+    tooltip.appendMarkdown(`**Profile:** ${identity.name}\n\n`);
+    tooltip.appendMarkdown(`**Git Author:** ${identity.git_name || identity.name}\n\n`);
     tooltip.appendMarkdown(`**Email:** ${identity.email}\n\n`);
 
     if (identity.ssh_key_path) {
@@ -94,11 +97,21 @@ export class StatusBarManager implements vscode.Disposable {
     }
 
     if (!identity.managed) {
-      tooltip.appendMarkdown(`\n---\n*Identity not managed by gitch*`);
+      if (identity.partial_match) {
+        tooltip.appendMarkdown(`\n---\n*Profile matched by email, but author, SSH, or GPG settings are incomplete.*`);
+      } else {
+        tooltip.appendMarkdown(`\n---\n*Identity not managed by gitch*`);
+      }
     }
 
     this.statusBarItem.tooltip = tooltip;
-    this.statusBarItem.backgroundColor = undefined; // Reset warning color
+    if (identity.partial_match) {
+      this.statusBarItem.backgroundColor = new vscode.ThemeColor(
+        'statusBarItem.warningBackground'
+      );
+    } else {
+      this.statusBarItem.backgroundColor = undefined;
+    }
   }
 
   dispose(): void {

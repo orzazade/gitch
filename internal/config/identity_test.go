@@ -118,7 +118,7 @@ func TestIdentity_Validate(t *testing.T) {
 	}{
 		{
 			name:     "valid identity",
-			identity: Identity{Name: "work", Email: "user@example.com"},
+			identity: Identity{Name: "work", GitName: "Jane Doe", Email: "user@example.com"},
 			wantErr:  false,
 		},
 		{
@@ -162,6 +162,33 @@ func TestIdentity_Validate(t *testing.T) {
 				if err != nil {
 					t.Errorf("Identity.Validate() returned error: %v, expected nil", err)
 				}
+			}
+		})
+	}
+}
+
+func TestIdentity_GitAuthorName(t *testing.T) {
+	tests := []struct {
+		name     string
+		identity Identity
+		want     string
+	}{
+		{
+			name:     "uses git name when set",
+			identity: Identity{Name: "work", GitName: "Jane Doe"},
+			want:     "Jane Doe",
+		},
+		{
+			name:     "falls back to profile name",
+			identity: Identity{Name: "work"},
+			want:     "work",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.identity.GitAuthorName(); got != tt.want {
+				t.Fatalf("GitAuthorName() = %q, want %q", got, tt.want)
 			}
 		})
 	}

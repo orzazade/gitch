@@ -22,6 +22,7 @@ type EncryptionInfo struct {
 // When exporting with --encrypt, SSHKeyEncrypted contains the age-encrypted private key.
 type EncryptedIdentity struct {
 	Name            string `yaml:"name"`
+	GitName         string `yaml:"git_name,omitempty"`
 	Email           string `yaml:"email"`
 	SSHKeyPath      string `yaml:"ssh_key_path,omitempty"`
 	SSHKeyEncrypted string `yaml:"ssh_key_encrypted,omitempty"`
@@ -46,6 +47,7 @@ type ExportConfig struct {
 func ToEncryptedIdentity(id config.Identity) EncryptedIdentity {
 	return EncryptedIdentity{
 		Name:       id.Name,
+		GitName:    id.GitName,
 		Email:      id.Email,
 		SSHKeyPath: id.SSHKeyPath,
 		GPGKeyID:   id.GPGKeyID,
@@ -57,6 +59,7 @@ func ToEncryptedIdentity(id config.Identity) EncryptedIdentity {
 func (e EncryptedIdentity) ToIdentity() config.Identity {
 	return config.Identity{
 		Name:       e.Name,
+		GitName:    e.GitName,
 		Email:      e.Email,
 		SSHKeyPath: e.SSHKeyPath,
 		GPGKeyID:   e.GPGKeyID,

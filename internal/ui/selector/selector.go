@@ -13,7 +13,7 @@ import (
 type Model struct {
 	identities  []config.Identity
 	cursor      int
-	activeEmail string
+	activeName  string
 	defaultName string
 	Selected    *config.Identity
 	Cancelled   bool
@@ -21,19 +21,19 @@ type Model struct {
 
 // New creates a new selector model.
 // The cursor starts on the currently active identity (for quick re-confirmation).
-func New(identities []config.Identity, activeEmail, defaultName string) Model {
+func New(identities []config.Identity, activeName, defaultName string) Model {
 	return Model{
 		identities:  identities,
-		cursor:      findActiveIndex(identities, activeEmail),
-		activeEmail: activeEmail,
+		cursor:      findActiveIndex(identities, activeName),
+		activeName:  activeName,
 		defaultName: defaultName,
 	}
 }
 
 // findActiveIndex returns the index of the active identity, or 0.
-func findActiveIndex(identities []config.Identity, activeEmail string) int {
+func findActiveIndex(identities []config.Identity, activeName string) int {
 	for i, id := range identities {
-		if strings.EqualFold(id.Email, activeEmail) {
+		if strings.EqualFold(id.Name, activeName) {
 			return i
 		}
 	}
@@ -89,7 +89,7 @@ func (m Model) View() string {
 	b.WriteString("Select an identity:\n\n")
 
 	for i, identity := range m.identities {
-		isActive := strings.EqualFold(identity.Email, m.activeEmail)
+		isActive := strings.EqualFold(identity.Name, m.activeName)
 		isDefault := strings.EqualFold(identity.Name, m.defaultName)
 		hasSSH := identity.SSHKeyPath != ""
 		hasGPG := identity.GPGKeyID != ""
@@ -157,12 +157,12 @@ func renderSelectableCard(id config.Identity, active, def, ssh, gpg, cursor bool
 
 // Run launches the selector and returns the selected identity.
 // Returns nil if cancelled or no selection made.
-func Run(identities []config.Identity, activeEmail, defaultName string) (*config.Identity, error) {
+func Run(identities []config.Identity, activeName, defaultName string) (*config.Identity, error) {
 	if len(identities) == 0 {
 		return nil, nil
 	}
 
-	m := New(identities, activeEmail, defaultName)
+	m := New(identities, activeName, defaultName)
 	p := tea.NewProgram(m)
 
 	finalModel, err := p.Run()

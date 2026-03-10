@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
-	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
@@ -15,14 +15,17 @@ import (
 
 var statusVerbose bool
 var statusJSON bool
+var statusAutoSwitch bool
 
 // statusOutput represents the JSON output structure for gitch status --json
 type statusOutput struct {
-	Name       string `json:"name"`
-	Email      string `json:"email"`
-	SSHKeyPath string `json:"ssh_key_path,omitempty"`
-	GPGKeyID   string `json:"gpg_key_id,omitempty"`
-	Managed    bool   `json:"managed"`
+	Name         string `json:"name"`
+	GitName      string `json:"git_name,omitempty"`
+	Email        string `json:"email"`
+	SSHKeyPath   string `json:"ssh_key_path,omitempty"`
+	GPGKeyID     string `json:"gpg_key_id,omitempty"`
+	Managed      bool   `json:"managed"`
+	PartialMatch bool   `json:"partial_match,omitempty"`
 }
 
 var statusCmd = &cobra.Command{
@@ -34,6 +37,7 @@ Displays the name and email from git config and indicates if it's
 managed by gitch.
 
 Use -v to show which rule matches the current directory/remote.
+Use --auto-switch to apply a matching rule before printing status.
 
 Examples:
   gitch status
@@ -45,31 +49,36 @@ func init() {
 	rootCmd.AddCommand(statusCmd)
 	statusCmd.Flags().BoolVarP(&statusVerbose, "verbose", "v", false, "Show matched rule details")
 	statusCmd.Flags().BoolVar(&statusJSON, "json", false, "Output in JSON format")
+	statusCmd.Flags().BoolVar(&statusAutoSwitch, "auto-switch", false, "Apply a matching rule before showing status")
 }
 
 func runStatus(cmd *cobra.Command, args []string) error {
-	// Load config first for auto-switch
+	// Load config first for status resolution
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Trigger auto-switch if rules match
-	result, _ := TryAutoSwitch(cfg)
-	if result != nil && result.Switched {
-		fmt.Println(ui.SuccessStyle.Render(
-			fmt.Sprintf("Switched to '%s' identity", result.ToIdentity),
-		))
-		fmt.Println()
-		// Reload config after switch (default may have changed)
-		cfg, _ = config.Load()
+	// Apply auto-switch only when explicitly requested.
+	if statusAutoSwitch {
+		result, err := TryAutoSwitch(cfg)
+		if err != nil {
+			return fmt.Errorf("failed to auto-switch: %w", err)
+		}
+		if result != nil && result.Switched && !statusJSON {
+			fmt.Println(ui.SuccessStyle.Render(
+				fmt.Sprintf("Switched to '%s' identity", result.ToIdentity),
+			))
+			fmt.Println()
+		}
 	}
 
-	// Get current git identity (after potential switch)
-	name, email, err := git.GetCurrentIdentity()
+	state, err := resolveCurrentProfileState(cfg)
 	if err != nil {
-		return fmt.Errorf("failed to get current identity: %w", err)
+		return fmt.Errorf("failed to resolve current identity: %w", err)
 	}
+	name := state.CurrentName
+	email := state.CurrentEmail
 
 	// Check if git has any identity configured
 	if name == "" && email == "" {
@@ -77,6 +86,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			// Output empty JSON for no identity case
 			output := statusOutput{
 				Name:    "",
+				GitName: "",
 				Email:   "",
 				Managed: false,
 			}
@@ -91,31 +101,31 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Try to find matching identity by email
-	var managed bool
-	var managedName string
-	var managedIdentity *config.Identity
-	for i, identity := range cfg.ListIdentities() {
-		if strings.EqualFold(identity.Email, email) {
-			managed = true
-			managedName = identity.Name
-			managedIdentity = &cfg.ListIdentities()[i]
-			break
-		}
-	}
+	managedIdentity := state.ExactMatch
+	emailMatchedIdentity := state.EmailMatch
+	managed := managedIdentity != nil
+	partialMatch := !managed && emailMatchedIdentity != nil
 
 	// JSON output format
 	if statusJSON {
 		output := statusOutput{
-			Name:    managedName,
-			Email:   email,
-			Managed: managed,
+			Email:        email,
+			Managed:      managed,
+			PartialMatch: partialMatch,
 		}
-		// If not managed, use git config name
-		if !managed && name != "" {
+		switch {
+		case managedIdentity != nil:
+			output.Name = managedIdentity.Name
+			output.GitName = managedIdentity.GitAuthorName()
+		case emailMatchedIdentity != nil:
+			output.Name = emailMatchedIdentity.Name
+			output.GitName = name
+			output.SSHKeyPath = emailMatchedIdentity.SSHKeyPath
+			output.GPGKeyID = emailMatchedIdentity.GPGKeyID
+		case name != "":
 			output.Name = name
+			output.GitName = name
 		}
-		// Add SSH key path and GPG key ID if available
 		if managedIdentity != nil {
 			if managedIdentity.SSHKeyPath != "" {
 				output.SSHKeyPath = managedIdentity.SSHKeyPath
@@ -134,12 +144,17 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	// Format output
 	if managed {
-		msg := fmt.Sprintf("Active: %s (%s)", managedName, email)
+		msg := fmt.Sprintf("Active: %s (%s)", managedIdentity.Name, email)
 		fmt.Println(ui.SuccessStyle.Render(msg))
-		// Show GPG key status if configured
-		if managedIdentity != nil && managedIdentity.GPGKeyID != "" {
+		fmt.Printf("Git Author: %s\n", managedIdentity.GitAuthorName())
+		if managedIdentity.GPGKeyID != "" {
 			fmt.Printf("GPG Key: %s\n", managedIdentity.GPGKeyID)
 		}
+	} else if partialMatch {
+		fmt.Printf("Active: %s (%s) ", name, email)
+		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("[profile '%s' not fully applied]", emailMatchedIdentity.Name)))
+		fmt.Printf("Expected Profile: %s\n", emailMatchedIdentity.Name)
+		fmt.Printf("Expected Git Author: %s\n", emailMatchedIdentity.GitAuthorName())
 	} else {
 		if name != "" {
 			fmt.Printf("Active: %s (%s) ", name, email)
@@ -179,10 +194,15 @@ func showVerboseRuleInfo(cfg *config.Config, currentEmail string) {
 		// Check if current identity matches expected
 		expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
 		if err == nil && expectedIdentity != nil {
-			if !strings.EqualFold(currentEmail, expectedIdentity.Email) {
+			match, matchErr := profile.Matches(expectedIdentity)
+			if matchErr == nil && !match {
 				fmt.Println()
 				fmt.Println(ui.WarningStyle.Render("Warning: Current identity does not match rule!"))
-				fmt.Printf("  Expected: %s (%s)\n", expectedIdentity.Name, expectedIdentity.Email)
+				fmt.Printf("  Expected: %s (%s)\n", expectedIdentity.GitAuthorName(), expectedIdentity.Email)
+			} else if matchErr != nil && !strings.EqualFold(currentEmail, expectedIdentity.Email) {
+				fmt.Println()
+				fmt.Println(ui.WarningStyle.Render("Warning: Current identity does not match rule!"))
+				fmt.Printf("  Expected: %s (%s)\n", expectedIdentity.GitAuthorName(), expectedIdentity.Email)
 			}
 		}
 	} else {

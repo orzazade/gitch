@@ -17,12 +17,15 @@ import { showIdentityQuickPick } from '../ui/quickPick';
 export function registerSwitchIdentityCommand(
   context: vscode.ExtensionContext,
   binaryPath: string,
+  getWorkspacePath: () => string | undefined,
   onIdentityChanged: () => void
 ): vscode.Disposable {
   return vscode.commands.registerCommand('gitch.switchIdentity', async () => {
     try {
+      const workspacePath = getWorkspacePath();
+
       // Get all identities
-      const identities = await listIdentities(binaryPath);
+      const identities = await listIdentities(binaryPath, workspacePath);
 
       // Show Quick Pick
       const selectedName = await showIdentityQuickPick(identities);
@@ -38,7 +41,7 @@ export function registerSwitchIdentityCommand(
       }
 
       // Switch identity
-      await cliSwitchIdentity(binaryPath, selectedName);
+      await cliSwitchIdentity(binaryPath, selectedName, workspacePath);
 
       // Notify success and refresh
       vscode.window.showInformationMessage(`Switched to identity: ${selectedName}`);

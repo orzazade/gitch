@@ -5,65 +5,119 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/adrg/xdg"
 	"github.com/orzazade/gitch/internal/git"
 )
 
-// HooksDir returns the gitch hooks directory path
+// HooksDir returns the gitch-managed global hooks directory path.
 func HooksDir() (string, error) {
 	return xdg.ConfigFile("gitch/hooks")
 }
 
-// InstallGlobal installs the pre-commit hook globally via core.hooksPath
+// LocalHookPath returns the current repository's pre-commit hook path.
+func LocalHookPath() (string, error) {
+	return git.GitPath(filepath.Join("hooks", "pre-commit"))
+}
+
+// InstallLocal installs the pre-commit hook in the current repository.
+func InstallLocal() error {
+	preCommitPath, err := LocalHookPath()
+	if err != nil {
+		return fmt.Errorf("failed to determine local hook path: %w", err)
+	}
+
+	if err := ensureHookPathWritable(preCommitPath); err != nil {
+		return err
+	}
+
+	return writeManagedHook(preCommitPath)
+}
+
+// UninstallLocal removes the gitch pre-commit hook from the current repository.
+func UninstallLocal() error {
+	preCommitPath, err := LocalHookPath()
+	if err != nil {
+		return fmt.Errorf("failed to determine local hook path: %w", err)
+	}
+
+	return removeManagedHook(preCommitPath)
+}
+
+// IsInstalledLocal checks whether the current repository has the gitch hook installed.
+func IsInstalledLocal() (bool, error) {
+	preCommitPath, err := LocalHookPath()
+	if err != nil {
+		return false, fmt.Errorf("failed to determine local hook path: %w", err)
+	}
+	return isManagedHook(preCommitPath)
+}
+
+// InstallGlobal installs the pre-commit hook globally via core.hooksPath.
+// It refuses to overwrite an existing non-gitch global hooksPath.
 func InstallGlobal() error {
+	currentPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	if err != nil {
+		return fmt.Errorf("failed to read core.hooksPath: %w", err)
+	}
+
 	hooksDir, err := HooksDir()
 	if err != nil {
 		return fmt.Errorf("failed to determine hooks directory: %w", err)
 	}
 
-	// Create hooks directory
+	if currentPath != "" && filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
+		return fmt.Errorf("core.hooksPath is already set to %s; refusing to overwrite existing global hooks", currentPath)
+	}
+
 	if err := os.MkdirAll(hooksDir, 0755); err != nil {
 		return fmt.Errorf("failed to create hooks directory: %w", err)
 	}
 
-	// Write pre-commit script
 	preCommitPath := filepath.Join(hooksDir, "pre-commit")
-	if err := os.WriteFile(preCommitPath, []byte(PreCommitScript), 0755); err != nil {
-		return fmt.Errorf("failed to write pre-commit hook: %w", err)
+	if err := ensureHookPathWritable(preCommitPath); err != nil {
+		return err
+	}
+	if err := writeManagedHook(preCommitPath); err != nil {
+		return err
 	}
 
-	// Set git config --global core.hooksPath to hooksDir
-	if err := git.SetConfig("core.hooksPath", hooksDir, true); err != nil {
+	if err := git.SetConfigScoped("core.hooksPath", hooksDir, git.ScopeGlobal); err != nil {
 		return fmt.Errorf("failed to set core.hooksPath: %w", err)
 	}
 
 	return nil
 }
 
-// UninstallGlobal removes the global hooks path configuration
+// UninstallGlobal removes the gitch global hook if gitch owns core.hooksPath.
 func UninstallGlobal() error {
-	// Unset git config --global core.hooksPath
-	if err := git.UnsetConfig("core.hooksPath", true); err != nil {
+	currentPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	if err != nil {
+		return fmt.Errorf("failed to read core.hooksPath: %w", err)
+	}
+
+	hooksDir, err := HooksDir()
+	if err != nil {
+		return nil
+	}
+
+	if filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
+		return nil
+	}
+
+	if err := git.UnsetConfigScoped("core.hooksPath", git.ScopeGlobal); err != nil {
 		return fmt.Errorf("failed to unset core.hooksPath: %w", err)
 	}
 
-	// Optionally remove hooks directory
-	hooksDir, err := HooksDir()
-	if err != nil {
-		return nil // Not critical if we can't determine the path
-	}
-
-	// Remove the hooks directory (ignore errors - user may have customized)
-	_ = os.RemoveAll(hooksDir)
-
+	_ = removeManagedHook(filepath.Join(hooksDir, "pre-commit"))
+	_ = os.Remove(hooksDir)
 	return nil
 }
 
-// IsInstalled checks if gitch hooks are globally installed
+// IsInstalled checks if gitch hooks are globally installed.
 func IsInstalled() (bool, error) {
-	// Get current core.hooksPath value
-	currentPath, err := git.GetConfig("core.hooksPath", true)
+	currentPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
 	if err != nil {
 		return false, err
 	}
@@ -72,12 +126,68 @@ func IsInstalled() (bool, error) {
 		return false, nil
 	}
 
-	// Check if it points to gitch hooks dir
 	hooksDir, err := HooksDir()
 	if err != nil {
 		return false, err
 	}
 
-	// Compare paths (normalize for comparison)
-	return filepath.Clean(currentPath) == filepath.Clean(hooksDir), nil
+	if filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
+		return false, nil
+	}
+
+	return isManagedHook(filepath.Join(hooksDir, "pre-commit"))
+}
+
+func ensureHookPathWritable(path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return fmt.Errorf("failed to create hook directory: %w", err)
+	}
+
+	managed, err := isManagedHook(path)
+	if err != nil {
+		return err
+	}
+	if managed {
+		return nil
+	}
+
+	if _, err := os.Stat(path); err == nil {
+		return fmt.Errorf("hook already exists at %s and is not managed by gitch", path)
+	} else if !os.IsNotExist(err) {
+		return fmt.Errorf("failed to inspect hook %s: %w", path, err)
+	}
+
+	return nil
+}
+
+func writeManagedHook(path string) error {
+	if err := os.WriteFile(path, []byte(PreCommitScript), 0755); err != nil {
+		return fmt.Errorf("failed to write pre-commit hook: %w", err)
+	}
+	return nil
+}
+
+func removeManagedHook(path string) error {
+	managed, err := isManagedHook(path)
+	if err != nil {
+		return err
+	}
+	if !managed {
+		return nil
+	}
+	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to remove hook %s: %w", path, err)
+	}
+	return nil
+}
+
+func isManagedHook(path string) (bool, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+		return false, fmt.Errorf("failed to read hook %s: %w", path, err)
+	}
+	return strings.Contains(string(data), managedHookMarker), nil
 }

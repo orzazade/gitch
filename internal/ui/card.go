@@ -61,17 +61,17 @@ func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey, hasG
 }
 
 // RenderIdentityList renders all identities as cards.
-// The active identity is determined by matching email to the activeEmail parameter.
+// The active identity is determined by matching name to the activeName parameter.
 // The default identity is determined by matching name to the defaultName parameter.
 // SSH/GPG key status is determined by checking identity fields.
-func RenderIdentityList(identities []config.Identity, activeEmail, defaultName string) string {
+func RenderIdentityList(identities []config.Identity, activeName, defaultName string) string {
 	if len(identities) == 0 {
 		return ""
 	}
 
 	var cards []string
 	for _, identity := range identities {
-		isActive := strings.EqualFold(identity.Email, activeEmail)
+		isActive := strings.EqualFold(identity.Name, activeName)
 		isDefault := strings.EqualFold(identity.Name, defaultName)
 		hasSSHKey := identity.SSHKeyPath != ""
 		hasGPGKey := identity.GPGKeyID != ""

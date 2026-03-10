@@ -3,10 +3,10 @@ package hooks
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
 )
 
@@ -57,14 +57,17 @@ func Validate() (*ValidationResult, error) {
 		return nil, fmt.Errorf("failed to get current git identity: %w", err)
 	}
 
-	// 7. Compare (by email - more reliable than name)
-	match := strings.EqualFold(currentEmail, expectedIdentity.Email)
+	// 7. Compare the full git identity and signing configuration.
+	match, err := profile.Matches(expectedIdentity)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compare identity state: %w", err)
+	}
 
 	return &ValidationResult{
 		Match:            match,
 		CurrentName:      currentName,
 		CurrentEmail:     currentEmail,
-		ExpectedName:     expectedIdentity.Name,
+		ExpectedName:     expectedIdentity.GitAuthorName(),
 		ExpectedEmail:    expectedIdentity.Email,
 		MatchedRule:      matchedRule,
 		ExpectedIdentity: expectedIdentity,

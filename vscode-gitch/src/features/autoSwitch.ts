@@ -3,7 +3,7 @@
  */
 
 import * as vscode from 'vscode';
-import { checkIdentityRule } from '../cli/identity';
+import { autoSwitchIdentity } from '../cli/identity';
 
 /**
  * Check if auto-switch is needed for the current workspace.
@@ -17,21 +17,7 @@ export async function checkAutoSwitch(
   workspacePath: string
 ): Promise<void> {
   try {
-    // checkIdentityRule runs gitch status which returns identity info
-    const result = await checkIdentityRule(binaryPath, workspacePath);
-
-    if (result.has_mismatch && result.current_identity) {
-      // Identity is set but not managed by gitch - warn user
-      const action = await vscode.window.showWarningMessage(
-        `Git identity (${result.current_identity.email}) is not managed by gitch. ` +
-          `Click the status bar to switch to a gitch identity.`,
-        'Switch Identity'
-      );
-
-      if (action === 'Switch Identity') {
-        vscode.commands.executeCommand('gitch.switchIdentity');
-      }
-    }
+    await autoSwitchIdentity(binaryPath, workspacePath);
   } catch (error) {
     console.error('[gitch] Auto-switch check failed:', error);
   }

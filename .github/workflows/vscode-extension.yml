@@ -32,6 +32,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run extension tests
+        run: npm test
+
+      - name: Compile extension
+        run: npm run compile
+
       - name: Update version (if provided)
         if: github.event.inputs.version
         run: npm version ${{ github.event.inputs.version }} --no-git-tag-version

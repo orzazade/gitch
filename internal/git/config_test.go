@@ -201,6 +201,39 @@ func TestGetCurrentIdentity_NoneSet(t *testing.T) {
 	}
 }
 
+func TestGetCurrentIdentity_EffectivePrefersLocal(t *testing.T) {
+	env := setupTestEnv(t)
+	defer env.cleanup(t)
+
+	origDir, _ := os.Getwd()
+	defer os.Chdir(origDir)
+	os.Chdir(env.dir)
+
+	if err := SetConfigScoped("user.name", "Global User", ScopeGlobal); err != nil {
+		t.Fatalf("failed to set global name: %v", err)
+	}
+	if err := SetConfigScoped("user.email", "global@example.com", ScopeGlobal); err != nil {
+		t.Fatalf("failed to set global email: %v", err)
+	}
+	if err := SetConfigScoped("user.name", "Local User", ScopeLocal); err != nil {
+		t.Fatalf("failed to set local name: %v", err)
+	}
+	if err := SetConfigScoped("user.email", "local@example.com", ScopeLocal); err != nil {
+		t.Fatalf("failed to set local email: %v", err)
+	}
+
+	name, email, err := GetCurrentIdentity()
+	if err != nil {
+		t.Fatalf("GetCurrentIdentity failed: %v", err)
+	}
+	if name != "Local User" {
+		t.Fatalf("effective user.name = %q, want %q", name, "Local User")
+	}
+	if email != "local@example.com" {
+		t.Fatalf("effective user.email = %q, want %q", email, "local@example.com")
+	}
+}
+
 func TestApplyIdentity_Success(t *testing.T) {
 	env := setupTestEnv(t)
 	defer env.cleanup(t)

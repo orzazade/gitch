@@ -72,6 +72,18 @@ func TestAddIdentity_InvalidEmail(t *testing.T) {
 	}
 }
 
+func TestAddIdentity_DuplicateEmail(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "work@example.com"})
+
+	err := cfg.AddIdentity(Identity{Name: "work-2", Email: "work@example.com"})
+	if err == nil {
+		t.Fatal("AddIdentity() should return error for duplicate email")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Fatalf("expected duplicate email error, got %v", err)
+	}
+}
+
 func TestGetIdentity_Found(t *testing.T) {
 	cfg := testConfig(
 		Identity{Name: "work", Email: "work@example.com"},

@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
-	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +13,7 @@ import (
 // listOutputItem represents a single identity in JSON output
 type listOutputItem struct {
 	Name       string `json:"name"`
+	GitName    string `json:"git_name,omitempty"`
 	Email      string `json:"email"`
 	SSHKeyPath string `json:"ssh_key_path,omitempty"`
 	GPGKeyID   string `json:"gpg_key_id,omitempty"`
@@ -57,11 +57,14 @@ func runList(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Get current git identity to determine which is active
-	_, activeEmail, err := git.GetCurrentIdentity()
+	// Resolve the exact active profile, if any.
+	state, err := resolveCurrentProfileState(cfg)
 	if err != nil {
-		// Non-fatal: just means no identity will be marked as active
-		activeEmail = ""
+		return fmt.Errorf("failed to resolve current profile state: %w", err)
+	}
+	activeProfileName := ""
+	if state.ExactMatch != nil {
+		activeProfileName = state.ExactMatch.Name
 	}
 
 	// JSON output for machine consumption
@@ -70,10 +73,11 @@ func runList(cmd *cobra.Command, args []string) error {
 		for i, id := range identities {
 			items[i] = listOutputItem{
 				Name:       id.Name,
+				GitName:    id.GitAuthorName(),
 				Email:      id.Email,
 				SSHKeyPath: id.SSHKeyPath,
 				GPGKeyID:   id.GPGKeyID,
-				IsActive:   strings.EqualFold(id.Email, activeEmail),
+				IsActive:   id.Name == activeProfileName,
 				IsDefault:  strings.EqualFold(id.Name, cfg.Default),
 			}
 		}
@@ -86,7 +90,7 @@ func runList(cmd *cobra.Command, args []string) error {
 	}
 
 	// Render and print identity list
-	output := ui.RenderIdentityList(identities, activeEmail, cfg.Default)
+	output := ui.RenderIdentityList(identities, activeProfileName, cfg.Default)
 	fmt.Println(output)
 
 	return nil

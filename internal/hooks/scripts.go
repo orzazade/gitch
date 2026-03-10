@@ -1,7 +1,10 @@
 package hooks
 
+const managedHookMarker = "# gitch:managed"
+
 // PreCommitScript is the bash script installed as pre-commit hook
 const PreCommitScript = `#!/bin/bash
+# gitch:managed
 # gitch pre-commit hook - validates identity before commit
 
 # Check for bypass

@@ -2,7 +2,7 @@
   "name": "gitch",
   "displayName": "gitch - Git Identity Manager",
   "description": "Manage multiple git identities with automatic SSH key selection",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "publisher": "orkhan-rzazade",
   "license": "MIT",
   "repository": {
@@ -51,6 +51,8 @@
   "scripts": {
     "compile": "node esbuild.js",
     "watch": "node esbuild.js --watch",
+    "build:test": "tsc -p tsconfig.test.json",
+    "test": "npm run build:test && node --test dist-test/test/cli.identity.test.js",
     "package": "vsce package",
     "vscode:prepublish": "node esbuild.js --production"
   },

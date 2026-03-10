@@ -137,8 +137,11 @@ func DetectConflicts(cfg *config.Config, export *ExportConfig) []Conflict {
 }
 
 // identitiesEqual checks if two identities are functionally equal.
-// Compares email, ssh_key_path, and gpg_key_id (case-insensitive for email).
+// Compares git author name, email, ssh_key_path, and gpg_key_id.
 func identitiesEqual(a, b *config.Identity) bool {
+	if a.GitAuthorName() != b.GitAuthorName() {
+		return false
+	}
 	if !strings.EqualFold(a.Email, b.Email) {
 		return false
 	}

@@ -9,7 +9,6 @@ import (
 	"github.com/orzazade/gitch/internal/config"
 	gitpkg "github.com/orzazade/gitch/internal/git"
 	gpgpkg "github.com/orzazade/gitch/internal/gpg"
-	"github.com/orzazade/gitch/internal/prompt"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
@@ -17,6 +16,7 @@ import (
 
 var (
 	addName        string
+	addGitName     string
 	addEmail       string
 	addDefault     bool
 	addGenerateSSH bool
@@ -33,7 +33,8 @@ var addCmd = &cobra.Command{
 	Long: `Add a new git identity with a name and email.
 
 The name is used to reference the identity in other commands.
-The email is the git user.email that will be used when this identity is active.
+The git author name and email are used for git user.name and user.email
+when this identity is active.
 
 SSH Key Options:
   --generate-ssh (-s)  Generate a new SSH keypair for this identity
@@ -51,7 +52,7 @@ GPG Key Options:
   --gpg-key            Link an existing GPG key ID for commit signing
 
 Examples:
-  gitch add --name work --email work@company.com
+  gitch add --name work --git-name "Jane Doe" --email work@company.com
   gitch add -n personal -e me@example.com --default
   gitch add --name github --email me@github.com --generate-ssh
   gitch add --name azuredev --email work@company.com --generate-ssh --key-type rsa
@@ -65,6 +66,7 @@ func init() {
 	rootCmd.AddCommand(addCmd)
 
 	addCmd.Flags().StringVarP(&addName, "name", "n", "", "Identity name (required)")
+	addCmd.Flags().StringVar(&addGitName, "git-name", "", "Git author name for commits (defaults to current git user.name)")
 	addCmd.Flags().StringVarP(&addEmail, "email", "e", "", "Email address (required)")
 	addCmd.Flags().BoolVarP(&addDefault, "default", "d", false, "Set as default identity")
 	addCmd.Flags().BoolVarP(&addGenerateSSH, "generate-ssh", "s", false, "Generate new SSH keypair")
@@ -100,6 +102,9 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		Name:  addName,
 		Email: addEmail,
 	}
+
+	gitName, gitNameWarning := resolveGitAuthorName(addGitName, addName)
+	identity.GitName = gitName
 
 	// Handle SSH key linking
 	if addSSHKey != "" {
@@ -263,17 +268,16 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	// If this is the first identity, update prompt cache (it becomes implicitly active)
-	if len(cfg.Identities) == 1 {
-		_ = prompt.UpdateCache(identity.Name) // Best effort
-	}
-
 	// Print success
 	msg := fmt.Sprintf("Added identity '%s' (%s)", addName, addEmail)
 	fmt.Println(ui.SuccessStyle.Render(msg))
 
 	if addDefault {
 		fmt.Println("Set as default identity")
+	}
+
+	if gitNameWarning != "" {
+		fmt.Println(ui.WarningStyle.Render("Warning: " + gitNameWarning))
 	}
 
 	return nil

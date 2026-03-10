@@ -21,6 +21,7 @@ import (
 // WizardResult holds the collected data from the wizard
 type WizardResult struct {
 	Name           string
+	GitName        string
 	Email          string
 	SSHKeyPath     string
 	SSHKeyType     string // "ed25519" or "rsa"
@@ -33,34 +34,35 @@ type WizardResult struct {
 
 // Model is the Bubble Tea model for the setup wizard
 type Model struct {
-	step                 int
-	nameInput            textinput.Model
-	emailInput           textinput.Model
-	sshChoice            int
-	sshKeyPathInput      textinput.Model // for existing SSH key path
-	sshKeyTypeChoice     int             // 0 = Ed25519, 1 = RSA
-	isAzureDevOps        bool            // auto-detected Azure DevOps remote
-	sshPassphraseInput   textinput.Model
-	sshConfirmInput      textinput.Model
-	gpgChoice            int
-	gpgKeyIDInput        textinput.Model // for existing GPG key ID
-	gpgPassphraseInput   textinput.Model
-	gpgConfirmInput      textinput.Model
-	spinner              spinner.Model
-	progress             progress.Model
-	loading              bool
-	loadingMessage       string
-	err                  error
-	warning              string // non-fatal warning message
-	done                 bool
-	Cancelled            bool
-	result               *WizardResult
-	sshPassphrase        []byte
-	gpgPassphrase        []byte
-	generatedSSHKeyPath  string // track SSH result for later
-	generatedGPGKeyID    string // track GPG result for later
-	existingSSHKeyPath   string // track existing SSH key path
-	existingGPGKeyID     string // track existing GPG key ID
+	step                int
+	nameInput           textinput.Model
+	gitNameInput        textinput.Model
+	emailInput          textinput.Model
+	sshChoice           int
+	sshKeyPathInput     textinput.Model // for existing SSH key path
+	sshKeyTypeChoice    int             // 0 = Ed25519, 1 = RSA
+	isAzureDevOps       bool            // auto-detected Azure DevOps remote
+	sshPassphraseInput  textinput.Model
+	sshConfirmInput     textinput.Model
+	gpgChoice           int
+	gpgKeyIDInput       textinput.Model // for existing GPG key ID
+	gpgPassphraseInput  textinput.Model
+	gpgConfirmInput     textinput.Model
+	spinner             spinner.Model
+	progress            progress.Model
+	loading             bool
+	loadingMessage      string
+	err                 error
+	warning             string // non-fatal warning message
+	done                bool
+	Cancelled           bool
+	result              *WizardResult
+	sshPassphrase       []byte
+	gpgPassphrase       []byte
+	generatedSSHKeyPath string // track SSH result for later
+	generatedGPGKeyID   string // track GPG result for later
+	existingSSHKeyPath  string // track existing SSH key path
+	existingGPGKeyID    string // track existing GPG key ID
 }
 
 // titleStyle is the style for the wizard header
@@ -98,6 +100,17 @@ func New() Model {
 	nameInput.Focus()
 	nameInput.CharLimit = 50
 	nameInput.Width = 40
+
+	currentGitName, _, _ := gitpkg.GetCurrentIdentity()
+
+	// Git author name input
+	gitNameInput := textinput.New()
+	gitNameInput.Placeholder = strings.TrimSpace(currentGitName)
+	if gitNameInput.Placeholder == "" {
+		gitNameInput.Placeholder = "Jane Doe"
+	}
+	gitNameInput.CharLimit = 100
+	gitNameInput.Width = 40
 
 	// Email input
 	emailInput := textinput.New()
@@ -171,6 +184,7 @@ func New() Model {
 	return Model{
 		step:               stepName,
 		nameInput:          nameInput,
+		gitNameInput:       gitNameInput,
 		emailInput:         emailInput,
 		sshChoice:          sshChoiceGenerate,
 		sshKeyPathInput:    sshKeyPathInput,
@@ -297,6 +311,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.step {
 	case stepName:
 		m.nameInput, cmd = m.nameInput.Update(msg)
+	case stepGitName:
+		m.gitNameInput, cmd = m.gitNameInput.Update(msg)
 	case stepEmail:
 		m.emailInput, cmd = m.emailInput.Update(msg)
 	case stepSSHKeyPath:
@@ -319,8 +335,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // getPreviousStep returns the step to go back to
 func (m Model) getPreviousStep() int {
 	switch m.step {
-	case stepEmail:
+	case stepGitName:
 		return stepName
+	case stepEmail:
+		return stepGitName
 	case stepSSH:
 		return stepEmail
 	case stepSSHKeyPath:
@@ -364,6 +382,19 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		name := strings.TrimSpace(m.nameInput.Value())
 		if err := config.ValidateName(name); err != nil {
 			m.err = err
+			return m, nil
+		}
+		m.err = nil
+		if strings.TrimSpace(m.gitNameInput.Value()) == "" {
+			m.gitNameInput.SetValue(m.gitNameInput.Placeholder)
+		}
+		m.step = stepGitName
+		return m, m.gitNameInput.Focus()
+
+	case stepGitName:
+		gitName := strings.TrimSpace(m.gitNameInput.Value())
+		if gitName == "" {
+			m.err = fmt.Errorf("please enter a git author name")
 			return m, nil
 		}
 		m.err = nil
@@ -561,7 +592,7 @@ func (m Model) startGPGKeyGeneration() (tea.Model, tea.Cmd) {
 	return m, tea.Batch(
 		m.spinner.Tick,
 		generateGPGKeyCmd(
-			strings.TrimSpace(m.nameInput.Value()),
+			strings.TrimSpace(m.gitNameInput.Value()),
 			strings.TrimSpace(m.emailInput.Value()),
 			m.gpgPassphrase,
 		),
@@ -612,6 +643,8 @@ func (m Model) focusCurrentInput() tea.Cmd {
 	switch m.step {
 	case stepName:
 		return m.nameInput.Focus()
+	case stepGitName:
+		return m.gitNameInput.Focus()
 	case stepEmail:
 		return m.emailInput.Focus()
 	case stepSSHKeyPath:
@@ -684,6 +717,11 @@ func (m Model) View() string {
 	case stepName:
 		b.WriteString("  > ")
 		b.WriteString(m.nameInput.View())
+		b.WriteString("\n")
+
+	case stepGitName:
+		b.WriteString("  > ")
+		b.WriteString(m.gitNameInput.View())
 		b.WriteString("\n")
 
 	case stepEmail:
@@ -804,18 +842,20 @@ func (m Model) getDisplayStep() int {
 	switch m.step {
 	case stepName:
 		return 1
-	case stepEmail:
+	case stepGitName:
 		return 2
-	case stepSSH:
+	case stepEmail:
 		return 3
+	case stepSSH:
+		return 4
 	case stepSSHKeyPath:
-		return 4 // use existing path
+		return 5 // use existing path
 	case stepSSHKeyType:
-		return 4 // generate: key type selection
+		return 5 // generate: key type selection
 	case stepSSHPassphrase:
-		return 5
-	case stepSSHConfirmPass:
 		return 6
+	case stepSSHConfirmPass:
+		return 7
 	case stepGPG:
 		return m.getGPGBaseStep()
 	case stepGPGKeyID:
@@ -831,7 +871,7 @@ func (m Model) getDisplayStep() int {
 
 // getGPGBaseStep returns the step number for the GPG choice step
 func (m Model) getGPGBaseStep() int {
-	base := 3 // name, email, ssh choice
+	base := 4 // profile name, git name, email, ssh choice
 	switch m.sshChoice {
 	case sshChoiceSkip:
 		base++ // just ssh choice
@@ -879,6 +919,7 @@ func (m Model) buildResult(gpgGenerated, gpgExisting bool) *WizardResult {
 
 	return &WizardResult{
 		Name:           strings.TrimSpace(m.nameInput.Value()),
+		GitName:        strings.TrimSpace(m.gitNameInput.Value()),
 		Email:          strings.TrimSpace(m.emailInput.Value()),
 		SSHKeyPath:     sshKeyPath,
 		SSHKeyType:     m.getSSHKeyTypeString(),
@@ -896,6 +937,8 @@ func (m Model) renderHints() string {
 	switch m.step {
 	case stepName:
 		hints = "Enter Continue  Esc Quit"
+	case stepGitName:
+		hints = "Enter Continue  Esc Back"
 	case stepSSH, stepSSHKeyType, stepGPG:
 		hints = "Up/Down Select  Enter Confirm  Esc Back"
 	default:

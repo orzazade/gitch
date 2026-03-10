@@ -11,31 +11,61 @@ import (
 // ErrGitNotFound indicates git binary was not found on the system.
 var ErrGitNotFound = errors.New("git: executable not found in PATH")
 
+// Scope controls which git configuration scope is read or written.
+type Scope string
+
+const (
+	ScopeEffective Scope = "effective"
+	ScopeGlobal    Scope = "global"
+	ScopeLocal     Scope = "local"
+)
+
+func scopeArgs(scope Scope) ([]string, error) {
+	switch scope {
+	case ScopeEffective:
+		return []string{"config"}, nil
+	case ScopeGlobal:
+		return []string{"config", "--global"}, nil
+	case ScopeLocal:
+		return []string{"config", "--local"}, nil
+	default:
+		return nil, fmt.Errorf("unknown git config scope %q", scope)
+	}
+}
+
 // GetConfig reads a git config value.
 // If global is true, reads from --global scope; otherwise reads from local repo.
 // Returns empty string if key is not set (not an error).
 func GetConfig(key string, global bool) (string, error) {
-	args := []string{"config"}
+	scope := ScopeLocal
 	if global {
-		args = append(args, "--global")
+		scope = ScopeGlobal
 	}
+	return GetConfigScoped(key, scope)
+}
+
+// GetConfigScoped reads a git config value from the requested scope.
+// Effective scope reads the value that git would currently use.
+func GetConfigScoped(key string, scope Scope) (string, error) {
+	args, err := scopeArgs(scope)
+	if err != nil {
+		return "", err
+	}
+
 	args = append(args, "--get", key)
 
 	cmd := exec.Command("git", args...)
 	output, err := cmd.Output()
 	if err != nil {
-		// Check if git is not found
 		if errors.Is(err, exec.ErrNotFound) {
 			return "", ErrGitNotFound
 		}
 
-		// Exit code 1 means key not set - this is not an error, just return empty
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) && exitErr.ExitCode() == 1 {
 			return "", nil
 		}
 
-		// Other errors should be wrapped with context
 		return "", fmt.Errorf("failed to get git config %s: %w", key, err)
 	}
 
@@ -45,15 +75,24 @@ func GetConfig(key string, global bool) (string, error) {
 // SetConfig writes a git config value.
 // If global is true, writes to --global scope; otherwise writes to local repo.
 func SetConfig(key, value string, global bool) error {
-	args := []string{"config"}
+	scope := ScopeLocal
 	if global {
-		args = append(args, "--global")
+		scope = ScopeGlobal
 	}
+	return SetConfigScoped(key, value, scope)
+}
+
+// SetConfigScoped writes a git config value to the requested scope.
+func SetConfigScoped(key, value string, scope Scope) error {
+	args, err := scopeArgs(scope)
+	if err != nil {
+		return err
+	}
+
 	args = append(args, key, value)
 
 	cmd := exec.Command("git", args...)
 	if err := cmd.Run(); err != nil {
-		// Check if git is not found
 		if errors.Is(err, exec.ErrNotFound) {
 			return ErrGitNotFound
 		}
@@ -67,22 +106,30 @@ func SetConfig(key, value string, global bool) error {
 // If global is true, removes from --global scope; otherwise removes from local repo.
 // Returns nil if the key was not set (idempotent).
 func UnsetConfig(key string, global bool) error {
-	args := []string{"config", "--unset"}
+	scope := ScopeLocal
 	if global {
-		args = append(args, "--global")
+		scope = ScopeGlobal
 	}
-	args = append(args, key)
+	return UnsetConfigScoped(key, scope)
+}
+
+// UnsetConfigScoped removes a git config key from the requested scope.
+func UnsetConfigScoped(key string, scope Scope) error {
+	args, err := scopeArgs(scope)
+	if err != nil {
+		return err
+	}
+
+	args = append(args, "--unset", key)
 
 	cmd := exec.Command("git", args...)
 	if err := cmd.Run(); err != nil {
-		// Check if git is not found
 		if errors.Is(err, exec.ErrNotFound) {
 			return ErrGitNotFound
 		}
 
-		// Exit code 5 means key was not set - this is not an error
 		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) && exitErr.ExitCode() == 5 {
+		if errors.As(err, &exitErr) && (exitErr.ExitCode() == 5 || exitErr.ExitCode() == 1) {
 			return nil
 		}
 
@@ -92,15 +139,20 @@ func UnsetConfig(key string, global bool) error {
 	return nil
 }
 
-// GetCurrentIdentity returns the current git user.name and user.email from global config.
-// Either value may be empty if not set.
+// GetCurrentIdentity returns the effective git user.name and user.email for the
+// current working directory, falling back to global config outside repositories.
 func GetCurrentIdentity() (name string, email string, err error) {
-	name, err = GetConfig("user.name", true)
+	return GetCurrentIdentityScoped(ScopeEffective)
+}
+
+// GetCurrentIdentityScoped reads git user.name and user.email from a specific scope.
+func GetCurrentIdentityScoped(scope Scope) (name string, email string, err error) {
+	name, err = GetConfigScoped("user.name", scope)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get user.name: %w", err)
 	}
 
-	email, err = GetConfig("user.email", true)
+	email, err = GetConfigScoped("user.email", scope)
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get user.email: %w", err)
 	}
@@ -111,11 +163,16 @@ func GetCurrentIdentity() (name string, email string, err error) {
 // ApplyIdentity sets git user.name and user.email globally.
 // Returns the first error encountered, if any.
 func ApplyIdentity(name, email string) error {
-	if err := SetConfig("user.name", name, true); err != nil {
+	return ApplyIdentityScoped(name, email, ScopeGlobal)
+}
+
+// ApplyIdentityScoped sets git user.name and user.email in the requested scope.
+func ApplyIdentityScoped(name, email string, scope Scope) error {
+	if err := SetConfigScoped("user.name", name, scope); err != nil {
 		return fmt.Errorf("failed to apply identity: %w", err)
 	}
 
-	if err := SetConfig("user.email", email, true); err != nil {
+	if err := SetConfigScoped("user.email", email, scope); err != nil {
 		return fmt.Errorf("failed to apply identity: %w", err)
 	}
 
@@ -125,11 +182,16 @@ func ApplyIdentity(name, email string) error {
 // ApplySigningConfig configures git to use the specified GPG key for signing commits.
 // Sets user.signingkey and commit.gpgsign globally.
 func ApplySigningConfig(keyID string) error {
-	if err := SetConfig("user.signingkey", keyID, true); err != nil {
+	return ApplySigningConfigScoped(keyID, ScopeGlobal)
+}
+
+// ApplySigningConfigScoped configures git to use the specified GPG key for signing commits.
+func ApplySigningConfigScoped(keyID string, scope Scope) error {
+	if err := SetConfigScoped("user.signingkey", keyID, scope); err != nil {
 		return fmt.Errorf("failed to set signing key: %w", err)
 	}
 
-	if err := SetConfig("commit.gpgsign", "true", true); err != nil {
+	if err := SetConfigScoped("commit.gpgsign", "true", scope); err != nil {
 		return fmt.Errorf("failed to enable commit signing: %w", err)
 	}
 
@@ -139,13 +201,38 @@ func ApplySigningConfig(keyID string) error {
 // ClearSigningConfig removes GPG signing configuration from git global config.
 // This is idempotent - returns nil even if the keys were not set.
 func ClearSigningConfig() error {
-	if err := UnsetConfig("user.signingkey", true); err != nil {
+	return ClearSigningConfigScoped(ScopeGlobal)
+}
+
+// ClearSigningConfigScoped removes GPG signing configuration from git config.
+func ClearSigningConfigScoped(scope Scope) error {
+	if err := UnsetConfigScoped("user.signingkey", scope); err != nil {
 		return fmt.Errorf("failed to unset signing key: %w", err)
 	}
 
-	if err := UnsetConfig("commit.gpgsign", true); err != nil {
+	if err := UnsetConfigScoped("commit.gpgsign", scope); err != nil {
 		return fmt.Errorf("failed to unset commit signing: %w", err)
 	}
 
 	return nil
+}
+
+// IsGitRepository reports whether the current working directory is inside a git repository.
+func IsGitRepository() bool {
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	return strings.TrimSpace(string(output)) == "true"
+}
+
+// GitPath resolves a path relative to the current repository's git directory.
+func GitPath(relPath string) (string, error) {
+	cmd := exec.Command("git", "rev-parse", "--git-path", relPath)
+	output, err := cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to resolve git path %s: %w", relPath, err)
+	}
+	return strings.TrimSpace(string(output)), nil
 }

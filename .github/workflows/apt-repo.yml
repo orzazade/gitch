@@ -65,6 +65,7 @@ permissions:
 jobs:
   update-apt-repo:
     name: Update APT Repository
+    if: ${{ secrets.APT_GPG_PRIVATE_KEY != '' }}
     runs-on: ubuntu-latest
 
     steps:

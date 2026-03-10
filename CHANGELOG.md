@@ -7,23 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Interactive setup wizard (`gitch setup`)
-- Identity selector TUI (`gitch use` without args)
-- Shell completions for bash, zsh, and fish
-- SSH key generation with Ed25519
-- SSH key linking to existing keys
-- Automatic ssh-agent integration on identity switch
-- macOS Keychain support for SSH keys
-- Core identity management (add, list, status, use, delete)
-- XDG-compliant configuration storage
-- Styled terminal output with Lipgloss
+## [2.3.0] - 2026-03-11
 
-### Coming Soon
-- Directory-based auto-switching rules
-- Remote-based identity matching
-- Pre-commit hook integration
-- Shell prompt integration
+### Added
+- Repo-local profile application by default when `gitch` runs inside a Git repository
+- Deterministic SSH profile switching through `core.sshCommand`
+- Quiet shell auto-switching on directory change for Bash, Zsh, and Fish
+- Repo-local hook installation with managed-hook safety checks
+- Repo-aware VS Code extension tests and CI coverage
+- Project direction document for product scope and architecture guardrails
+
+### Changed
+- Profiles now separate profile id (`name`) from Git author name (`git_name`)
+- `gitch status` is read-only by default and only switches when explicitly requested
+- Manual switch, auto-switch, hook switch, and editor integration now share one profile application path
+- Active-profile detection now requires a full profile match instead of email-only matching
+- VS Code integration now resolves status and switching against the current workspace repository
+
+### Fixed
+- Inconsistent GPG and SSH behavior between manual and automatic switching paths
+- macOS directory rule mismatches caused by symlinked path aliases
+- Duplicate-email profile ambiguity in active-profile resolution
+- Unsafe global hook takeover of unrelated existing hook setups
+- Extension publish pipeline shipping without extension test coverage
 
 ## [0.1.0] - TBD
 
@@ -35,5 +41,6 @@ Initial release with core functionality:
 
 ---
 
-[Unreleased]: https://github.com/orzazade/gitch/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/orzazade/gitch/compare/v2.3.0...HEAD
+[2.3.0]: https://github.com/orzazade/gitch/compare/v2.2.0...v2.3.0
 [0.1.0]: https://github.com/orzazade/gitch/releases/tag/v0.1.0

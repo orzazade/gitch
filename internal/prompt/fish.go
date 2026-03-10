@@ -26,6 +26,10 @@ end
 
 # Override fish_prompt to prepend gitch identity
 function fish_prompt
+  if test "$PWD" != "$_GITCH_LAST_PWD"
+    set -g _GITCH_LAST_PWD $PWD
+    gitch autoswitch --quiet >/dev/null 2>/dev/null
+  end
   _gitch_prompt
   _gitch_original_fish_prompt
 end

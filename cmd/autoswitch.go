@@ -3,13 +3,31 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
-	sshpkg "github.com/orzazade/gitch/internal/ssh"
+	"github.com/orzazade/gitch/internal/ui"
+	"github.com/spf13/cobra"
 )
+
+var autoSwitchQuiet bool
+
+var autoSwitchCmd = &cobra.Command{
+	Use:   "autoswitch",
+	Short: "Apply the best matching identity rule for the current directory or repository",
+	Long: `Find the best matching directory or remote rule and apply that identity.
+
+This command is useful for shell hooks, editor integration, or manual checks when
+you want rule-based switching without using the interactive selector.
+
+Examples:
+  gitch autoswitch
+  gitch autoswitch --quiet`,
+	Args: cobra.NoArgs,
+	RunE: runAutoSwitchCommand,
+}
 
 // AutoSwitchResult contains the result of an auto-switch attempt
 type AutoSwitchResult struct {
@@ -18,6 +36,49 @@ type AutoSwitchResult struct {
 	ToIdentity    string
 	MatchedRule   *rules.Rule
 	SkippedReason string
+}
+
+func init() {
+	rootCmd.AddCommand(autoSwitchCmd)
+	autoSwitchCmd.Flags().BoolVar(&autoSwitchQuiet, "quiet", false, "Exit silently when no switch is needed")
+}
+
+func runAutoSwitchCommand(cmd *cobra.Command, args []string) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	result, err := TryAutoSwitch(cfg)
+	if err != nil {
+		return fmt.Errorf("failed to auto-switch: %w", err)
+	}
+
+	if result == nil || !result.Switched {
+		if autoSwitchQuiet {
+			return nil
+		}
+		if result == nil || result.SkippedReason == "no matching rule" {
+			fmt.Println(ui.DimStyle.Render("No matching identity rule."))
+			return nil
+		}
+		fmt.Println(ui.DimStyle.Render("No switch performed: " + result.SkippedReason))
+		return nil
+	}
+
+	identity, err := cfg.GetIdentity(result.ToIdentity)
+	if err != nil {
+		return fmt.Errorf("switched identity %q is not available in config: %w", result.ToIdentity, err)
+	}
+
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)))
+	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
+	if defaultApplyScope() == git.ScopeLocal {
+		fmt.Println("Scope: local repository")
+	} else {
+		fmt.Println("Scope: global")
+	}
+	return nil
 }
 
 // TryAutoSwitch checks if identity should switch based on rules and performs the switch
@@ -50,13 +111,19 @@ func TryAutoSwitch(cfg *config.Config) (*AutoSwitchResult, error) {
 	}
 
 	// 4. Get current git identity
-	_, currentEmail, err := git.GetCurrentIdentity()
+	currentName, currentEmail, err := git.GetCurrentIdentity()
 	if err != nil {
 		return nil, err
 	}
 
-	// 5. Check if already using correct identity
-	if strings.EqualFold(currentEmail, expectedIdentity.Email) {
+	scope := defaultApplyScope()
+
+	// 5. Check if already using the full expected profile
+	matches, err := profile.MatchesAtScope(expectedIdentity, scope)
+	if err != nil {
+		return nil, err
+	}
+	if matches {
 		return &AutoSwitchResult{
 			Switched:      false,
 			ToIdentity:    expectedIdentity.Name,
@@ -66,27 +133,24 @@ func TryAutoSwitch(cfg *config.Config) (*AutoSwitchResult, error) {
 	}
 
 	// 6. Perform the switch
-	// Set git config
-	if err := git.SetConfig("user.name", expectedIdentity.Name, true); err != nil {
+	if err := applyConfiguredIdentity(expectedIdentity, scope); err != nil {
 		return nil, err
 	}
-	if err := git.SetConfig("user.email", expectedIdentity.Email, true); err != nil {
-		return nil, err
-	}
-
-	// Load SSH key if present (silently ignore errors)
-	if expectedIdentity.SSHKeyPath != "" {
-		_ = sshpkg.AddKeyToAgent(expectedIdentity.SSHKeyPath)
-	}
-
-	// Update default in config
-	cfg.Default = expectedIdentity.Name
-	_ = cfg.Save()
 
 	return &AutoSwitchResult{
 		Switched:     true,
-		FromIdentity: currentEmail,
+		FromIdentity: formatCurrentIdentity(currentName, currentEmail),
 		ToIdentity:   expectedIdentity.Name,
 		MatchedRule:  matchedRule,
 	}, nil
+}
+
+func formatCurrentIdentity(name, email string) string {
+	if name == "" {
+		return email
+	}
+	if email == "" {
+		return name
+	}
+	return fmt.Sprintf("%s <%s>", name, email)
 }

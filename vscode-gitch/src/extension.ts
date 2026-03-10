@@ -4,6 +4,7 @@ import { StatusBarManager } from './ui/statusBar';
 import { getCurrentIdentity } from './cli/identity';
 import { registerSwitchIdentityCommand } from './commands/switchIdentity';
 import { registerAutoSwitch, checkAutoSwitch } from './features/autoSwitch';
+import { getPreferredWorkspacePath } from './workspace';
 
 let statusBarManager: StatusBarManager | undefined;
 
@@ -16,7 +17,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.workspaceState.update('gitch.binaryPath', binaryPath);
 
     // Initialize status bar
-    statusBarManager = new StatusBarManager(binaryPath);
+    statusBarManager = new StatusBarManager(binaryPath, getPreferredWorkspacePath);
     context.subscriptions.push(statusBarManager);
     await statusBarManager.initialize();
 
@@ -31,6 +32,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const switchCmd = registerSwitchIdentityCommand(
       context,
       binaryPath,
+      getPreferredWorkspacePath,
       async () => {
         await statusBarManager?.refresh();
         await updateScmPlaceholder(binaryPath);
@@ -52,7 +54,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     // Initial auto-switch check for current workspace
     const initialFolder = vscode.workspace.workspaceFolders?.[0];
     if (initialFolder) {
-      checkAutoSwitch(binaryPath, initialFolder.uri.fsPath);
+      await checkAutoSwitch(binaryPath, initialFolder.uri.fsPath);
     }
 
     // Watch for workspace folder changes
@@ -109,14 +111,17 @@ async function updateScmPlaceholder(binaryPath: string): Promise<void> {
   const git = gitExtension.getAPI(1);
   if (!git || !git.repositories) return;
 
-  const identity = await getCurrentIdentity(binaryPath);
-  if (!identity) return;
-
-  const placeholder = `Committing as: ${identity.name} <${identity.email}>`;
-
   for (const repo of git.repositories) {
     if (repo.inputBox) {
-      repo.inputBox.placeholder = placeholder;
+      const workspacePath = repo.rootUri?.fsPath ?? getPreferredWorkspacePath();
+      const identity = await getCurrentIdentity(binaryPath, workspacePath);
+      if (!identity) {
+        repo.inputBox.placeholder = '';
+        continue;
+      }
+
+      const authorName = identity.git_name || identity.name;
+      repo.inputBox.placeholder = `Committing as: ${authorName} <${identity.email}>`;
     }
   }
 }

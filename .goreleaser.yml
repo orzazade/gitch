@@ -70,21 +70,22 @@ nfpms:
       - rpm
       - apk
 
-scoops:
-  - name: gitch
-    repository:
-      owner: orzazade
-      name: scoop-bucket
-      branch: main
-      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
-    commit_author:
-      name: goreleaserbot
-      email: bot@goreleaser.com
-    commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
-    homepage: https://github.com/orzazade/gitch
-    description: Git identity manager - never commit with the wrong identity again
-    license: MIT
-    skip_upload: auto
+# Scoop publishing is disabled until the bucket repository exists again.
+# scoops:
+#   - name: gitch
+#     repository:
+#       owner: orzazade
+#       name: scoop-bucket
+#       branch: main
+#       token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+#     commit_author:
+#       name: goreleaserbot
+#       email: bot@goreleaser.com
+#     commit_msg_template: "Scoop update for {{ .ProjectName }} version {{ .Tag }}"
+#     homepage: https://github.com/orzazade/gitch
+#     description: Git identity manager - never commit with the wrong identity again
+#     license: MIT
+#     skip_upload: auto
 
 # Chocolatey disabled - requires Windows runner to package
 # TODO: Add separate Windows workflow for Chocolatey publishing

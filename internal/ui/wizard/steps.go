@@ -4,16 +4,17 @@ package wizard
 // Step constants for the wizard flow
 const (
 	stepName           = 0
-	stepEmail          = 1
-	stepSSH            = 2
-	stepSSHKeyPath     = 3  // New: enter existing SSH key path
-	stepSSHKeyType     = 4  // Moved: was 3
-	stepSSHPassphrase  = 5  // Moved: was 4
-	stepSSHConfirmPass = 6  // Moved: was 5
-	stepGPG            = 7  // Moved: was 6
-	stepGPGKeyID       = 8  // New: enter existing GPG key ID
-	stepGPGPassphrase  = 9  // Moved: was 7
-	stepGPGConfirmPass = 10 // Moved: was 8
+	stepGitName        = 1
+	stepEmail          = 2
+	stepSSH            = 3
+	stepSSHKeyPath     = 4
+	stepSSHKeyType     = 5
+	stepSSHPassphrase  = 6
+	stepSSHConfirmPass = 7
+	stepGPG            = 8
+	stepGPGKeyID       = 9
+	stepGPGPassphrase  = 10
+	stepGPGConfirmPass = 11
 )
 
 // sshOptions are the choices for SSH key handling
@@ -62,7 +63,7 @@ const sshKeyTypeRSA = 1
 
 // getTotalSteps returns the total number of steps based on SSH and GPG choices.
 func getTotalSteps(sshChoice, gpgChoice int, sshPassphraseEmpty, gpgPassphraseEmpty bool) int {
-	total := 3 // name, email, ssh choice
+	total := 4 // profile name, git name, email, ssh choice
 
 	// Add SSH steps based on choice
 	switch sshChoice {
@@ -100,6 +101,8 @@ func getStepTitle(step int) string {
 	switch step {
 	case stepName:
 		return "What name would you like to use for this identity?"
+	case stepGitName:
+		return "What Git author name should commits use?"
 	case stepEmail:
 		return "What's your email address for this identity?"
 	case stepSSH:
@@ -130,6 +133,8 @@ func getStepHint(step int) string {
 	switch step {
 	case stepName:
 		return "Alphanumeric and hyphens only (e.g., work, personal, github)"
+	case stepGitName:
+		return "This becomes git user.name for commits (e.g., Jane Doe)"
 	case stepEmail:
 		return "This will be used as your git user.email"
 	case stepSSH:

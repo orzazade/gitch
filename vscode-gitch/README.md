@@ -4,10 +4,10 @@ Never commit with the wrong git identity again.
 
 ## Features
 
-- **Status Bar Identity** - See your current git identity at a glance
+- **Status Bar Identity** - See the active profile for the current repository or workspace
 - **Quick Switch** - Click the status bar to switch between identities
 - **Auto-Switch** - Automatically switch identity based on workspace rules
-- **Mismatch Warnings** - Get notified when using an unmanaged identity
+- **Mismatch Warnings** - Get notified when a profile is unmanaged or only partially applied
 
 ## Requirements
 
@@ -17,14 +17,8 @@ The extension automatically downloads the `gitch` CLI on first activation. Alter
 # macOS
 brew install orzazade/tap/gitch
 
-# Linux (Debian/Ubuntu)
-curl -fsSL https://orzazade.github.io/gitch/apt/gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/gitch.gpg
-echo "deb [signed-by=/usr/share/keyrings/gitch.gpg] https://orzazade.github.io/gitch/apt stable main" | sudo tee /etc/apt/sources.list.d/gitch.list
-sudo apt update && sudo apt install gitch
-
-# Windows
-scoop bucket add gitch https://github.com/orzazade/scoop-bucket
-scoop install gitch
+# Linux / Windows
+# Download the appropriate package or archive from GitHub Releases
 ```
 
 ## Usage
@@ -33,6 +27,8 @@ scoop install gitch
 2. Look at the status bar (bottom left) - you'll see your current identity
 3. Click the status bar to switch identities
 4. Set up auto-switch rules with `gitch rule add` in the terminal
+
+In multi-root workspaces, the extension prefers the active editor's repository and falls back to the first workspace folder when no editor is focused.
 
 ## Extension Settings
 

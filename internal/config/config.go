@@ -19,8 +19,18 @@ type Config struct {
 	Rules      []rules.Rule `mapstructure:"rules" yaml:"rules,omitempty"`
 }
 
+const configPathEnv = "GITCH_CONFIG_PATH"
+
 // ConfigPath returns the XDG config file path for gitch
 func ConfigPath() (string, error) {
+	if override := strings.TrimSpace(os.Getenv(configPathEnv)); override != "" {
+		return override, nil
+	}
+
+	if xdgHome := strings.TrimSpace(os.Getenv("XDG_CONFIG_HOME")); xdgHome != "" {
+		return filepath.Join(xdgHome, "gitch", "config.yaml"), nil
+	}
+
 	return xdg.ConfigFile("gitch/config.yaml")
 }
 
@@ -121,11 +131,11 @@ func (c *Config) AddIdentity(identity Identity) error {
 		return fmt.Errorf("identity with name %q already exists", identity.Name)
 	}
 
-	// Check for duplicate email (warn but allow)
+	// Duplicate emails make active profile detection ambiguous because git config
+	// only stores one user.email at a time.
 	for _, existing := range c.Identities {
 		if strings.EqualFold(existing.Email, identity.Email) {
-			fmt.Fprintf(os.Stderr, "Warning: email %q is already used by identity %q\n", identity.Email, existing.Name)
-			break
+			return fmt.Errorf("identity with email %q already exists (%s)", identity.Email, existing.Name)
 		}
 	}
 
