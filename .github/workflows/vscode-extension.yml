@@ -46,7 +46,12 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/vscode-v')
         run: |
           VERSION=${GITHUB_REF#refs/tags/vscode-v}
-          npm version $VERSION --no-git-tag-version
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            npm version $VERSION --no-git-tag-version
+          else
+            echo "package.json already at version $VERSION"
+          fi
 
       - name: Package extension
         run: npx vsce package

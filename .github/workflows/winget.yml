@@ -29,13 +29,11 @@ name: Publish to WinGet
 # =============================================================================
 
 on:
-  release:
-    types: [released]
+  workflow_dispatch:
 
 jobs:
   winget:
     name: Publish to WinGet
-    if: ${{ secrets.WINGET_TOKEN != '' }}
     runs-on: windows-latest
     steps:
       - name: Publish to WinGet
