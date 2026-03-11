@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/orzazade/gitch/internal/prompt"
+	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{

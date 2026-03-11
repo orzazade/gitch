@@ -524,20 +524,20 @@ func TestMergeConfig_MixedDecisions(t *testing.T) {
 
 	export := &ExportConfig{
 		Identities: []config.Identity{
-			{Name: "work", Email: "work-new@example.com"},        // Conflict - will overwrite
+			{Name: "work", Email: "work-new@example.com"},         // Conflict - will overwrite
 			{Name: "personal", Email: "personal-new@example.com"}, // Conflict - will skip
 			{Name: "opensource", Email: "oss@example.com"},        // New - will add
 		},
 		Rules: []rules.Rule{
-			{Type: rules.DirectoryRule, Pattern: "~/work/**", Identity: "work-new"},   // Conflict - will skip
+			{Type: rules.DirectoryRule, Pattern: "~/work/**", Identity: "work-new"},     // Conflict - will skip
 			{Type: rules.DirectoryRule, Pattern: "~/projects/**", Identity: "personal"}, // New - will add
 		},
 	}
 
 	overwrite := map[string]bool{
-		"work":       true,  // Overwrite this identity
-		"personal":   false, // Skip this identity
-		"~/work/**":  false, // Skip this rule
+		"work":      true,  // Overwrite this identity
+		"personal":  false, // Skip this identity
+		"~/work/**": false, // Skip this rule
 	}
 
 	result, err := MergeConfig(cfg, export, overwrite)
