@@ -30,13 +30,29 @@ name: Publish to WinGet
 
 on:
   workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Release tag to publish to WinGet (optional if the action can infer the latest release)'
+        required: false
 
 jobs:
   winget:
     name: Publish to WinGet
     runs-on: windows-latest
     steps:
+      - name: Preflight
+        id: preflight
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.WINGET_TOKEN }}" ]; then
+            echo "WINGET_TOKEN is not configured; skipping WinGet publish."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
       - name: Publish to WinGet
+        if: steps.preflight.outputs.enabled == 'true'
         uses: vedantmgoyal9/winget-releaser@v2
         with:
           identifier: Orzazade.Gitch

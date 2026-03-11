@@ -56,6 +56,10 @@ name: Update APT Repository
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to import into the APT repo (for example v2.3.0)'
+        required: true
 
 permissions:
   contents: write
@@ -66,31 +70,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Preflight
+        id: preflight
+        run: |
+          if [ -z "${{ secrets.APT_GPG_PRIVATE_KEY }}" ]; then
+            echo "APT_GPG_PRIVATE_KEY is not configured; skipping APT publish."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
       - name: Checkout apt-repo branch
+        if: steps.preflight.outputs.enabled == 'true'
         uses: actions/checkout@v4
         with:
           ref: apt-repo
           fetch-depth: 0
 
       - name: Install dependencies
+        if: steps.preflight.outputs.enabled == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y reprepro gnupg
 
       - name: Import GPG key
+        if: steps.preflight.outputs.enabled == 'true'
         run: |
           echo "${{ secrets.APT_GPG_PRIVATE_KEY }}" | gpg --batch --import
 
       - name: Download .deb packages from release
+        if: steps.preflight.outputs.enabled == 'true'
         run: |
           mkdir -p incoming
-          gh release download "${{ github.event.release.tag_name }}" \
+          gh release download "${{ github.event.inputs.tag }}" \
             --pattern "*.deb" \
             --dir incoming
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add packages to repository
+        if: steps.preflight.outputs.enabled == 'true'
         run: |
           for deb in incoming/*.deb; do
             if [ -f "$deb" ]; then
@@ -100,9 +119,10 @@ jobs:
           rm -rf incoming
 
       - name: Commit and push
+        if: steps.preflight.outputs.enabled == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git diff --staged --quiet || git commit -m "Update APT repo for ${{ github.event.release.tag_name }}"
+          git diff --staged --quiet || git commit -m "Update APT repo for ${{ github.event.inputs.tag }}"
           git push
