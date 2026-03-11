@@ -64,12 +64,28 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: apt-repo-${{ github.event.inputs.tag }}
+  cancel-in-progress: false
+
 jobs:
   update-apt-repo:
     name: Update APT Repository
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
+      - name: Validate tag input
+        run: |
+          case "${{ github.event.inputs.tag }}" in
+            v[0-9]*.[0-9]*.[0-9]*)
+              ;;
+            *)
+              echo "tag must be a semver release tag such as v2.3.0" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Preflight
         id: preflight
         run: |
@@ -111,10 +127,15 @@ jobs:
       - name: Add packages to repository
         if: steps.preflight.outputs.enabled == 'true'
         run: |
-          for deb in incoming/*.deb; do
-            if [ -f "$deb" ]; then
-              reprepro -b . includedeb stable "$deb"
-            fi
+          mapfile -t debs < <(find incoming -maxdepth 1 -name '*.deb' -print)
+
+          if [ "${#debs[@]}" -eq 0 ]; then
+            echo "No .deb artifacts were found for ${{ github.event.inputs.tag }}" >&2
+            exit 1
+          fi
+
+          for deb in "${debs[@]}"; do
+            reprepro -b . includedeb stable "$deb"
           done
           rm -rf incoming
 

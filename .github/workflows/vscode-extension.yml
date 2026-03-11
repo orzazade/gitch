@@ -10,10 +10,18 @@ on:
         description: 'Version to publish (e.g., 2.3.0)'
         required: false
 
+permissions:
+  contents: read
+
+concurrency:
+  group: vscode-extension-${{ github.event.inputs.version || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   publish:
     name: Publish Extension
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     defaults:
       run:
         working-directory: vscode-gitch
@@ -37,6 +45,22 @@ jobs:
 
       - name: Compile extension
         run: npm run compile
+
+      - name: Validate publish context
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            exit 0
+          fi
+
+          case "${GITHUB_REF}" in
+            refs/tags/vscode-v*)
+              exit 0
+              ;;
+            *)
+              echo "Manual extension publish requires a version input or a vscode-v* tag ref." >&2
+              exit 1
+              ;;
+          esac
 
       - name: Update version (if provided)
         if: github.event.inputs.version

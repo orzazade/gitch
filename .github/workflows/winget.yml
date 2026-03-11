@@ -35,11 +35,32 @@ on:
         description: 'Release tag to publish to WinGet (optional if the action can infer the latest release)'
         required: false
 
+permissions:
+  contents: read
+
+concurrency:
+  group: winget-${{ github.event.inputs.release-tag || 'latest' }}
+  cancel-in-progress: false
+
 jobs:
   winget:
     name: Publish to WinGet
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
+      - name: Validate release tag input
+        if: github.event.inputs.release-tag
+        shell: bash
+        run: |
+          case "${{ github.event.inputs.release-tag }}" in
+            v[0-9]*.[0-9]*.[0-9]*)
+              ;;
+            *)
+              echo "release-tag must be a semver release tag such as v2.3.0" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Preflight
         id: preflight
         shell: bash
@@ -57,4 +78,5 @@ jobs:
         with:
           identifier: Orzazade.Gitch
           installers-regex: '_windows_amd64\.zip$'
+          release-tag: ${{ github.event.inputs.release-tag }}
           token: ${{ secrets.WINGET_TOKEN }}

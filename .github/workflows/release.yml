@@ -5,20 +5,48 @@ on:
     tags:
       - 'v[0-9]*.[0-9]*.[0-9]*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (for example v2.3.0)'
+        required: false
 
 permissions:
   contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
+      - name: Resolve release ref
+        id: resolve
+        run: |
+          RELEASE_REF="${{ github.ref }}"
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            RELEASE_REF="refs/tags/${{ github.event.inputs.tag }}"
+          fi
+
+          case "$RELEASE_REF" in
+            refs/tags/v[0-9]*.[0-9]*.[0-9]*)
+              echo "ref=$RELEASE_REF" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Release workflow must run against a semver tag (for example refs/tags/v2.3.0)." >&2
+              exit 1
+              ;;
+          esac
+
       - name: Checkout code
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ steps.resolve.outputs.ref }}
 
       - name: Setup Go
         uses: actions/setup-go@v6
@@ -34,5 +62,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
           CHOCOLATEY_API_KEY: ${{ secrets.CHOCOLATEY_API_KEY }}
