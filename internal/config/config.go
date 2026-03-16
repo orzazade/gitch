@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -180,12 +179,6 @@ func (c *Config) SetDefault(name string) error {
 	c.Default = c.Identities[idx].Name
 	return nil
 }
-
-// ErrIdentityNotFound is returned when an identity is not found
-var ErrIdentityNotFound = errors.New("identity not found")
-
-// ErrRuleNotFound is returned when a rule is not found
-var ErrRuleNotFound = errors.New("rule not found")
 
 // AddRule adds a new rule to the config
 // Validates the rule and checks for exact duplicates
