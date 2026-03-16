@@ -196,7 +196,7 @@ func runHookSwitch(cmd *cobra.Command, args []string) error {
 	identity := result.ExpectedIdentity
 
 	// Apply the full profile to git config, signing config, ssh-agent, and prompt cache.
-	if err := applyConfiguredIdentity(identity, gitScopeForHook()); err != nil {
+	if err := applyConfiguredIdentity(identity, git.ScopeLocal); err != nil {
 		return fmt.Errorf("failed to switch identity: %w", err)
 	}
 
@@ -229,6 +229,3 @@ func runHookMode(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func gitScopeForHook() git.Scope {
-	return git.ScopeLocal
-}
