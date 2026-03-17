@@ -171,8 +171,7 @@ func WriteKeyBackup(keyID, basePath string) error {
 		return fmt.Errorf("failed to export private key for backup: %w", err)
 	}
 
-	privPath := basePath + ".asc"
-	if err := os.WriteFile(privPath, []byte(privKey), 0600); err != nil {
+	if err := os.WriteFile(basePath+".asc", []byte(privKey), 0600); err != nil {
 		os.Remove(pubPath) // Clean up
 		return fmt.Errorf("failed to write private key backup: %w", err)
 	}
