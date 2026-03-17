@@ -96,9 +96,8 @@ func AddKeyToAgentWithPassphrase(keyPath string, passphrase []byte) error {
 
 	// Add to agent
 	agentClient := agent.NewClient(conn)
-	comment := filepath.Base(keyPath)
 	return agentClient.Add(agent.AddedKey{
 		PrivateKey: privKey,
-		Comment:    comment,
+		Comment:    filepath.Base(keyPath),
 	})
 }
