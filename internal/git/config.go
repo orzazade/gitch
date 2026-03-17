@@ -169,14 +169,9 @@ func ApplyIdentity(name, email string) error {
 // ApplyIdentityScoped sets git user.name and user.email in the requested scope.
 func ApplyIdentityScoped(name, email string, scope Scope) error {
 	if err := SetConfigScoped("user.name", name, scope); err != nil {
-		return fmt.Errorf("failed to apply identity: %w", err)
+		return err
 	}
-
-	if err := SetConfigScoped("user.email", email, scope); err != nil {
-		return fmt.Errorf("failed to apply identity: %w", err)
-	}
-
-	return nil
+	return SetConfigScoped("user.email", email, scope)
 }
 
 // ApplySigningConfig configures git to use the specified GPG key for signing commits.
