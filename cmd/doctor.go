@@ -1,0 +1,148 @@
+package cmd
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/orzazade/gitch/internal/config"
+	"github.com/orzazade/gitch/internal/gpg"
+	"github.com/orzazade/gitch/internal/hooks"
+	"github.com/orzazade/gitch/internal/rules"
+	sshpkg "github.com/orzazade/gitch/internal/ssh"
+	"github.com/orzazade/gitch/internal/ui"
+	"github.com/spf13/cobra"
+)
+
+var doctorCmd = &cobra.Command{
+	Use:   "doctor",
+	Short: "Check gitch setup for common problems",
+	Long: `Run health checks on your gitch setup and report issues with fix instructions.
+
+Examples:
+  gitch doctor`,
+	RunE: runDoctor,
+}
+
+func init() {
+	rootCmd.AddCommand(doctorCmd)
+}
+
+type doctorCheck struct {
+	ok    bool
+	label string
+	fix   string
+}
+
+func runDoctor(cmd *cobra.Command, args []string) error {
+	var checks []doctorCheck
+
+	cfg, err := config.Load()
+	if err != nil {
+		checks = append(checks, doctorCheck{false, "cannot load gitch config", "check ~/.config/gitch/config.yaml for syntax errors"})
+		printDoctorResults(checks)
+		return nil
+	}
+
+	n := len(cfg.Identities)
+	if n == 0 {
+		checks = append(checks, doctorCheck{false, "no identities configured", "run: gitch add"})
+		printDoctorResults(checks)
+		return nil
+	}
+	checks = append(checks, doctorCheck{true, fmt.Sprintf("%d %s configured", n, nounPlural(n, "identity", "identities")), ""})
+
+	state, err := resolveCurrentProfileState(cfg)
+	if err != nil || (state.CurrentName == "" && state.CurrentEmail == "") {
+		checks = append(checks, doctorCheck{false, "no active identity in git config", "run: gitch use <name>"})
+	} else {
+		identity := state.ExactMatch
+		if identity == nil {
+			identity = state.EmailMatch
+		}
+
+		if identity == nil {
+			checks = append(checks, doctorCheck{false, fmt.Sprintf("active email %q is not managed by gitch", state.CurrentEmail), "run: gitch use <name>"})
+		} else {
+			checks = append(checks, doctorCheck{true, fmt.Sprintf("active identity: %s (%s)", identity.Name, identity.Email), ""})
+
+			if identity.SSHKeyPath != "" {
+				if _, statErr := os.Stat(identity.SSHKeyPath); statErr != nil {
+					checks = append(checks, doctorCheck{false, fmt.Sprintf("SSH key file missing: %s", identity.SSHKeyPath), fmt.Sprintf("run: gitch add to reconfigure '%s'", identity.Name)})
+				} else {
+					checks = append(checks, doctorCheck{true, fmt.Sprintf("SSH key exists: %s", identity.SSHKeyPath), ""})
+					if !sshpkg.IsAgentRunning() {
+						checks = append(checks, doctorCheck{false, "ssh-agent not running", "run: eval $(ssh-agent) && ssh-add " + identity.SSHKeyPath})
+					} else if !sshpkg.IsKeyLoadedInAgent(identity.SSHKeyPath) {
+						checks = append(checks, doctorCheck{false, "SSH key not loaded in agent", "run: ssh-add " + identity.SSHKeyPath})
+					} else {
+						checks = append(checks, doctorCheck{true, "SSH key loaded in agent", ""})
+					}
+				}
+			}
+
+			if identity.GPGKeyID != "" {
+				if !gpg.IsGPGAvailable() {
+					checks = append(checks, doctorCheck{false, "gpg not installed (required for commit signing)", "install GPG: sudo apt install gnupg"})
+				} else if gpgErr := gpg.ValidateKeyID(identity.GPGKeyID); gpgErr != nil {
+					checks = append(checks, doctorCheck{false, fmt.Sprintf("GPG key not found in keyring: %s", identity.GPGKeyID), "import the key or run: gitch add to reconfigure"})
+				} else {
+					checks = append(checks, doctorCheck{true, fmt.Sprintf("GPG key valid: %s", identity.GPGKeyID), ""})
+				}
+			}
+		}
+	}
+
+	globalOK, _ := hooks.IsInstalled()
+	localOK, _ := hooks.IsInstalledLocal()
+	switch {
+	case globalOK:
+		checks = append(checks, doctorCheck{true, "pre-commit hook installed (global)", ""})
+	case localOK:
+		checks = append(checks, doctorCheck{true, "pre-commit hook installed (local)", ""})
+	default:
+		checks = append(checks, doctorCheck{false, "no pre-commit hook installed — commits are unguarded", "run: gitch hook install"})
+	}
+
+	if len(cfg.Rules) > 0 {
+		cwd, _ := os.Getwd()
+		remoteURL, _ := rules.GetGitRemoteURL()
+		if matched := rules.FindBestMatch(cfg.Rules, cwd, remoteURL); matched != nil {
+			checks = append(checks, doctorCheck{true, fmt.Sprintf("auto-switch rule matched: %s → %s", matched.Pattern, matched.Identity), ""})
+		} else {
+			checks = append(checks, doctorCheck{false, "no auto-switch rule matches current directory", "run: gitch rule add"})
+		}
+	}
+
+	printDoctorResults(checks)
+	return nil
+}
+
+func printDoctorResults(checks []doctorCheck) {
+	fmt.Println(ui.DimStyle.Render("gitch doctor — health check"))
+	fmt.Println()
+	warnings := 0
+	for _, c := range checks {
+		if c.ok {
+			fmt.Printf("  %s  %s\n", ui.SuccessStyle.Render("ok  "), c.label)
+		} else {
+			warnings++
+			fmt.Printf("  %s  %s\n", ui.WarningStyle.Render("warn"), c.label)
+			if c.fix != "" {
+				fmt.Printf("        %s\n", ui.DimStyle.Render(c.fix))
+			}
+		}
+	}
+	fmt.Println()
+	if warnings == 0 {
+		fmt.Println(ui.SuccessStyle.Render("Everything looks good."))
+	} else {
+		fmt.Printf("%s\n", ui.WarningStyle.Render(fmt.Sprintf("%d %s found.", warnings, nounPlural(warnings, "issue", "issues"))))
+	}
+}
+
+func nounPlural(n int, singular, plural string) string {
+	if n == 1 {
+		return singular
+	}
+	return plural
+}

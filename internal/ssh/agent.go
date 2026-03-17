@@ -57,6 +57,46 @@ func AddKeyToAgent(keyPath string) error {
 	return cmd.Run()
 }
 
+// IsKeyLoadedInAgent checks whether the SSH key at keyPath is loaded in the
+// running ssh-agent by comparing public key fingerprints. Returns false if
+// the agent is not running, the public key file cannot be read, or the key
+// is not found in the agent.
+func IsKeyLoadedInAgent(keyPath string) bool {
+	if !IsAgentRunning() {
+		return false
+	}
+
+	pubKeyData, err := os.ReadFile(keyPath + ".pub")
+	if err != nil {
+		return false
+	}
+
+	pubKey, _, _, _, err := ssh.ParseAuthorizedKey(pubKeyData)
+	if err != nil {
+		return false
+	}
+
+	socket := os.Getenv("SSH_AUTH_SOCK")
+	conn, err := net.Dial("unix", socket)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+
+	keys, err := agent.NewClient(conn).List()
+	if err != nil {
+		return false
+	}
+
+	target := ssh.FingerprintSHA256(pubKey)
+	for _, k := range keys {
+		if ssh.FingerprintSHA256(k) == target {
+			return true
+		}
+	}
+	return false
+}
+
 // AddKeyToAgentWithPassphrase adds an SSH key to the agent programmatically.
 // If passphrase is nil or empty and the key requires one, falls back to AddKeyToAgent
 // to allow interactive passphrase prompting.
