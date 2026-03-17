@@ -2,6 +2,7 @@
 package wizard
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -394,7 +395,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case stepGitName:
 		gitName := strings.TrimSpace(m.gitNameInput.Value())
 		if gitName == "" {
-			m.err = fmt.Errorf("please enter a git author name")
+			m.err = errors.New("please enter a git author name")
 			return m, nil
 		}
 		m.err = nil
@@ -438,7 +439,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case stepSSHKeyPath:
 		keyPath := strings.TrimSpace(m.sshKeyPathInput.Value())
 		if keyPath == "" {
-			m.err = fmt.Errorf("please enter a key path")
+			m.err = errors.New("please enter a key path")
 			return m, nil
 		}
 		// Validate the key exists and is valid
@@ -482,7 +483,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case stepSSHConfirmPass:
 		confirm := m.sshConfirmInput.Value()
 		if confirm != m.sshPassphraseInput.Value() {
-			m.err = fmt.Errorf("passphrases don't match")
+			m.err = errors.New("passphrases don't match")
 			m.sshConfirmInput.Reset()
 			return m, m.sshConfirmInput.Focus()
 		}
@@ -501,7 +502,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 		case gpgChoiceUseExisting:
 			// Use existing GPG key, go to key ID input
 			if !gpgpkg.IsGPGAvailable() {
-				m.err = fmt.Errorf("gpg command not found - install GPG to use GPG features")
+				m.err = errors.New("gpg command not found - install GPG to use GPG features")
 				return m, nil
 			}
 			m.step = stepGPGKeyID
@@ -510,7 +511,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			// Generate new key
 			// Check if GPG is available
 			if !gpgpkg.IsGPGAvailable() {
-				m.err = fmt.Errorf("gpg command not found - install GPG to generate keys")
+				m.err = errors.New("gpg command not found - install GPG to generate keys")
 				return m, nil
 			}
 			// Continue to GPG passphrase step
@@ -521,7 +522,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case stepGPGKeyID:
 		keyID := strings.TrimSpace(m.gpgKeyIDInput.Value())
 		if keyID == "" {
-			m.err = fmt.Errorf("please enter a GPG key ID")
+			m.err = errors.New("please enter a GPG key ID")
 			return m, nil
 		}
 		// Validate the key exists
@@ -553,7 +554,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	case stepGPGConfirmPass:
 		confirm := m.gpgConfirmInput.Value()
 		if confirm != m.gpgPassphraseInput.Value() {
-			m.err = fmt.Errorf("passphrases don't match")
+			m.err = errors.New("passphrases don't match")
 			m.gpgConfirmInput.Reset()
 			return m, m.gpgConfirmInput.Focus()
 		}
@@ -604,7 +605,7 @@ func generateSSHKeyCmd(name, email string, passphrase []byte, keyTypeChoice int)
 	return func() tea.Msg {
 		keyPath := sshpkg.DefaultSSHKeyPath(name)
 		if keyPath == "" {
-			return sshKeyError{fmt.Errorf("failed to determine SSH key path")}
+			return sshKeyError{errors.New("failed to determine SSH key path")}
 		}
 
 		// Convert choice to KeyType
