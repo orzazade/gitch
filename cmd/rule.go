@@ -158,8 +158,7 @@ func runRuleAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	msg := fmt.Sprintf("Rule added: %s -> %s", rule.Pattern, rule.Identity)
-	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Rule added: %s -> %s", rule.Pattern, rule.Identity)))
 
 	return nil
 }
@@ -209,8 +208,7 @@ func runRuleRemove(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	msg := fmt.Sprintf("Rule removed: %s", pattern)
-	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Rule removed: %s", pattern)))
 
 	return nil
 }

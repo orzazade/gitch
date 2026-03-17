@@ -80,8 +80,7 @@ func runSetup(cmd *cobra.Command, args []string) error {
 
 	// Print success
 	fmt.Println()
-	msg := fmt.Sprintf("Created identity '%s' (%s)", data.Name, data.Email)
-	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Created identity '%s' (%s)", data.Name, data.Email)))
 	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
 
 	if data.SSHKeyPath != "" {
