@@ -72,17 +72,12 @@ func parseKeyInfo(output string) (*KeyInfo, error) {
 			info.ID = fields[4]
 			info.Algorithm = parseAlgorithm(fields[3])
 
-			if fields[5] != "" {
-				if ts, err := strconv.ParseInt(fields[5], 10, 64); err == nil {
-					info.Created = time.Unix(ts, 0)
-				}
+			if t, err := parseUnixTimestamp(fields[5]); err == nil {
+				info.Created = t
 			}
 
-			if fields[6] != "" {
-				if ts, err := strconv.ParseInt(fields[6], 10, 64); err == nil {
-					expires := time.Unix(ts, 0)
-					info.Expires = &expires
-				}
+			if t, err := parseUnixTimestamp(fields[6]); err == nil {
+				info.Expires = &t
 			}
 
 		case "fpr":
