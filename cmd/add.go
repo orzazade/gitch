@@ -209,7 +209,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	if addGenerateGPG {
 		// Check if gpg is available
 		if !gpgpkg.IsGPGAvailable() {
-			return errors.New("gpg command not found - install GPG to use signing features")
+			return gpgpkg.ErrGPGNotFound
 		}
 
 		// Prompt for passphrase (same as SSH)
