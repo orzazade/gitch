@@ -54,7 +54,7 @@ func ImportFromFile(path string) (*ExportConfig, error) {
 
 	data, err := os.ReadFile(expandedPath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf("file not found: %s", path)
 		}
 		return nil, fmt.Errorf("failed to read file: %w", err)

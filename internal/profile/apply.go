@@ -1,6 +1,7 @@
 package profile
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -81,7 +82,7 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 			return nil, fmt.Errorf("failed to configure SSH command: %w", err)
 		}
 		if _, err := os.Stat(keyPath); err != nil {
-			if os.IsNotExist(err) {
+			if errors.Is(err, os.ErrNotExist) {
 				result.Warnings = append(result.Warnings, fmt.Sprintf("SSH key not found: %s", keyPath))
 			} else {
 				result.Warnings = append(result.Warnings, fmt.Sprintf("failed to access SSH key %s: %v", keyPath, err))

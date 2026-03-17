@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -67,7 +68,7 @@ func runImport(cmd *cobra.Command, args []string) error {
 		if id.SSHKeyPath != "" {
 			expanded, err := ssh.ExpandPath(id.SSHKeyPath)
 			if err == nil {
-				if _, statErr := os.Stat(expanded); os.IsNotExist(statErr) {
+				if _, statErr := os.Stat(expanded); errors.Is(statErr, os.ErrNotExist) {
 					fmt.Fprintf(os.Stderr, "Warning: SSH key not found: %s (identity: %s)\n", id.SSHKeyPath, id.Name)
 				}
 			}

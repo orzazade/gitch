@@ -1,6 +1,7 @@
 package ssh
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -135,7 +136,7 @@ func UpdateSSHConfig(newBlock string) error {
 	existingContent := ""
 	data, err := os.ReadFile(configPath)
 	if err != nil {
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("failed to read SSH config: %w", err)
 		}
 		// File doesn't exist - that's ok

@@ -122,7 +122,7 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 
 			keyData, err := os.ReadFile(keyPath)
 			if err != nil {
-				if os.IsNotExist(err) {
+				if errors.Is(err, os.ErrNotExist) {
 					// Key file doesn't exist, skip encryption but keep path
 					export.EncryptedIdentities = append(export.EncryptedIdentities, encId)
 					continue

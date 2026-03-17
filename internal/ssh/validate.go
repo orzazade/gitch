@@ -123,7 +123,7 @@ func ValidateKeyPath(path string) error {
 	// Check file exists
 	info, err := os.Stat(expandedPath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return fmt.Errorf("key file not found: %s", expandedPath)
 		}
 		return fmt.Errorf("cannot access key file: %w", err)
