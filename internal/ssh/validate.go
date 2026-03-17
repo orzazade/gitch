@@ -21,8 +21,8 @@ func ValidateSSHKey(pemData []byte) error {
 	key, err := ssh.ParseRawPrivateKey(pemData)
 	if err != nil {
 		// Check if it's a passphrase-protected key
-		passErr, ok := err.(*ssh.PassphraseMissingError)
-		if ok {
+		var passErr *ssh.PassphraseMissingError
+		if errors.As(err, &passErr) {
 			// Key is encrypted - check if it's a supported type via the public key
 			keyType := passErr.PublicKey.Type()
 			if keyType == ssh.KeyAlgoED25519 || keyType == ssh.KeyAlgoRSA {
@@ -72,8 +72,8 @@ func GetKeyType(pemData []byte) (KeyType, error) {
 	key, err := ssh.ParseRawPrivateKey(pemData)
 	if err != nil {
 		// Check if it's a passphrase-protected key
-		passErr, ok := err.(*ssh.PassphraseMissingError)
-		if ok {
+		var passErr *ssh.PassphraseMissingError
+		if errors.As(err, &passErr) {
 			// Key is encrypted - determine type via the public key
 			switch passErr.PublicKey.Type() {
 			case ssh.KeyAlgoED25519:
