@@ -71,12 +71,13 @@ func RenderIdentityList(identities []config.Identity, activeName, defaultName st
 
 	var cards []string
 	for _, identity := range identities {
-		isActive := strings.EqualFold(identity.Name, activeName)
-		isDefault := strings.EqualFold(identity.Name, defaultName)
-		hasSSHKey := identity.SSHKeyPath != ""
-		hasGPGKey := identity.GPGKeyID != ""
-		card := RenderIdentityCard(identity.Name, identity.Email, isActive, isDefault, hasSSHKey, hasGPGKey)
-		cards = append(cards, card)
+		cards = append(cards, RenderIdentityCard(
+			identity.Name, identity.Email,
+			strings.EqualFold(identity.Name, activeName),
+			strings.EqualFold(identity.Name, defaultName),
+			identity.SSHKeyPath != "",
+			identity.GPGKeyID != "",
+		))
 	}
 
 	return strings.Join(cards, "\n")
