@@ -51,12 +51,7 @@ func ValidateSSHKey(pemData []byte) error {
 func ValidateEd25519Key(pemData []byte) error {
 	kt, err := GetKeyType(pemData)
 	if err != nil {
-		// GetKeyType returns "unsupported key type" for valid but non-Ed25519 keys;
-		// surface as a "not Ed25519" error so callers get a consistent message.
-		if strings.Contains(err.Error(), "unsupported key type") {
-			return fmt.Errorf("key is not Ed25519: %w", err)
-		}
-		return err
+		return fmt.Errorf("key is not Ed25519: %w", err)
 	}
 	if kt != KeyTypeEd25519 {
 		return fmt.Errorf("key is not Ed25519: found %s", kt)
