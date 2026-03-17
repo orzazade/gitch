@@ -100,11 +100,7 @@ func (i *Identity) Validate() error {
 		return errors.New("git author name cannot be empty")
 	}
 
-	if err := ValidateEmail(i.Email); err != nil {
-		return err
-	}
-
-	return nil
+	return ValidateEmail(i.Email)
 }
 
 // GitAuthorName returns the git user.name value for the identity.
