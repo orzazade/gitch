@@ -132,12 +132,12 @@ func parseAlgorithm(algoNum string) string {
 	case "22":
 		return "ed25519"
 	default:
-		// For algorithms with key length like "rsa4096" or "ed25519"
-		// The field might contain the algorithm name directly
-		if strings.Contains(strings.ToLower(algoNum), "ed25519") {
+		// The field might contain the algorithm name directly (e.g. "rsa4096", "ed25519")
+		lower := strings.ToLower(algoNum)
+		if strings.Contains(lower, "ed25519") {
 			return "ed25519"
 		}
-		if strings.Contains(strings.ToLower(algoNum), "rsa") {
+		if strings.Contains(lower, "rsa") {
 			return "rsa"
 		}
 		return algoNum
