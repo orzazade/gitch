@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +55,7 @@ func ClearCache() error {
 	}
 
 	err = os.Remove(cachePath)
-	if err != nil && os.IsNotExist(err) {
+	if err != nil && errors.Is(err, os.ErrNotExist) {
 		// File doesn't exist - that's fine
 		return nil
 	}
@@ -71,7 +72,7 @@ func ReadCache() (string, error) {
 
 	data, err := os.ReadFile(cachePath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			// File doesn't exist - return empty string, not error
 			return "", nil
 		}

@@ -2,6 +2,7 @@
 package hooks
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -153,7 +154,7 @@ func ensureHookPathWritable(path string) error {
 
 	if _, err := os.Stat(path); err == nil {
 		return fmt.Errorf("hook already exists at %s and is not managed by gitch", path)
-	} else if !os.IsNotExist(err) {
+	} else if !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("failed to inspect hook %s: %w", path, err)
 	}
 
@@ -175,7 +176,7 @@ func removeManagedHook(path string) error {
 	if !managed {
 		return nil
 	}
-	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+	if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("failed to remove hook %s: %w", path, err)
 	}
 	return nil
@@ -184,7 +185,7 @@ func removeManagedHook(path string) error {
 func isManagedHook(path string) (bool, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return false, nil
 		}
 		return false, fmt.Errorf("failed to read hook %s: %w", path, err)
