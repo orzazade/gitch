@@ -80,13 +80,9 @@ func runDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	// Handle prompt cache if we deleted the active identity
-	if isActive {
-		// If no identities left, clear cache
-		if len(cfg.Identities) == 0 {
-			_ = prompt.ClearCache() // Best effort
-		}
-		// If other identities exist, leave cache as-is (user will switch)
+	// Handle prompt cache if we deleted the active identity with no remaining identities
+	if isActive && len(cfg.Identities) == 0 {
+		_ = prompt.ClearCache() // Best effort
 	}
 
 	// Print success
