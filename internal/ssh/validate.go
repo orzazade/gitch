@@ -3,6 +3,7 @@ package ssh
 import (
 	"crypto/ed25519"
 	"crypto/rsa"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -105,8 +106,8 @@ func IsEncrypted(pemData []byte) bool {
 	}
 
 	// Check if the error is because passphrase is required
-	_, ok := err.(*ssh.PassphraseMissingError)
-	return ok
+	var passErr *ssh.PassphraseMissingError
+	return errors.As(err, &passErr)
 }
 
 // ValidateKeyPath validates an SSH key file at the given path.
