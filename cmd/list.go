@@ -81,17 +81,16 @@ func runList(cmd *cobra.Command, args []string) error {
 				IsDefault:  strings.EqualFold(id.Name, cfg.Default),
 			}
 		}
-		jsonBytes, err := json.MarshalIndent(items, "", "  ")
+		out, err := json.MarshalIndent(items, "", "  ")
 		if err != nil {
 			return fmt.Errorf("failed to marshal JSON: %w", err)
 		}
-		fmt.Println(string(jsonBytes))
+		fmt.Println(string(out))
 		return nil
 	}
 
 	// Render and print identity list
-	output := ui.RenderIdentityList(identities, activeProfileName, cfg.Default)
-	fmt.Println(output)
+	fmt.Println(ui.RenderIdentityList(identities, activeProfileName, cfg.Default))
 
 	return nil
 }
