@@ -57,9 +57,7 @@ func FindKeyByEmail(email string) ([]KeyInfo, error) {
 // IsGPGAvailable checks if the gpg command is installed and accessible.
 // Returns true if gpg is available, false otherwise.
 func IsGPGAvailable() bool {
-	cmd := exec.Command("gpg", "--version")
-	err := cmd.Run()
-	return err == nil
+	return exec.Command("gpg", "--version").Run() == nil
 }
 
 // parseMultipleKeys parses gpg --with-colons output that may contain multiple keys.
