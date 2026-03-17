@@ -146,15 +146,6 @@ func MatchRemote(pattern string, remote *ParsedRemote) bool {
 
 	// Exact match (with potential partial path match)
 	// Pattern "github.com/org" should match remote "github.com/org/repo"
-	if strings.HasPrefix(remotePath, pattern) {
-		// Ensure we match at a path boundary
-		if len(remotePath) == len(pattern) {
-			return true
-		}
-		if len(remotePath) > len(pattern) && remotePath[len(pattern)] == '/' {
-			return true
-		}
-	}
-
-	return false
+	return strings.HasPrefix(remotePath, pattern) &&
+		(len(remotePath) == len(pattern) || remotePath[len(pattern)] == '/')
 }
