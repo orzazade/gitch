@@ -45,10 +45,9 @@ func FindKeyByEmail(email string) ([]KeyInfo, error) {
 	cmd := exec.Command("gpg", "--list-secret-keys", "--keyid-format", "LONG", "--with-colons", email)
 	output, err := cmd.Output()
 	if err != nil {
-		// No keys found is not an error - return empty slice
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			// gpg returns non-zero when no keys match
-			_ = exitErr
+		// gpg returns non-zero when no keys match — not an error
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			return []KeyInfo{}, nil
 		}
 		return nil, fmt.Errorf("failed to search for GPG keys: %w", err)
