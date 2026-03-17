@@ -34,7 +34,7 @@ func MatchesAtScope(identity *config.Identity, scope git.Scope) (bool, error) {
 		return false, nil
 	}
 
-	if normalize(currentName) != normalize(identity.GitAuthorName()) {
+	if strings.TrimSpace(currentName) != strings.TrimSpace(identity.GitAuthorName()) {
 		return false, nil
 	}
 
@@ -141,7 +141,7 @@ func sshMatches(identity *config.Identity, scope git.Scope) (bool, error) {
 		return false, fmt.Errorf("failed to build SSH command: %w", err)
 	}
 
-	return normalize(sshCommand) == normalize(expected), nil
+	return strings.TrimSpace(sshCommand) == strings.TrimSpace(expected), nil
 }
 
 func isTruthy(value string) bool {
@@ -151,8 +151,4 @@ func isTruthy(value string) bool {
 	default:
 		return false
 	}
-}
-
-func normalize(value string) string {
-	return strings.TrimSpace(value)
 }
