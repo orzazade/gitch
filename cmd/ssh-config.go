@@ -87,12 +87,8 @@ func init() {
 // collectHosts gathers HostConfigs from all identities with SSH keys
 func collectHosts(cfg *config.Config) []ssh.HostConfig {
 	var hosts []ssh.HostConfig
-	identities := cfg.ListIdentities()
-	for _, identity := range identities {
-		identityHosts := ssh.IdentityToHosts(identity)
-		if identityHosts != nil {
-			hosts = append(hosts, identityHosts...)
-		}
+	for _, identity := range cfg.ListIdentities() {
+		hosts = append(hosts, ssh.IdentityToHosts(identity)...)
 	}
 	return hosts
 }
