@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// ErrGPGNotFound is returned when the gpg binary is not installed.
+var ErrGPGNotFound = errors.New("gpg command not found - install GPG to use signing features")
+
 // ValidateKeyID validates that a GPG key with the given ID exists in the keyring.
 // The keyID should be in long format (16 hex characters), but short IDs and
 // fingerprints are also accepted.
@@ -19,7 +22,7 @@ func ValidateKeyID(keyID string) error {
 	if err != nil {
 		// Check if gpg is not installed
 		if errors.Is(err, exec.ErrNotFound) {
-			return fmt.Errorf("gpg command not found - install GPG to use signing features")
+			return ErrGPGNotFound
 		}
 		// Key not found or other error
 		return fmt.Errorf("GPG key not found: %s", keyID)
@@ -41,7 +44,7 @@ func FindKeyByEmail(email string) ([]KeyInfo, error) {
 	output, err := cmd.Output()
 	if err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
-			return nil, fmt.Errorf("gpg command not found - install GPG to use signing features")
+			return nil, ErrGPGNotFound
 		}
 		// gpg returns non-zero when no keys match — not an error
 		var exitErr *exec.ExitError
