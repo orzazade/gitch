@@ -8,6 +8,7 @@ import (
 	"github.com/orzazade/gitch/internal/config"
 	gitpkg "github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/profile"
+	"github.com/orzazade/gitch/internal/ui"
 )
 
 type currentProfileState struct {
@@ -25,6 +26,11 @@ func applyConfiguredIdentity(identity *config.Identity, scope gitpkg.Scope) erro
 
 	printProfileWarnings(result.Warnings)
 	return nil
+}
+
+func printSwitchSuccess(identity *config.Identity) {
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)))
+	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
 }
 
 func printProfileWarnings(warnings []string) {

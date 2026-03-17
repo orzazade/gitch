@@ -71,8 +71,7 @@ func runAutoSwitchCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("switched identity %q is not available in config: %w", result.ToIdentity, err)
 	}
 
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)))
-	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
+	printSwitchSuccess(identity)
 	if defaultApplyScope() == git.ScopeLocal {
 		fmt.Println("Scope: local repository")
 	} else {
