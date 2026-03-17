@@ -115,7 +115,10 @@ func printAuditResults(result *audit.ScanResult) error {
 		}
 
 		status := formatStatus(r)
-		subject := truncateSubject(r.Commit.Subject, 50)
+		subject := r.Commit.Subject
+		if len(subject) > 50 {
+			subject = subject[:47] + "..."
+		}
 
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			status,
@@ -143,12 +146,6 @@ func formatStatus(r audit.Result) string {
 	return ui.WarningStyle.Render("LOCAL")
 }
 
-func truncateSubject(subject string, maxLen int) string {
-	if len(subject) <= maxLen {
-		return subject
-	}
-	return subject[:maxLen-3] + "..."
-}
 
 func printSummary(result *audit.ScanResult) {
 	if result.MismatchCount == 0 {
