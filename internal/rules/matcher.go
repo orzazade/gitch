@@ -14,12 +14,7 @@ func MatchDirectory(pattern, cwd string) (bool, error) {
 	expandedCwd := normalizeDirectoryPath(cwd)
 
 	// Use doublestar.PathMatch for OS-native path separators
-	match, err := doublestar.PathMatch(expandedPattern, expandedCwd)
-	if err != nil {
-		return false, err
-	}
-
-	return match, nil
+	return doublestar.PathMatch(expandedPattern, expandedCwd)
 }
 
 func normalizeDirectoryPattern(pattern string) string {
@@ -161,5 +156,5 @@ func MatchRemote(pattern string, remote *ParsedRemote) bool {
 		}
 	}
 
-	return pattern == remotePath
+	return false
 }
