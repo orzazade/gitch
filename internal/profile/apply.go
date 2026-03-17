@@ -66,6 +66,8 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 		}
 	}
 
+	result := &ApplyResult{Scope: scope}
+
 	if identity.SSHKeyPath != "" {
 		keyPath, err := sshpkg.ExpandPath(identity.SSHKeyPath)
 		if err != nil {
@@ -78,19 +80,7 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 		if err := git.SetConfigScoped("core.sshCommand", command, scope); err != nil {
 			return nil, fmt.Errorf("failed to configure SSH command: %w", err)
 		}
-	} else {
-		if err := git.UnsetConfigScoped("core.sshCommand", scope); err != nil {
-			return nil, fmt.Errorf("failed to clear SSH command: %w", err)
-		}
-	}
-
-	result := &ApplyResult{Scope: scope}
-
-	if identity.SSHKeyPath != "" {
-		keyPath, err := sshpkg.ExpandPath(identity.SSHKeyPath)
-		if err != nil {
-			result.Warnings = append(result.Warnings, fmt.Sprintf("failed to resolve SSH key path %s: %v", identity.SSHKeyPath, err))
-		} else if _, err := os.Stat(keyPath); err != nil {
+		if _, err := os.Stat(keyPath); err != nil {
 			if os.IsNotExist(err) {
 				result.Warnings = append(result.Warnings, fmt.Sprintf("SSH key not found: %s", keyPath))
 			} else {
@@ -98,6 +88,10 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 			}
 		} else if err := sshpkg.AddKeyToAgent(keyPath); err != nil {
 			result.Warnings = append(result.Warnings, fmt.Sprintf("failed to add SSH key to agent: %v", err))
+		}
+	} else {
+		if err := git.UnsetConfigScoped("core.sshCommand", scope); err != nil {
+			return nil, fmt.Errorf("failed to clear SSH command: %w", err)
 		}
 	}
 
