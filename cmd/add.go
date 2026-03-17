@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
 	gitpkg "github.com/orzazade/gitch/internal/git"
@@ -192,8 +191,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		fmt.Printf("  Fingerprint: %s\n", fingerprint)
 		fmt.Println()
 		fmt.Println("Public key (add to GitHub/GitLab):")
-		fmt.Print(strings.TrimSuffix(string(publicKey), "\n"))
-		fmt.Println()
+		fmt.Print(string(publicKey))
 		fmt.Println()
 	}
 
@@ -240,8 +238,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 		if publicKey != "" {
 			fmt.Println("Public key (add to GitHub/GitLab):")
-			fmt.Print(strings.TrimSuffix(publicKey, "\n"))
-			fmt.Println()
+			fmt.Print(publicKey)
 			fmt.Println()
 		}
 	}
