@@ -132,8 +132,7 @@ func runUse(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	msg := fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)
-	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)))
 	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
 	if scope == git.ScopeLocal {
 		fmt.Println("Scope: local repository")
