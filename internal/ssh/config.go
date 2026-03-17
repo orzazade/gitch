@@ -26,13 +26,8 @@ type HostConfig struct {
 
 // String generates an SSH config Host block from the HostConfig
 func (h HostConfig) String() string {
-	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Host %s\n", h.Alias))
-	sb.WriteString(fmt.Sprintf("    HostName %s\n", h.HostName))
-	sb.WriteString(fmt.Sprintf("    User %s\n", h.User))
-	sb.WriteString(fmt.Sprintf("    IdentityFile %s\n", h.IdentityFile))
-	sb.WriteString("    IdentitiesOnly yes\n")
-	return sb.String()
+	return fmt.Sprintf("Host %s\n    HostName %s\n    User %s\n    IdentityFile %s\n    IdentitiesOnly yes\n",
+		h.Alias, h.HostName, h.User, h.IdentityFile)
 }
 
 // GenerateConfigBlock wraps host configurations in gitch markers
