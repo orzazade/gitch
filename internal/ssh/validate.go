@@ -75,13 +75,14 @@ func GetKeyType(pemData []byte) (KeyType, error) {
 		var passErr *ssh.PassphraseMissingError
 		if errors.As(err, &passErr) {
 			// Key is encrypted - determine type via the public key
-			switch passErr.PublicKey.Type() {
+			kt := passErr.PublicKey.Type()
+			switch kt {
 			case ssh.KeyAlgoED25519:
 				return KeyTypeEd25519, nil
 			case ssh.KeyAlgoRSA:
 				return KeyTypeRSA, nil
 			default:
-				return "", fmt.Errorf("unsupported key type: %s", passErr.PublicKey.Type())
+				return "", fmt.Errorf("unsupported key type: %s", kt)
 			}
 		}
 		return "", fmt.Errorf("failed to parse private key: %w", err)
