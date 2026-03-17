@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -81,10 +82,9 @@ func RemoveRemotes() error {
 		cmd := exec.Command("git", "remote", "remove", remote)
 		if err := cmd.Run(); err != nil {
 			// Ignore "remote does not exist" errors (exit code 2)
-			if exitErr, ok := err.(*exec.ExitError); ok {
-				if exitErr.ExitCode() == 2 {
-					continue
-				}
+			var exitErr *exec.ExitError
+			if errors.As(err, &exitErr) && exitErr.ExitCode() == 2 {
+				continue
 			}
 			return fmt.Errorf("failed to remove remote %s: %w", remote, err)
 		}
