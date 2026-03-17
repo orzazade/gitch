@@ -565,14 +565,18 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// choiceToKeyType converts the wizard's int SSH key type choice to a sshpkg.KeyType.
+func choiceToKeyType(choice int) sshpkg.KeyType {
+	if choice == sshKeyTypeRSA {
+		return sshpkg.KeyTypeRSA
+	}
+	return sshpkg.KeyTypeEd25519
+}
+
 // startSSHKeyGeneration initiates SSH key generation
 func (m Model) startSSHKeyGeneration() (tea.Model, tea.Cmd) {
 	m.loading = true
-	kt := sshpkg.KeyTypeEd25519
-	if m.sshKeyTypeChoice == sshKeyTypeRSA {
-		kt = sshpkg.KeyTypeRSA
-	}
-	m.loadingMessage = fmt.Sprintf("Generating %s SSH key...", kt.Label())
+	m.loadingMessage = fmt.Sprintf("Generating %s SSH key...", choiceToKeyType(m.sshKeyTypeChoice).Label())
 
 	return m, tea.Batch(
 		m.spinner.Tick,
@@ -608,11 +612,7 @@ func generateSSHKeyCmd(name, email string, passphrase []byte, keyTypeChoice int)
 			return sshKeyError{errors.New("failed to determine SSH key path")}
 		}
 
-		// Convert choice to KeyType
-		keyType := sshpkg.KeyTypeEd25519
-		if keyTypeChoice == sshKeyTypeRSA {
-			keyType = sshpkg.KeyTypeRSA
-		}
+		keyType := choiceToKeyType(keyTypeChoice)
 
 		privateKey, publicKey, err := sshpkg.GenerateKeyPairWithType(keyType, email, passphrase)
 		if err != nil {
@@ -894,10 +894,7 @@ func (m Model) getSSHKeyTypeString() string {
 	if m.sshChoice == sshChoiceSkip || m.sshChoice == sshChoiceUseExisting {
 		return ""
 	}
-	if m.sshKeyTypeChoice == sshKeyTypeRSA {
-		return "rsa"
-	}
-	return "ed25519"
+	return choiceToKeyType(m.sshKeyTypeChoice).String()
 }
 
 // buildResult constructs the WizardResult based on current state
