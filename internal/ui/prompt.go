@@ -35,8 +35,7 @@ func ConfirmPrompt(message string, skipConfirm bool) (bool, error) {
 	fmt.Printf("%s [y/N] ", message)
 
 	// Read response
-	reader := bufio.NewReader(os.Stdin)
-	response, err := reader.ReadString('\n')
+	response, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		return false, fmt.Errorf("failed to read response: %w", err)
 	}
@@ -122,8 +121,7 @@ func TypedConfirm(message, phrase string) (bool, error) {
 	fmt.Printf("\nType '%s' to proceed: ", phrase)
 
 	// Read response
-	reader := bufio.NewReader(os.Stdin)
-	response, err := reader.ReadString('\n')
+	response, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		return false, fmt.Errorf("failed to read response: %w", err)
 	}
