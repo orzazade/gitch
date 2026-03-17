@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -51,14 +52,9 @@ func GetCommits(limit int) ([]Commit, error) {
 	cmd := exec.Command("git", args...)
 	output, err := cmd.Output()
 	if err != nil {
-		// Check for empty repo or no commits
-		errStr := string(output)
-		if strings.Contains(errStr, "fatal: your current branch") ||
-			strings.Contains(errStr, "does not have any commits") {
-			return []Commit{}, nil
-		}
-		// Also check exit error message
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		// Check stderr for empty repo / no commits (git sends fatal messages to stderr)
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			stderr := string(exitErr.Stderr)
 			if strings.Contains(stderr, "fatal: your current branch") ||
 				strings.Contains(stderr, "does not have any commits") {
