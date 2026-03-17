@@ -47,14 +47,11 @@ func remoteSpecificity(pattern string) int {
 	parts := strings.Split(pattern, "/")
 	score := len(parts) * 10
 
-	// Check for wildcards
-	hasWildcard := strings.Contains(pattern, "*")
-	if !hasWildcard {
+	wildcardCount := strings.Count(pattern, "*")
+	if wildcardCount == 0 {
 		// Exact repo match bonus
 		score += 50
 	} else {
-		// Penalize wildcards
-		wildcardCount := strings.Count(pattern, "*")
 		score -= wildcardCount * 2
 	}
 
