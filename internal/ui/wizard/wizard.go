@@ -955,10 +955,7 @@ func (m Model) Result() *WizardResult {
 // Run launches the wizard and returns the result or error.
 // This is a convenience wrapper around tea.NewProgram.
 func Run() (*WizardResult, error) {
-	m := New()
-	p := tea.NewProgram(m)
-
-	finalModel, err := p.Run()
+	finalModel, err := tea.NewProgram(New()).Run()
 	if err != nil {
 		return nil, err
 	}
