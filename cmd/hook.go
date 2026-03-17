@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -190,7 +191,7 @@ func runHookSwitch(cmd *cobra.Command, args []string) error {
 	}
 
 	if result.ExpectedIdentity == nil {
-		return fmt.Errorf("no expected identity found")
+		return errors.New("no expected identity found")
 	}
 
 	identity := result.ExpectedIdentity

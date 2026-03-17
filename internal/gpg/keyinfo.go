@@ -2,7 +2,7 @@
 package gpg
 
 import (
-	"fmt"
+	"errors"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -99,7 +99,7 @@ func parseKeyInfo(output string) (*KeyInfo, error) {
 	}
 
 	if info.ID == "" {
-		return nil, fmt.Errorf("failed to parse GPG key information")
+		return nil, errors.New("failed to parse GPG key information")
 	}
 
 	return info, nil

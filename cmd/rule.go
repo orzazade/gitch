@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"text/tabwriter"
@@ -98,11 +99,11 @@ func runRuleAdd(cmd *cobra.Command, args []string) error {
 	hasRemote := ruleRemote != ""
 
 	if hasPositional && hasRemote {
-		return fmt.Errorf("cannot specify both a directory pattern and --remote; use one or the other")
+		return errors.New("cannot specify both a directory pattern and --remote; use one or the other")
 	}
 
 	if !hasPositional && !hasRemote {
-		return fmt.Errorf("must specify either a directory pattern or --remote")
+		return errors.New("must specify either a directory pattern or --remote")
 	}
 
 	// Load config

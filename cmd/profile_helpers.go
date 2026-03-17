@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -69,7 +70,7 @@ func defaultApplyScope() gitpkg.Scope {
 
 func resolveApplyScope(forceLocal, forceGlobal bool) (gitpkg.Scope, error) {
 	if forceLocal && forceGlobal {
-		return "", fmt.Errorf("cannot use both --local and --global")
+		return "", errors.New("cannot use both --local and --global")
 	}
 	if forceLocal {
 		return gitpkg.ScopeLocal, nil

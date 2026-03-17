@@ -136,7 +136,7 @@ func ValidateKeyPath(path string) error {
 
 	// Check it's not a .pub file (common mistake)
 	if strings.HasSuffix(filepath.Base(expandedPath), ".pub") {
-		return fmt.Errorf("path points to a public key (.pub file); provide the private key path instead")
+		return errors.New("path points to a public key (.pub file); provide the private key path instead")
 	}
 
 	// Read and validate the key

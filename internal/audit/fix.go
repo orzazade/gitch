@@ -103,7 +103,7 @@ func RemoveRemotes() error {
 func Fix(scanResult *ScanResult) error {
 	// Step 1: Prerequisites check
 	if !IsFilterRepoAvailable() {
-		return fmt.Errorf("git-filter-repo not found\n\nInstall with:\n  brew install git-filter-repo\n  # or: pip install git-filter-repo")
+		return errors.New("git-filter-repo not found\n\nInstall with:\n  brew install git-filter-repo\n  # or: pip install git-filter-repo")
 	}
 
 	// Step 2: Collect commits that need fixing
@@ -115,7 +115,7 @@ func Fix(scanResult *ScanResult) error {
 	}
 
 	if len(toFix) == 0 {
-		return fmt.Errorf("no mismatched commits to fix")
+		return errors.New("no mismatched commits to fix")
 	}
 
 	// Count pushed vs local among mismatches

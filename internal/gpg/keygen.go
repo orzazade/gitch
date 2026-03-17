@@ -79,7 +79,7 @@ func GenerateKey(name, email string, passphrase []byte) (*KeyInfo, error) {
 	}
 
 	if len(keys) == 0 {
-		return nil, fmt.Errorf("key was imported but could not be found in keyring")
+		return nil, errors.New("key was imported but could not be found in keyring")
 	}
 
 	// Return the most recently created key (should be the one we just made)

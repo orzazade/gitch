@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -15,7 +16,7 @@ func CreateMirrorBackup(destPath string) error {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	output, err := cmd.Output()
 	if err != nil {
-		return fmt.Errorf("not in a git repository")
+		return errors.New("not in a git repository")
 	}
 
 	repoRoot := strings.TrimSpace(string(output))

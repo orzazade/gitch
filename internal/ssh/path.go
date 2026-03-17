@@ -2,6 +2,7 @@
 package ssh
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,7 +13,7 @@ import (
 // Returns the cleaned, absolute path.
 func ExpandPath(path string) (string, error) {
 	if path == "" {
-		return "", fmt.Errorf("empty path")
+		return "", errors.New("empty path")
 	}
 
 	// Expand environment variables first
