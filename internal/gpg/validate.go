@@ -85,16 +85,12 @@ func parseMultipleKeys(output string) ([]KeyInfo, error) {
 			currentKey.ID = fields[4]
 			currentKey.Algorithm = parseAlgorithm(fields[3])
 
-			if fields[5] != "" {
-				if ts, err := parseUnixTimestamp(fields[5]); err == nil {
-					currentKey.Created = ts
-				}
+			if ts, err := parseUnixTimestamp(fields[5]); err == nil {
+				currentKey.Created = ts
 			}
 
-			if fields[6] != "" {
-				if ts, err := parseUnixTimestamp(fields[6]); err == nil {
-					currentKey.Expires = &ts
-				}
+			if ts, err := parseUnixTimestamp(fields[6]); err == nil {
+				currentKey.Expires = &ts
 			}
 
 		case "fpr":
