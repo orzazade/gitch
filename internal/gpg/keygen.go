@@ -69,8 +69,7 @@ func GenerateKey(name, email string, passphrase []byte) (*KeyInfo, error) {
 	privateArmor.Close()
 
 	// Import the key into system gpg
-	armoredKey := privateKeyBuf.Bytes()
-	err = importKeyToGPG(armoredKey)
+	err = importKeyToGPG(privateKeyBuf.Bytes())
 	if err != nil {
 		return nil, fmt.Errorf("failed to import key to gpg: %w", err)
 	}
