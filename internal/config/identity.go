@@ -31,10 +31,8 @@ type Identity struct {
 // ValidateHookMode validates that the hook mode is a valid value
 func ValidateHookMode(mode string) error {
 	switch mode {
-	case HookModeAllow, HookModeWarn, HookModeBlock:
+	case HookModeAllow, HookModeWarn, HookModeBlock, "":
 		return nil
-	case "":
-		return nil // Empty is valid, defaults to warn
 	default:
 		return fmt.Errorf("invalid hook mode %q: must be one of: allow, warn, block", mode)
 	}
