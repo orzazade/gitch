@@ -124,7 +124,7 @@ func ExportPublicKey(keyID string) (string, error) {
 	}
 
 	if len(output) == 0 {
-		return "", fmt.Errorf("GPG key not found: %s", keyID)
+		return "", errKeyNotFound(keyID)
 	}
 
 	return string(output), nil
@@ -144,7 +144,7 @@ func ExportPrivateKey(keyID string) (string, error) {
 	}
 
 	if len(output) == 0 {
-		return "", fmt.Errorf("GPG key not found: %s", keyID)
+		return "", errKeyNotFound(keyID)
 	}
 
 	return string(output), nil

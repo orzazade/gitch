@@ -12,6 +12,11 @@ import (
 // ErrGPGNotFound is returned when the gpg binary is not installed.
 var ErrGPGNotFound = errors.New("gpg command not found - install GPG to use signing features")
 
+// errKeyNotFound returns a formatted error for a missing GPG key.
+func errKeyNotFound(keyID string) error {
+	return fmt.Errorf("GPG key not found: %s", keyID)
+}
+
 // ValidateKeyID validates that a GPG key with the given ID exists in the keyring.
 // The keyID should be in long format (16 hex characters), but short IDs and
 // fingerprints are also accepted.
@@ -25,12 +30,12 @@ func ValidateKeyID(keyID string) error {
 			return ErrGPGNotFound
 		}
 		// Key not found or other error
-		return fmt.Errorf("GPG key not found: %s", keyID)
+		return errKeyNotFound(keyID)
 	}
 
 	// Verify output contains key information
 	if !strings.Contains(string(output), "sec") {
-		return fmt.Errorf("GPG key not found: %s", keyID)
+		return errKeyNotFound(keyID)
 	}
 
 	return nil
