@@ -158,10 +158,7 @@ func Fix(scanResult *ScanResult) error {
 		return fmt.Errorf("failed to get repository root: %w", err)
 	}
 	repoRoot := strings.TrimSpace(string(output))
-	repoName := filepath.Base(repoRoot)
-
-	timestamp := time.Now().Format("20060102-150405")
-	backupPath := filepath.Join(os.TempDir(), fmt.Sprintf("%s-backup-%s", repoName, timestamp))
+	backupPath := filepath.Join(os.TempDir(), fmt.Sprintf("%s-backup-%s", filepath.Base(repoRoot), time.Now().Format("20060102-150405")))
 
 	fmt.Printf("\nCreating backup at: %s\n", backupPath)
 	if err := CreateMirrorBackup(backupPath); err != nil {
