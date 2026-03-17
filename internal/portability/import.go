@@ -308,8 +308,7 @@ func ExtractEncryptedKeys(export *ExportConfig, passphrase []byte, overwriteKeys
 		}
 
 		// Create parent directory if needed
-		dir := filepath.Dir(keyPath)
-		if err := os.MkdirAll(dir, 0700); err != nil {
+		if err := os.MkdirAll(filepath.Dir(keyPath), 0700); err != nil {
 			result.Errors = append(result.Errors, fmt.Sprintf("%s: failed to create directory: %v", encId.Name, err))
 			continue
 		}
