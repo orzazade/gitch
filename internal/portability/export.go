@@ -27,6 +27,27 @@ func BuildExportConfig(cfg *config.Config) *ExportConfig {
 	}
 }
 
+// writeExportFile creates the file at expandedPath, writes header, then encodes export as YAML.
+func writeExportFile(expandedPath, header string, export *ExportConfig) error {
+	file, err := os.Create(expandedPath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer file.Close()
+
+	if _, err := file.WriteString(header); err != nil {
+		return fmt.Errorf("failed to write header: %w", err)
+	}
+
+	encoder := yaml.NewEncoder(file)
+	encoder.SetIndent(2)
+	if err := encoder.Encode(export); err != nil {
+		return fmt.Errorf("failed to write YAML: %w", err)
+	}
+
+	return encoder.Close()
+}
+
 // ExportToFile exports the configuration to a YAML file at the specified path.
 // The path supports ~ expansion for home directory.
 // Returns ErrNoIdentities if there are no identities to export.
@@ -35,44 +56,21 @@ func ExportToFile(cfg *config.Config, path string) error {
 		return ErrNoIdentities
 	}
 
-	// Expand path (handle ~)
 	expandedPath, err := ssh.ExpandPath(path)
 	if err != nil {
 		return fmt.Errorf("invalid path: %w", err)
 	}
 
-	// Create parent directory if it doesn't exist
 	if err := os.MkdirAll(filepath.Dir(expandedPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
-	// Build export config
 	export := BuildExportConfig(cfg)
-
-	// Create the file
-	file, err := os.Create(expandedPath)
-	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
-	}
-	defer file.Close()
-
-	// Write header comment
 	header := fmt.Sprintf("# gitch configuration export\n# Exported: %s\n# Version: %d\n\n",
 		export.ExportedAt.Format(time.RFC3339),
 		export.Version,
 	)
-	if _, err := file.WriteString(header); err != nil {
-		return fmt.Errorf("failed to write header: %w", err)
-	}
-
-	// Write YAML with pretty formatting
-	encoder := yaml.NewEncoder(file)
-	encoder.SetIndent(2)
-	if err := encoder.Encode(export); err != nil {
-		return fmt.Errorf("failed to write YAML: %w", err)
-	}
-
-	return encoder.Close()
+	return writeExportFile(expandedPath, header, export)
 }
 
 // ExportToFileEncrypted exports configuration with encrypted SSH private keys.
@@ -140,29 +138,10 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 		export.EncryptedIdentities = append(export.EncryptedIdentities, encId)
 	}
 
-	// Create the file
-	file, err := os.Create(expandedPath)
-	if err != nil {
-		return fmt.Errorf("failed to create file: %w", err)
-	}
-	defer file.Close()
-
-	// Write header comment
 	header := fmt.Sprintf("# gitch encrypted configuration export\n# Exported: %s\n# Version: %d\n# Encryption: %s\n\n",
 		export.ExportedAt.Format(time.RFC3339),
 		export.Version,
 		export.Encryption.Method,
 	)
-	if _, err := file.WriteString(header); err != nil {
-		return fmt.Errorf("failed to write header: %w", err)
-	}
-
-	// Write YAML with pretty formatting
-	encoder := yaml.NewEncoder(file)
-	encoder.SetIndent(2)
-	if err := encoder.Encode(export); err != nil {
-		return fmt.Errorf("failed to write YAML: %w", err)
-	}
-
-	return encoder.Close()
+	return writeExportFile(expandedPath, header, export)
 }
