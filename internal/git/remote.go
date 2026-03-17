@@ -45,10 +45,5 @@ func GetCurrentRemoteType() (isAzureDevOps bool, err error) {
 		return false, nil
 	}
 
-	remoteURL := strings.TrimSpace(string(output))
-	if remoteURL == "" {
-		return false, nil
-	}
-
-	return IsAzureDevOpsRemote(remoteURL), nil
+	return IsAzureDevOpsRemote(strings.TrimSpace(string(output))), nil
 }
