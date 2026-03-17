@@ -13,6 +13,9 @@ import (
 	"golang.org/x/crypto/ssh/agent"
 )
 
+// errAgentNotRunning is returned when ssh-agent is not running or not accessible.
+var errAgentNotRunning = errors.New("ssh-agent not running. Start it with: eval $(ssh-agent)")
+
 // IsAgentRunning checks if ssh-agent is running and accessible.
 // Returns true if SSH_AUTH_SOCK is set and the socket is reachable.
 func IsAgentRunning() bool {
@@ -35,7 +38,7 @@ func IsAgentRunning() bool {
 // This method uses exec to shell out, allowing passphrase prompts to work interactively.
 func AddKeyToAgent(keyPath string) error {
 	if !IsAgentRunning() {
-		return errors.New("ssh-agent not running. Start it with: eval $(ssh-agent)")
+		return errAgentNotRunning
 	}
 
 	var cmd *exec.Cmd
@@ -102,7 +105,7 @@ func IsKeyLoadedInAgent(keyPath string) bool {
 // to allow interactive passphrase prompting.
 func AddKeyToAgentWithPassphrase(keyPath string, passphrase []byte) error {
 	if !IsAgentRunning() {
-		return errors.New("ssh-agent not running. Start it with: eval $(ssh-agent)")
+		return errAgentNotRunning
 	}
 
 	socket := os.Getenv("SSH_AUTH_SOCK")
