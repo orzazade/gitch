@@ -139,22 +139,11 @@ func DetectConflicts(cfg *config.Config, export *ExportConfig) []Conflict {
 // identitiesEqual checks if two identities are functionally equal.
 // Compares git author name, email, ssh_key_path, and gpg_key_id.
 func identitiesEqual(a, b *config.Identity) bool {
-	if a.GitAuthorName() != b.GitAuthorName() {
-		return false
-	}
-	if !strings.EqualFold(a.Email, b.Email) {
-		return false
-	}
-	if a.SSHKeyPath != b.SSHKeyPath {
-		return false
-	}
-	if a.GPGKeyID != b.GPGKeyID {
-		return false
-	}
-	if a.HookMode != b.HookMode {
-		return false
-	}
-	return true
+	return a.GitAuthorName() == b.GitAuthorName() &&
+		strings.EqualFold(a.Email, b.Email) &&
+		a.SSHKeyPath == b.SSHKeyPath &&
+		a.GPGKeyID == b.GPGKeyID &&
+		a.HookMode == b.HookMode
 }
 
 // rulesEqual checks if two rules are functionally equal.
