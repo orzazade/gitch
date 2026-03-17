@@ -200,7 +200,7 @@ func runRuleRemove(cmd *cobra.Command, args []string) error {
 
 	// Remove the rule
 	if err := cfg.RemoveRule(pattern); err != nil {
-		return fmt.Errorf("rule with pattern %q not found", pattern)
+		return err
 	}
 
 	// Save config
