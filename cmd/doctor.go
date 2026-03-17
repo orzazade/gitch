@@ -136,7 +136,7 @@ func printDoctorResults(checks []doctorCheck) {
 	if warnings == 0 {
 		fmt.Println(ui.SuccessStyle.Render("Everything looks good."))
 	} else {
-		fmt.Printf("%s\n", ui.WarningStyle.Render(fmt.Sprintf("%d %s found.", warnings, nounPlural(warnings, "issue", "issues"))))
+		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("%d %s found.", warnings, nounPlural(warnings, "issue", "issues"))))
 	}
 }
 
