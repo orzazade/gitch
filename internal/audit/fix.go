@@ -176,7 +176,7 @@ func Fix(scanResult *ScanResult) error {
 	// Step 8: Run git-filter-repo (AUDIT-04)
 	fmt.Println("\nRewriting history...")
 	if err := RunFilterRepo(mailmapPath); err != nil {
-		return fmt.Errorf("git-filter-repo failed: %w\n\nYour backup is at: %s", err, backupPath)
+		return fmt.Errorf("%w\n\nYour backup is at: %s", err, backupPath)
 	}
 
 	// Step 9: Remove remotes (AUDIT-06)
