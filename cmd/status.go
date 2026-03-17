@@ -65,7 +65,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to auto-switch: %w", err)
 		}
-		if result != nil && result.Switched && !statusJSON {
+		if result.Switched && !statusJSON {
 			fmt.Println(ui.SuccessStyle.Render(
 				fmt.Sprintf("Switched to '%s' identity", result.ToIdentity),
 			))
@@ -192,7 +192,7 @@ func showVerboseRuleInfo(cfg *config.Config, currentEmail string) {
 
 		// Check if current identity matches expected
 		expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
-		if err == nil && expectedIdentity != nil {
+		if err == nil {
 			match, matchErr := profile.Matches(expectedIdentity)
 			if matchErr == nil && !match {
 				fmt.Println()
