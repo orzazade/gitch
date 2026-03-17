@@ -22,17 +22,11 @@ func ParseRemote(rawURL string) (*ParsedRemote, error) {
 		return nil, err
 	}
 
-	// Normalize host to lowercase
-	host := strings.ToLower(u.Host)
-
-	// Get path and clean it
-	path := strings.TrimSuffix(strings.TrimPrefix(u.Path, "/"), ".git")
-
 	// Split path into org and repo
-	parts := strings.Split(path, "/")
+	parts := strings.Split(strings.TrimSuffix(strings.TrimPrefix(u.Path, "/"), ".git"), "/")
 
 	result := &ParsedRemote{
-		Host: host,
+		Host: strings.ToLower(u.Host),
 	}
 
 	if len(parts) >= 1 && parts[0] != "" {
