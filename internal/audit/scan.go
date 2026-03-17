@@ -283,7 +283,5 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 
 // IsGitRepo checks if the current directory is inside a git repository
 func IsGitRepo() bool {
-	cmd := exec.Command("git", "rev-parse", "--git-dir")
-	err := cmd.Run()
-	return err == nil
+	return exec.Command("git", "rev-parse", "--git-dir").Run() == nil
 }
