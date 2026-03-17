@@ -42,8 +42,7 @@ func ExportToFile(cfg *config.Config, path string) error {
 	}
 
 	// Create parent directory if it doesn't exist
-	dir := filepath.Dir(expandedPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(expandedPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -91,8 +90,7 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 	}
 
 	// Create parent directory if it doesn't exist
-	dir := filepath.Dir(expandedPath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(expandedPath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
