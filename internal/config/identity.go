@@ -64,7 +64,10 @@ func ValidateName(name string) error {
 	}
 
 	if !nameRegex.MatchString(name) {
-		if strings.HasPrefix(name, "-") || strings.HasSuffix(name, "-") {
+		hasAlpha := strings.IndexFunc(name, func(r rune) bool {
+			return r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9'
+		}) != -1
+		if hasAlpha && (strings.HasPrefix(name, "-") || strings.HasSuffix(name, "-")) {
 			return errors.New("identity name cannot start or end with a hyphen")
 		}
 		return errors.New("identity name must contain only alphanumeric characters and hyphens")
