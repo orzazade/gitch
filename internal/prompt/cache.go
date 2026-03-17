@@ -54,8 +54,7 @@ func ClearCache() error {
 	}
 
 	err = os.Remove(cachePath)
-	if err != nil && errors.Is(err, os.ErrNotExist) {
-		// File doesn't exist - that's fine
+	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
 	return err
