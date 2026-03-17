@@ -51,8 +51,8 @@ func (i *Identity) GetHookMode() string {
 // nameRegex validates identity names: alphanumeric + hyphens, no leading/trailing hyphens
 var nameRegex = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$`)
 
-// singleCharRegex validates single character names
-var singleCharRegex = regexp.MustCompile(`^[a-zA-Z0-9]$`)
+// nameAlphanumRegex matches any alphanumeric character
+var nameAlphanumRegex = regexp.MustCompile(`[a-zA-Z0-9]`)
 
 // ValidateName validates an identity name according to the naming rules:
 // - Alphanumeric characters and hyphens only
@@ -68,16 +68,10 @@ func ValidateName(name string) error {
 		return fmt.Errorf("identity name cannot exceed %d characters", MaxNameLength)
 	}
 
-	// Single character names are valid
-	if len(name) == 1 {
-		if !singleCharRegex.MatchString(name) {
+	if !nameRegex.MatchString(name) {
+		if !nameAlphanumRegex.MatchString(name) {
 			return errors.New("identity name must contain only alphanumeric characters and hyphens")
 		}
-		return nil
-	}
-
-	// Multi-character names must match the pattern
-	if !nameRegex.MatchString(name) {
 		if strings.HasPrefix(name, "-") || strings.HasSuffix(name, "-") {
 			return errors.New("identity name cannot start or end with a hyphen")
 		}
