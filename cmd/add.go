@@ -187,12 +187,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 
 		identity.SSHKeyPath = keyPath
 
-		// Print key generation success info with key type
-		keyTypeLabel := "Ed25519"
-		if keyType == sshpkg.KeyTypeRSA {
-			keyTypeLabel = "RSA 4096-bit"
-		}
-		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Generated %s SSH key:", keyTypeLabel)))
+		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Generated %s SSH key:", keyType.Label())))
 		fmt.Printf("  Path: %s\n", keyPath)
 		fmt.Printf("  Fingerprint: %s\n", fingerprint)
 		fmt.Println()

@@ -20,6 +20,14 @@ func (kt KeyType) String() string {
 	return string(kt)
 }
 
+// Label returns a human-readable label for the key type.
+func (kt KeyType) Label() string {
+	if kt == KeyTypeRSA {
+		return "RSA 4096-bit"
+	}
+	return "Ed25519"
+}
+
 // ParseKeyType parses a string into a KeyType.
 // Accepts "ed25519", "rsa" (case-insensitive).
 // Returns an error for invalid types.

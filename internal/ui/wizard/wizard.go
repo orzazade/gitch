@@ -568,11 +568,11 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 // startSSHKeyGeneration initiates SSH key generation
 func (m Model) startSSHKeyGeneration() (tea.Model, tea.Cmd) {
 	m.loading = true
-	keyTypeLabel := "Ed25519"
+	kt := sshpkg.KeyTypeEd25519
 	if m.sshKeyTypeChoice == sshKeyTypeRSA {
-		keyTypeLabel = "RSA 4096-bit"
+		kt = sshpkg.KeyTypeRSA
 	}
-	m.loadingMessage = fmt.Sprintf("Generating %s SSH key...", keyTypeLabel)
+	m.loadingMessage = fmt.Sprintf("Generating %s SSH key...", kt.Label())
 
 	return m, tea.Batch(
 		m.spinner.Tick,
