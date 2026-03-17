@@ -269,8 +269,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	msg := fmt.Sprintf("Added identity '%s' (%s)", addName, addEmail)
-	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Added identity '%s' (%s)", addName, addEmail)))
 
 	if addDefault {
 		fmt.Println("Set as default identity")

@@ -98,8 +98,7 @@ func runConfigHookMode(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	msg := fmt.Sprintf("Hook mode for '%s' set to '%s'", identity.Name, mode)
-	fmt.Println(ui.SuccessStyle.Render(msg))
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Hook mode for '%s' set to '%s'", identity.Name, mode)))
 
 	return nil
 }
