@@ -48,30 +48,19 @@ func ValidateSSHKey(pemData []byte) error {
 // Returns an error if the key is not Ed25519 or cannot be parsed.
 // Deprecated: Use ValidateSSHKey for broader key type support.
 func ValidateEd25519Key(pemData []byte) error {
-	// Try to parse the private key
-	key, err := ssh.ParseRawPrivateKey(pemData)
+	kt, err := GetKeyType(pemData)
 	if err != nil {
-		// Check if it's a passphrase-protected key
-		passErr, ok := err.(*ssh.PassphraseMissingError)
-		if ok {
-			// Key is encrypted - check if it's Ed25519 via the public key
-			if passErr.PublicKey.Type() == ssh.KeyAlgoED25519 {
-				return nil // Valid encrypted Ed25519 key
-			}
-			return fmt.Errorf("key is not Ed25519: found %s", passErr.PublicKey.Type())
+		// GetKeyType returns "unsupported key type" for valid but non-Ed25519 keys;
+		// surface as a "not Ed25519" error so callers get a consistent message.
+		if strings.Contains(err.Error(), "unsupported key type") {
+			return fmt.Errorf("key is not Ed25519: %w", err)
 		}
-		return fmt.Errorf("failed to parse private key: %w", err)
+		return err
 	}
-
-	// Key parsed successfully - verify it's Ed25519
-	switch key.(type) {
-	case ed25519.PrivateKey:
-		return nil
-	case *ed25519.PrivateKey:
-		return nil
-	default:
-		return fmt.Errorf("key is not Ed25519: found %T", key)
+	if kt != KeyTypeEd25519 {
+		return fmt.Errorf("key is not Ed25519: found %s", kt)
 	}
+	return nil
 }
 
 // GetKeyType parses the PEM data and returns the key type.
