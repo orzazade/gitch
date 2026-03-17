@@ -154,10 +154,8 @@ func UpdateSSHConfig(newBlock string) error {
 	cleanedContent = strings.TrimRight(cleanedContent, "\n\t ")
 
 	// Build new content
-	var finalContent string
-	if cleanedContent == "" {
-		finalContent = newBlock
-	} else {
+	finalContent := newBlock
+	if cleanedContent != "" {
 		finalContent = cleanedContent + "\n\n" + newBlock
 	}
 
