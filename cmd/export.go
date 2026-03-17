@@ -68,7 +68,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("failed to read passphrase: %w", err)
 		}
-		if passphrase == nil || len(passphrase) == 0 {
+		if len(passphrase) == 0 {
 			return errors.New("passphrase required for encrypted export")
 		}
 
