@@ -107,12 +107,17 @@ func (c *Config) findIdentityIndex(name string) int {
 	return -1
 }
 
+// errIdentityNotFound returns a formatted error for a missing identity.
+func errIdentityNotFound(name string) error {
+	return fmt.Errorf("identity %q not found", name)
+}
+
 // GetIdentity returns an identity by name (case-insensitive)
 // Returns an error if the identity is not found
 func (c *Config) GetIdentity(name string) (*Identity, error) {
 	idx := c.findIdentityIndex(name)
 	if idx == -1 {
-		return nil, fmt.Errorf("identity %q not found", name)
+		return nil, errIdentityNotFound(name)
 	}
 	return &c.Identities[idx], nil
 }
@@ -148,7 +153,7 @@ func (c *Config) AddIdentity(identity Identity) error {
 func (c *Config) DeleteIdentity(name string) error {
 	idx := c.findIdentityIndex(name)
 	if idx == -1 {
-		return fmt.Errorf("identity %q not found", name)
+		return errIdentityNotFound(name)
 	}
 
 	// Check if this is the default identity
@@ -172,7 +177,7 @@ func (c *Config) ListIdentities() []Identity {
 func (c *Config) SetDefault(name string) error {
 	idx := c.findIdentityIndex(name)
 	if idx == -1 {
-		return fmt.Errorf("identity %q not found", name)
+		return errIdentityNotFound(name)
 	}
 
 	// Use the actual stored name (preserves original case)
