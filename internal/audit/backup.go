@@ -19,9 +19,6 @@ func CreateMirrorBackup(destPath string) error {
 	}
 
 	repoRoot := strings.TrimSpace(string(output))
-	if repoRoot == "" {
-		return fmt.Errorf("not in a git repository")
-	}
 
 	// Create mirror backup
 	// CRITICAL: Use --no-local to avoid hardlink issues (Pitfall 4 from research)
