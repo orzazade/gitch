@@ -144,8 +144,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	// Format output
 	if managed {
-		msg := fmt.Sprintf("Active: %s (%s)", managedIdentity.Name, email)
-		fmt.Println(ui.SuccessStyle.Render(msg))
+		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Active: %s (%s)", managedIdentity.Name, email)))
 		fmt.Printf("Git Author: %s\n", managedIdentity.GitAuthorName())
 		if managedIdentity.GPGKeyID != "" {
 			fmt.Printf("GPG Key: %s\n", managedIdentity.GPGKeyID)

@@ -29,11 +29,8 @@ func GenerateKey(name, email string, passphrase []byte) (*KeyInfo, error) {
 		Time:                   func() time.Time { return time.Now() },
 	}
 
-	// Create comment for the key
-	comment := fmt.Sprintf("gitch identity: %s", name)
-
 	// Generate new entity (keypair)
-	entity, err := openpgp.NewEntity(name, comment, email, config)
+	entity, err := openpgp.NewEntity(name, fmt.Sprintf("gitch identity: %s", name), email, config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate GPG key: %w", err)
 	}

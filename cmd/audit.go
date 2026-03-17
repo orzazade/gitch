@@ -167,15 +167,11 @@ func printSummary(result *audit.ScanResult) {
 	}
 
 	if localMismatches > 0 {
-		msg := fmt.Sprintf("  %d local-only (safe to fix with 'gitch audit --fix')",
-			localMismatches)
-		fmt.Println(ui.WarningStyle.Render(msg))
+		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("  %d local-only (safe to fix with 'gitch audit --fix')", localMismatches)))
 	}
 
 	if pushedMismatches > 0 {
-		msg := fmt.Sprintf("  %d already pushed (requires force-push to fix)",
-			pushedMismatches)
-		fmt.Println(ui.ErrorStyle.Render(msg))
+		fmt.Println(ui.ErrorStyle.Render(fmt.Sprintf("  %d already pushed (requires force-push to fix)", pushedMismatches)))
 	}
 
 	if result.NoUpstream {
