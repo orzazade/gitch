@@ -36,7 +36,7 @@ func IsAzureDevOpsRemote(remoteURL string) bool {
 // Returns (true, nil) if Azure DevOps is detected.
 // Returns (false, nil) if not Azure DevOps or no origin remote exists.
 // Returns (false, error) only if the git command fails for other reasons.
-func GetCurrentRemoteType() (isAzureDevOps bool, err error) {
+func GetCurrentRemoteType() (bool, error) {
 	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
 	output, err := cmd.Output()
 	if err != nil {
