@@ -128,7 +128,7 @@ func parseMultipleKeys(output string) ([]KeyInfo, error) {
 }
 
 // parseUnixTimestamp parses a Unix timestamp string to time.Time.
-func parseUnixTimestamp(s string) (t time.Time, err error) {
+func parseUnixTimestamp(s string) (time.Time, error) {
 	ts, err := strconv.ParseInt(s, 10, 64)
 	if err != nil {
 		return time.Time{}, err
