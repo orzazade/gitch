@@ -37,14 +37,12 @@ func ValidateKeyID(keyID string) error {
 // Returns a slice of KeyInfo for all matching keys (may be empty if none found).
 // This enables auto-detection of existing GPG keys for an identity.
 func FindKeyByEmail(email string) ([]KeyInfo, error) {
-	// Check if gpg is available first
-	if !IsGPGAvailable() {
-		return nil, fmt.Errorf("gpg command not found - install GPG to use signing features")
-	}
-
 	cmd := exec.Command("gpg", "--list-secret-keys", "--keyid-format", "LONG", "--with-colons", email)
 	output, err := cmd.Output()
 	if err != nil {
+		if errors.Is(err, exec.ErrNotFound) {
+			return nil, fmt.Errorf("gpg command not found - install GPG to use signing features")
+		}
 		// gpg returns non-zero when no keys match — not an error
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
