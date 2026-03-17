@@ -1,6 +1,7 @@
 package gpg
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -17,7 +18,7 @@ func ValidateKeyID(keyID string) error {
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		// Check if gpg is not installed
-		if isCommandNotFound(err) {
+		if errors.Is(err, exec.ErrNotFound) {
 			return fmt.Errorf("gpg command not found - install GPG to use signing features")
 		}
 		// Key not found or other error
@@ -136,13 +137,3 @@ func parseUnixTimestamp(s string) (t time.Time, err error) {
 	return time.Unix(ts, 0), nil
 }
 
-// isCommandNotFound checks if the error indicates the command was not found.
-func isCommandNotFound(err error) bool {
-	if err == nil {
-		return false
-	}
-	errStr := err.Error()
-	return strings.Contains(errStr, "executable file not found") ||
-		strings.Contains(errStr, "not found") ||
-		strings.Contains(errStr, "no such file")
-}
