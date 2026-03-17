@@ -111,10 +111,6 @@ func printAuditResults(result *audit.ScanResult) error {
 	fmt.Fprintln(w, "STATUS\tHASH\tAUTHOR\tDATE\tSUBJECT")
 
 	for _, r := range result.Results {
-		if !r.IsMismatched && !auditShowAll {
-			continue
-		}
-
 		status := formatStatus(r)
 		subject := r.Commit.Subject
 		if len(subject) > 50 {
