@@ -78,8 +78,7 @@ func validateRemotePattern(pattern string) error {
 	}
 
 	// First part should be a hostname
-	host := parts[0]
-	if host == "" || strings.ContainsAny(host, " \t\n") {
+	if parts[0] == "" || strings.ContainsAny(parts[0], " \t\n") {
 		return fmt.Errorf("invalid host in remote pattern: %s", pattern)
 	}
 
