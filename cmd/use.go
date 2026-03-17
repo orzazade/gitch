@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/orzazade/gitch/internal/config"
-	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/rules"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/orzazade/gitch/internal/ui/selector"
@@ -132,11 +131,6 @@ func runUse(cmd *cobra.Command, args []string) error {
 	}
 
 	printSwitchSuccess(identity)
-	if scope == git.ScopeLocal {
-		fmt.Println("Scope: local repository")
-	} else {
-		fmt.Println("Scope: global")
-	}
-
+	printScopeInfo(scope)
 	return nil
 }

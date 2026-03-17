@@ -72,11 +72,7 @@ func runAutoSwitchCommand(cmd *cobra.Command, args []string) error {
 	}
 
 	printSwitchSuccess(identity)
-	if defaultApplyScope() == git.ScopeLocal {
-		fmt.Println("Scope: local repository")
-	} else {
-		fmt.Println("Scope: global")
-	}
+	printScopeInfo(defaultApplyScope())
 	return nil
 }
 

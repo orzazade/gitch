@@ -33,6 +33,14 @@ func printSwitchSuccess(identity *config.Identity) {
 	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
 }
 
+func printScopeInfo(scope gitpkg.Scope) {
+	if scope == gitpkg.ScopeLocal {
+		fmt.Println("Scope: local repository")
+	} else {
+		fmt.Println("Scope: global")
+	}
+}
+
 func printProfileWarnings(warnings []string) {
 	for _, warning := range warnings {
 		fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)
