@@ -17,31 +17,8 @@ import (
 // Returns nil if the key is valid (encrypted or not).
 // Returns an error if the key is not a supported type or cannot be parsed.
 func ValidateSSHKey(pemData []byte) error {
-	// Try to parse the private key
-	key, err := ssh.ParseRawPrivateKey(pemData)
-	if err != nil {
-		// Check if it's a passphrase-protected key
-		var passErr *ssh.PassphraseMissingError
-		if errors.As(err, &passErr) {
-			// Key is encrypted - check if it's a supported type via the public key
-			keyType := passErr.PublicKey.Type()
-			if keyType == ssh.KeyAlgoED25519 || keyType == ssh.KeyAlgoRSA {
-				return nil // Valid encrypted key of supported type
-			}
-			return fmt.Errorf("unsupported key type: %s (supported: ed25519, rsa)", keyType)
-		}
-		return fmt.Errorf("failed to parse private key: %w", err)
-	}
-
-	// Key parsed successfully - verify it's a supported type
-	switch key.(type) {
-	case ed25519.PrivateKey, *ed25519.PrivateKey:
-		return nil
-	case *rsa.PrivateKey:
-		return nil
-	default:
-		return fmt.Errorf("unsupported key type: %T (supported: ed25519, rsa)", key)
-	}
+	_, err := GetKeyType(pemData)
+	return err
 }
 
 // ValidateEd25519Key validates that the given PEM data is an Ed25519 private key.
@@ -77,7 +54,7 @@ func GetKeyType(pemData []byte) (KeyType, error) {
 			case ssh.KeyAlgoRSA:
 				return KeyTypeRSA, nil
 			default:
-				return "", fmt.Errorf("unsupported key type: %s", kt)
+				return "", fmt.Errorf("unsupported key type: %s (supported: ed25519, rsa)", kt)
 			}
 		}
 		return "", fmt.Errorf("failed to parse private key: %w", err)
@@ -90,7 +67,7 @@ func GetKeyType(pemData []byte) (KeyType, error) {
 	case *rsa.PrivateKey:
 		return KeyTypeRSA, nil
 	default:
-		return "", fmt.Errorf("unsupported key type: %T", key)
+		return "", fmt.Errorf("unsupported key type: %T (supported: ed25519, rsa)", key)
 	}
 }
 
