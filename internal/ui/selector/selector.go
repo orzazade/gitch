@@ -89,14 +89,14 @@ func (m Model) View() string {
 	b.WriteString("Select an identity:\n\n")
 
 	for i, identity := range m.identities {
-		isActive := strings.EqualFold(identity.Name, m.activeName)
-		isDefault := strings.EqualFold(identity.Name, m.defaultName)
-		hasSSH := identity.SSHKeyPath != ""
-		hasGPG := identity.GPGKeyID != ""
-		isCursor := i == m.cursor
-
-		card := renderSelectableCard(identity, isActive, isDefault, hasSSH, hasGPG, isCursor)
-		b.WriteString(card)
+		b.WriteString(renderSelectableCard(
+			identity,
+			strings.EqualFold(identity.Name, m.activeName),
+			strings.EqualFold(identity.Name, m.defaultName),
+			identity.SSHKeyPath != "",
+			identity.GPGKeyID != "",
+			i == m.cursor,
+		))
 		b.WriteString("\n")
 	}
 
@@ -162,10 +162,7 @@ func Run(identities []config.Identity, activeName, defaultName string) (*config.
 		return nil, nil
 	}
 
-	m := New(identities, activeName, defaultName)
-	p := tea.NewProgram(m)
-
-	finalModel, err := p.Run()
+	finalModel, err := tea.NewProgram(New(identities, activeName, defaultName)).Run()
 	if err != nil {
 		return nil, err
 	}
