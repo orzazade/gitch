@@ -25,8 +25,7 @@ func UpdateCache(identityName string) error {
 	}
 
 	// Create directory if needed
-	cacheDir := filepath.Dir(cachePath)
-	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(cachePath), 0755); err != nil {
 		return err
 	}
 
