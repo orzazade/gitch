@@ -19,10 +19,10 @@ const ConfirmPhrase = "I UNDERSTAND"
 // Mailmap format: <correct-email> <wrong-email>
 func GenerateMailmap(mismatches []Result, expectedEmail string) string {
 	// Collect unique wrong emails
-	uniqueEmails := make(map[string]bool)
+	uniqueEmails := make(map[string]struct{})
 	for _, r := range mismatches {
 		if r.IsMismatched {
-			uniqueEmails[r.Commit.AuthorEmail] = true
+			uniqueEmails[r.Commit.AuthorEmail] = struct{}{}
 		}
 	}
 
