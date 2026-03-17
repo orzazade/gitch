@@ -39,14 +39,12 @@ func DetectPromptFramework() DetectedFramework {
 	}
 
 	// Check for Starship: ~/.config/starship.toml
-	starshipConfig := filepath.Join(homeDir, ".config", "starship.toml")
-	if _, err := os.Stat(starshipConfig); err == nil {
+	if _, err := os.Stat(filepath.Join(homeDir, ".config", "starship.toml")); err == nil {
 		return FrameworkStarship
 	}
 
 	// Check for Oh My Zsh: ~/.oh-my-zsh directory
-	omzDir := filepath.Join(homeDir, ".oh-my-zsh")
-	if info, err := os.Stat(omzDir); err == nil && info.IsDir() {
+	if info, err := os.Stat(filepath.Join(homeDir, ".oh-my-zsh")); err == nil && info.IsDir() {
 		return FrameworkOhMyZsh
 	}
 
