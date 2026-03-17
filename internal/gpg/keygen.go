@@ -3,6 +3,7 @@ package gpg
 import (
 	"bytes"
 	"crypto"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -119,7 +120,8 @@ func ExportPublicKey(keyID string) (string, error) {
 	cmd := exec.Command("gpg", "--armor", "--export", keyID)
 	output, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			return "", fmt.Errorf("failed to export public key: %s", string(exitErr.Stderr))
 		}
 		return "", fmt.Errorf("failed to export public key: %w", err)
@@ -138,7 +140,8 @@ func ExportPrivateKey(keyID string) (string, error) {
 	cmd := exec.Command("gpg", "--armor", "--export-secret-keys", keyID)
 	output, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			return "", fmt.Errorf("failed to export private key: %s", string(exitErr.Stderr))
 		}
 		return "", fmt.Errorf("failed to export private key: %w", err)

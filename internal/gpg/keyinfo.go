@@ -41,12 +41,6 @@ func GetKeyInfo(keyID string) (*KeyInfo, error) {
 	cmd := exec.Command("gpg", "--list-secret-keys", "--keyid-format", "LONG", "--with-colons", keyID)
 	output, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			// gpg returns non-zero when key not found
-			if len(exitErr.Stderr) > 0 {
-				return nil, fmt.Errorf("GPG key not found: %s", keyID)
-			}
-		}
 		return nil, fmt.Errorf("GPG key not found: %s", keyID)
 	}
 
