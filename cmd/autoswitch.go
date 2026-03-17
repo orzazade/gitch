@@ -54,11 +54,11 @@ func runAutoSwitchCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to auto-switch: %w", err)
 	}
 
-	if result == nil || !result.Switched {
+	if !result.Switched {
 		if autoSwitchQuiet {
 			return nil
 		}
-		if result == nil || result.SkippedReason == "no matching rule" {
+		if result.SkippedReason == "no matching rule" {
 			fmt.Println(ui.DimStyle.Render("No matching identity rule."))
 			return nil
 		}
