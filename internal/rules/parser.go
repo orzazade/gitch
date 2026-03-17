@@ -26,8 +26,7 @@ func ParseRemote(rawURL string) (*ParsedRemote, error) {
 	host := strings.ToLower(u.Host)
 
 	// Get path and clean it
-	path := strings.TrimPrefix(u.Path, "/")
-	path = strings.TrimSuffix(path, ".git")
+	path := strings.TrimSuffix(strings.TrimPrefix(u.Path, "/"), ".git")
 
 	// Split path into org and repo
 	parts := strings.Split(path, "/")
