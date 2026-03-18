@@ -47,6 +47,10 @@ func runExport(cmd *cobra.Command, args []string) error {
 
 	outputPath := args[0]
 
+	if len(cfg.Identities) == 0 {
+		return errors.New("no identities configured — add one with: gitch add")
+	}
+
 	var keysEncrypted int
 	if exportEncrypt {
 		// Prompt for passphrase with confirmation
@@ -70,17 +74,11 @@ func runExport(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := portability.ExportToFileEncrypted(cfg, outputPath, passphrase); err != nil {
-			if errors.Is(err, portability.ErrNoIdentities) {
-				return errors.New("no identities configured — add one with: gitch add")
-			}
 			return fmt.Errorf("failed to export: %w", err)
 		}
 		fmt.Println(ui.SuccessStyle.Render("Encrypted export complete!"))
 	} else {
 		if err := portability.ExportToFile(cfg, outputPath); err != nil {
-			if errors.Is(err, portability.ErrNoIdentities) {
-				return errors.New("no identities configured — add one with: gitch add")
-			}
 			return fmt.Errorf("failed to export: %w", err)
 		}
 		fmt.Println(ui.SuccessStyle.Render("Export complete!"))
