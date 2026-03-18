@@ -47,6 +47,18 @@ func TestDetectPromptFramework_NoPowerlevelEnv(t *testing.T) {
 	}
 }
 
+func TestDetectPromptFramework_Powerlevel(t *testing.T) {
+	// Setting a POWERLEVEL9K_* env var should trigger Powerlevel10k detection
+	// (unless Starship or Oh My Zsh are detected first)
+	t.Setenv("POWERLEVEL9K_MODE", "nerdfont-complete")
+	t.Setenv("HOME", t.TempDir()) // Avoid detecting starship/oh-my-zsh from real home
+
+	result := DetectPromptFramework()
+	if result != FrameworkPowerlevel {
+		t.Errorf("expected FrameworkPowerlevel with POWERLEVEL9K_* env set, got %q", result)
+	}
+}
+
 func TestFrameworkConstants(t *testing.T) {
 	// Ensure constants have expected underlying string values
 	if FrameworkNone != "" {
