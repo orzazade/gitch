@@ -2,11 +2,9 @@ package ssh
 
 import (
 	"errors"
-	"fmt"
 	"net"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 
 	"golang.org/x/crypto/ssh"
@@ -100,47 +98,3 @@ func IsKeyLoadedInAgent(keyPath string) bool {
 	return false
 }
 
-// AddKeyToAgentWithPassphrase adds an SSH key to the agent programmatically.
-// If passphrase is nil or empty and the key requires one, falls back to AddKeyToAgent
-// to allow interactive passphrase prompting.
-func AddKeyToAgentWithPassphrase(keyPath string, passphrase []byte) error {
-	if !IsAgentRunning() {
-		return errAgentNotRunning
-	}
-
-	socket := os.Getenv("SSH_AUTH_SOCK")
-	conn, err := net.Dial("unix", socket)
-	if err != nil {
-		return fmt.Errorf("failed to connect to ssh-agent: %w", err)
-	}
-	defer func() { _ = conn.Close() }()
-
-	// Read key file
-	keyData, err := os.ReadFile(keyPath)
-	if err != nil {
-		return fmt.Errorf("failed to read key file: %w", err)
-	}
-
-	// Parse key
-	var privKey any
-	if len(passphrase) > 0 {
-		privKey, err = ssh.ParseRawPrivateKeyWithPassphrase(keyData, passphrase)
-	} else {
-		privKey, err = ssh.ParseRawPrivateKey(keyData)
-	}
-	if err != nil {
-		// If the key needs a passphrase, fall back to shell method for interactive prompt
-		var passErr *ssh.PassphraseMissingError
-		if errors.As(err, &passErr) {
-			return AddKeyToAgent(keyPath)
-		}
-		return fmt.Errorf("failed to parse private key: %w", err)
-	}
-
-	// Add to agent
-	agentClient := agent.NewClient(conn)
-	return agentClient.Add(agent.AddedKey{
-		PrivateKey: privKey,
-		Comment:    filepath.Base(keyPath),
-	})
-}
