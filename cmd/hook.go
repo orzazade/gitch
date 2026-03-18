@@ -108,7 +108,8 @@ func init() {
 }
 
 func runHookInstall(cmd *cobra.Command, args []string) error {
-	if hookGlobal {
+	switch {
+	case hookGlobal:
 		installed, err := hooks.IsInstalled()
 		if err != nil {
 			return fmt.Errorf("failed to check hook status: %w", err)
@@ -123,7 +124,8 @@ func runHookInstall(cmd *cobra.Command, args []string) error {
 		hooksDir, _ := hooks.HooksDir()
 		fmt.Println(ui.SuccessStyle.Render("Global hooks installed at " + hooksDir))
 		fmt.Println(ui.DimStyle.Render("Git will validate identity before each commit and push."))
-	} else if hookPrePush {
+
+	case hookPrePush:
 		installed, err := hooks.IsInstalledLocalPrePush()
 		if err != nil {
 			return fmt.Errorf("failed to check local pre-push hook status: %w", err)
@@ -137,7 +139,8 @@ func runHookInstall(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Println(ui.SuccessStyle.Render("Local pre-push hook installed"))
 		fmt.Println(ui.DimStyle.Render("Git will verify commit identities before each push."))
-	} else {
+
+	default:
 		installed, err := hooks.IsInstalledLocal()
 		if err != nil {
 			return fmt.Errorf("failed to check local hook status: %w", err)
