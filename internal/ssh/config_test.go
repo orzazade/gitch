@@ -274,6 +274,14 @@ func TestIdentityToHosts_TildeExpansion(t *testing.T) {
 	}
 }
 
+func TestRemoveManagedBlock_OnlyBlock(t *testing.T) {
+	content := MarkerStart + "\nHost gitch-work\n    User git\n\n" + MarkerEnd + "\n"
+	result := removeManagedBlock(content)
+	if strings.TrimSpace(result) != "" {
+		t.Errorf("expected empty result when config only has managed block, got: %q", result)
+	}
+}
+
 func TestSSHConfigPath(t *testing.T) {
 	path, err := SSHConfigPath()
 	if err != nil {
