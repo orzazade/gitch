@@ -121,9 +121,9 @@ func runUse(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		identity, err = cfg.GetIdentity(name)
 		if err != nil {
-			msg := fmt.Sprintf("identity '%s' not found", name)
+			msg := "identity '" + name + "' not found"
 			if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
-				msg += fmt.Sprintf("\n\nDid you mean '%s'?  Run: gitch use %s", suggestion, suggestion)
+				msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch use " + suggestion
 			} else {
 				msg += ". Use 'gitch list' to see available identities"
 			}

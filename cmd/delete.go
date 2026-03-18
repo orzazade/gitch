@@ -57,7 +57,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	isActive := strings.EqualFold(identity.Email, activeEmail)
 
 	// Confirm deletion
-	message := fmt.Sprintf("Delete identity '%s'? This cannot be undone.", identity.Name)
+	message := "Delete identity '" + identity.Name + "'? This cannot be undone."
 	confirmed, err := ui.ConfirmPrompt(message, deleteYes)
 	if err != nil {
 		return err

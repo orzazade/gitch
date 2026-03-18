@@ -90,7 +90,7 @@ func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 	expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
 	if err != nil {
 		return &autoSwitchResult{
-			SkippedReason: fmt.Sprintf("identity '%s' not found", matchedRule.Identity),
+			SkippedReason: "identity '" + matchedRule.Identity + "' not found",
 		}, nil
 	}
 
