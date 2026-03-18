@@ -380,6 +380,27 @@ func TestMatches_UnknownType(t *testing.T) {
 	}
 }
 
+func TestMatches_RemoteRuleEmptyURL(t *testing.T) {
+	rule := Rule{Type: RemoteRule, Pattern: "github.com/org/*", Identity: "work"}
+	if rule.Matches("/some/path", "") {
+		t.Error("remote rule should not match when remote URL is empty")
+	}
+}
+
+func TestMatches_RemoteRuleMatchesURL(t *testing.T) {
+	rule := Rule{Type: RemoteRule, Pattern: "github.com/org/*", Identity: "work"}
+	if !rule.Matches("", "git@github.com:org/repo.git") {
+		t.Error("remote rule should match a matching remote URL")
+	}
+}
+
+func TestMatches_RemoteRuleNoMatch(t *testing.T) {
+	rule := Rule{Type: RemoteRule, Pattern: "github.com/org/*", Identity: "work"}
+	if rule.Matches("", "git@gitlab.com:other/repo.git") {
+		t.Error("remote rule should not match a non-matching remote URL")
+	}
+}
+
 func TestFindBestMatch(t *testing.T) {
 	home, err := os.UserHomeDir()
 	if err != nil {
