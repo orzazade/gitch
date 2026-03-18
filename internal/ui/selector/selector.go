@@ -2,6 +2,7 @@
 package selector
 
 import (
+	"slices"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -32,10 +33,10 @@ func New(identities []config.Identity, activeName, defaultName string) Model {
 
 // findActiveIndex returns the index of the active identity, or 0.
 func findActiveIndex(identities []config.Identity, activeName string) int {
-	for i, id := range identities {
-		if strings.EqualFold(id.Name, activeName) {
-			return i
-		}
+	if idx := slices.IndexFunc(identities, func(id config.Identity) bool {
+		return strings.EqualFold(id.Name, activeName)
+	}); idx != -1 {
+		return idx
 	}
 	return 0
 }
