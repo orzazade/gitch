@@ -36,7 +36,7 @@ func TestHostConfig_String(t *testing.T) {
 
 	// Check indentation (4 spaces)
 	if !strings.Contains(result, "    HostName") {
-		t.Errorf("Expected 4-space indentation for HostName")
+		t.Error("Expected 4-space indentation for HostName")
 	}
 }
 
@@ -102,10 +102,10 @@ func TestGenerateConfigBlock_MultipleHosts(t *testing.T) {
 
 	// Both hosts should be present
 	if !strings.Contains(result, "Host github-work") {
-		t.Errorf("Expected github-work host in output")
+		t.Error("Expected github-work host in output")
 	}
 	if !strings.Contains(result, "Host gitlab-work") {
-		t.Errorf("Expected gitlab-work host in output")
+		t.Error("Expected gitlab-work host in output")
 	}
 }
 
@@ -144,21 +144,21 @@ Host other
 
 	// Should not contain gitch markers
 	if strings.Contains(result, "gitch:start") {
-		t.Errorf("Expected gitch:start to be removed")
+		t.Error("Expected gitch:start to be removed")
 	}
 	if strings.Contains(result, "gitch:end") {
-		t.Errorf("Expected gitch:end to be removed")
+		t.Error("Expected gitch:end to be removed")
 	}
 	if strings.Contains(result, "github-work") {
-		t.Errorf("Expected github-work block to be removed")
+		t.Error("Expected github-work block to be removed")
 	}
 
 	// Should preserve surrounding content
 	if !strings.Contains(result, "Host personal") {
-		t.Errorf("Expected 'Host personal' to be preserved")
+		t.Error("Expected 'Host personal' to be preserved")
 	}
 	if !strings.Contains(result, "Host other") {
-		t.Errorf("Expected 'Host other' to be preserved")
+		t.Error("Expected 'Host other' to be preserved")
 	}
 }
 
@@ -196,10 +196,10 @@ Host github-work
 	result := removeManagedBlock(content)
 
 	if strings.Contains(result, "gitch:start") {
-		t.Errorf("Expected gitch block to be removed")
+		t.Error("Expected gitch block to be removed")
 	}
 	if !strings.Contains(result, "Host personal") {
-		t.Errorf("Expected 'Host personal' to be preserved")
+		t.Error("Expected 'Host personal' to be preserved")
 	}
 }
 

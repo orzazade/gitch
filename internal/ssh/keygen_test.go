@@ -34,7 +34,7 @@ func Test_generateKeyPair_NoPassphrase(t *testing.T) {
 
 	// Verify comment is in public key
 	if !bytes.Contains(pubKey, []byte("test@gitch")) {
-		t.Errorf("Public key does not contain comment 'test@gitch'")
+		t.Error("Public key does not contain comment 'test@gitch'")
 	}
 
 	// Verify private key can be parsed back
@@ -53,12 +53,12 @@ func Test_generateKeyPair_WithPassphrase(t *testing.T) {
 
 	// Verify private key format
 	if !bytes.HasPrefix(privKey, []byte("-----BEGIN OPENSSH PRIVATE KEY-----")) {
-		t.Errorf("Encrypted private key does not start with expected header")
+		t.Error("Encrypted private key does not start with expected header")
 	}
 
 	// Verify public key format
 	if !bytes.HasPrefix(pubKey, []byte("ssh-ed25519 ")) {
-		t.Errorf("Public key does not start with 'ssh-ed25519'")
+		t.Error("Public key does not start with 'ssh-ed25519'")
 	}
 
 	// Verify parsing without passphrase fails (key is encrypted)
@@ -87,11 +87,11 @@ func Test_generateKeyPair_EmptyComment(t *testing.T) {
 
 	// Verify keys are still valid
 	if !bytes.HasPrefix(privKey, []byte("-----BEGIN OPENSSH PRIVATE KEY-----")) {
-		t.Errorf("Private key has unexpected format")
+		t.Error("Private key has unexpected format")
 	}
 
 	if !bytes.HasPrefix(pubKey, []byte("ssh-ed25519 ")) {
-		t.Errorf("Public key has unexpected format")
+		t.Error("Public key has unexpected format")
 	}
 }
 
@@ -293,7 +293,7 @@ func TestGenerateKeyPairWithType_Ed25519(t *testing.T) {
 
 	// Verify private key format
 	if !bytes.HasPrefix(privKey, []byte("-----BEGIN OPENSSH PRIVATE KEY-----")) {
-		t.Errorf("Private key does not start with expected header")
+		t.Error("Private key does not start with expected header")
 	}
 
 	// Verify public key format
@@ -316,7 +316,7 @@ func TestGenerateKeyPairWithType_RSA(t *testing.T) {
 
 	// Verify private key format
 	if !bytes.HasPrefix(privKey, []byte("-----BEGIN OPENSSH PRIVATE KEY-----")) {
-		t.Errorf("Private key does not start with expected header")
+		t.Error("Private key does not start with expected header")
 	}
 
 	// Verify public key format - must start with ssh-rsa
@@ -356,7 +356,7 @@ func TestGenerateKeyPairWithType_RSA_WithPassphrase(t *testing.T) {
 
 	// Verify public key format
 	if !bytes.HasPrefix(pubKey, []byte("ssh-rsa ")) {
-		t.Errorf("RSA public key does not start with 'ssh-rsa'")
+		t.Error("RSA public key does not start with 'ssh-rsa'")
 	}
 
 	// Verify parsing without passphrase fails (key is encrypted)
