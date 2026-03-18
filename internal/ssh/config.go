@@ -38,16 +38,14 @@ func GenerateConfigBlock(hosts []HostConfig) string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString(MarkerStart)
-	sb.WriteString("\n")
+	sb.WriteString(MarkerStart + "\n")
 
 	for _, host := range hosts {
 		sb.WriteString(host.String())
 		sb.WriteString("\n")
 	}
 
-	sb.WriteString(MarkerEnd)
-	sb.WriteString("\n")
+	sb.WriteString(MarkerEnd + "\n")
 
 	return sb.String()
 }
