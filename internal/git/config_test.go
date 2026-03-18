@@ -9,76 +9,42 @@ import (
 )
 
 // testGitEnv sets up an isolated git environment for testing.
-// It creates a temp directory with a git repo and uses GIT_CONFIG_GLOBAL
-// to point to a temp config file, ensuring tests don't modify user's real config.
+// Uses t.TempDir() and t.Setenv() so cleanup is automatic.
 type testGitEnv struct {
-	dir          string
-	globalConfig string
-	origEnv      map[string]string
+	dir string
 }
 
 // setupTestEnv creates an isolated git testing environment.
+// The temp directory and environment variables are restored automatically when the test ends.
 func setupTestEnv(t *testing.T) *testGitEnv {
 	t.Helper()
 
-	// Create temp directory
-	dir, err := os.MkdirTemp("", "gitch-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
+	dir := t.TempDir()
 
 	// Create temp global config file
 	globalConfig := filepath.Join(dir, ".gitconfig")
 	if err := os.WriteFile(globalConfig, []byte{}, 0644); err != nil {
-		os.RemoveAll(dir)
 		t.Fatalf("failed to create temp gitconfig: %v", err)
 	}
 
-	// Save original environment
-	origEnv := make(map[string]string)
-	for _, key := range []string{"GIT_CONFIG_GLOBAL", "HOME", "XDG_CONFIG_HOME"} {
-		origEnv[key] = os.Getenv(key)
-	}
-
-	// Set isolated environment
-	// GIT_CONFIG_GLOBAL points git to our temp config file for --global operations
-	os.Setenv("GIT_CONFIG_GLOBAL", globalConfig)
-	// Set HOME to temp dir to prevent git from reading user's real config
-	os.Setenv("HOME", dir)
-	// Clear XDG_CONFIG_HOME to avoid any XDG-based config loading
-	os.Setenv("XDG_CONFIG_HOME", dir)
+	// Set isolated environment (automatically restored when test ends)
+	t.Setenv("GIT_CONFIG_GLOBAL", globalConfig)
+	t.Setenv("HOME", dir)
+	t.Setenv("XDG_CONFIG_HOME", dir)
 
 	// Initialize a git repo in the temp directory for local config tests
 	cmd := exec.Command("git", "init")
 	cmd.Dir = dir
 	if err := cmd.Run(); err != nil {
-		os.RemoveAll(dir)
 		t.Fatalf("failed to init git repo: %v", err)
 	}
 
-	return &testGitEnv{
-		dir:          dir,
-		globalConfig: globalConfig,
-		origEnv:      origEnv,
-	}
+	return &testGitEnv{dir: dir}
 }
 
-// cleanup restores the original environment and removes temp files.
-func (e *testGitEnv) cleanup(t *testing.T) {
-	t.Helper()
-
-	// Restore original environment
-	for key, val := range e.origEnv {
-		if val == "" {
-			os.Unsetenv(key)
-		} else {
-			os.Setenv(key, val)
-		}
-	}
-
-	// Remove temp directory
-	os.RemoveAll(e.dir)
-}
+// cleanup is a no-op retained for call-site compatibility.
+// All cleanup is handled automatically by t.TempDir() and t.Setenv().
+func (e *testGitEnv) cleanup(t *testing.T) {}
 
 func TestGetConfig_ExistingKey(t *testing.T) {
 	env := setupTestEnv(t)
