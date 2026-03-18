@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/orzazade/gitch/internal/audit"
 	"github.com/orzazade/gitch/internal/config"
 	gitpkg "github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/rules"
@@ -65,10 +66,14 @@ func runAmend(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get the last commit's info
-	lastHash, lastAuthorName, lastAuthorEmail, err := getLastCommitAuthor()
-	if err != nil {
-		return err
+	commits, err := audit.GetCommits(1)
+	if err != nil || len(commits) == 0 {
+		return errors.New("no commits found")
 	}
+	lastCommit := commits[0]
+	lastHash := lastCommit.Hash
+	lastAuthorName := lastCommit.AuthorName
+	lastAuthorEmail := lastCommit.AuthorEmail
 
 	// Resolve expected identity from rules
 	cfg, err := config.Load()
@@ -144,7 +149,11 @@ func runAmend(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git commit --amend failed: %s", strings.TrimSpace(string(output)))
 	}
 
-	newHash, _, _, _ := getLastCommitAuthor()
+	newCommits, _ := audit.GetCommits(1)
+	newHash := ""
+	if len(newCommits) > 0 {
+		newHash = newCommits[0].Hash
+	}
 
 	out := amendOutput{
 		OK:           true,
@@ -158,20 +167,6 @@ func runAmend(cmd *cobra.Command, args []string) error {
 		Reason:       "commit amended to identity '" + expectedIdentity.Name + "'",
 	}
 	return printAmendResult(out)
-}
-
-// getLastCommitAuthor returns the hash, author name, and author email of HEAD.
-func getLastCommitAuthor() (hash, name, email string, err error) {
-	cmd := exec.Command("git", "log", "-1", "--format=%H|||%an|||%ae")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", "", "", errors.New("no commits found")
-	}
-	parts := strings.SplitN(strings.TrimSpace(string(output)), "|||", 3)
-	if len(parts) < 3 {
-		return "", "", "", errors.New("failed to parse last commit")
-	}
-	return parts[0], parts[1], parts[2], nil
 }
 
 // isHeadPushed returns true if HEAD has been pushed to the upstream branch.
