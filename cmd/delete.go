@@ -84,7 +84,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Deleted identity '%s'", identity.Name)))
+	fmt.Println(ui.SuccessStyle.Render("Deleted identity '" + identity.Name + "'"))
 
 	// Warn if this was the active identity
 	if isActive {

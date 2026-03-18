@@ -277,7 +277,7 @@ func runRuleSuggest(cmd *cobra.Command, args []string) error {
 	fmt.Printf("Remote: %s\n", remoteURL)
 	fmt.Printf("Reason: %s\n", suggestion.Reason)
 	fmt.Println()
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Suggested: use identity '%s'", suggestion.Identity)))
+	fmt.Println(ui.SuccessStyle.Render("Suggested: use identity '" + suggestion.Identity + "'"))
 	fmt.Println()
 	fmt.Println("Run this to add the rule:")
 	fmt.Printf("  gitch rule add --remote %q --use %s\n", suggestion.Pattern, suggestion.Identity)

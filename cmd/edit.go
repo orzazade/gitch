@@ -107,7 +107,7 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Updated identity '%s'", identity.Name)))
+	fmt.Println(ui.SuccessStyle.Render("Updated identity '" + identity.Name + "'"))
 	fmt.Printf("  Email:     %s\n", identity.Email)
 	fmt.Printf("  Git name:  %s\n", identity.GitAuthorName())
 	if identity.SSHKeyPath != "" {
