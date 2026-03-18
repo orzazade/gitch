@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -111,10 +112,11 @@ func resolvePromptFromRule(cfg *config.Config, currentEmail string) string {
 // resolvePromptFromIdentities matches the current email against all managed
 // identities. Returns the identity name, or "?" if unmanaged.
 func resolvePromptFromIdentities(cfg *config.Config, currentEmail string) string {
-	for i := range cfg.Identities {
-		if strings.EqualFold(cfg.Identities[i].Email, currentEmail) {
-			return cfg.Identities[i].Name
-		}
+	idx := slices.IndexFunc(cfg.Identities, func(id config.Identity) bool {
+		return strings.EqualFold(id.Email, currentEmail)
+	})
+	if idx != -1 {
+		return cfg.Identities[idx].Name
 	}
 	return "?"
 }
