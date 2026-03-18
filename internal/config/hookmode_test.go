@@ -96,6 +96,42 @@ func TestUpdateIdentity_DuplicateEmail(t *testing.T) {
 	}
 }
 
+func TestUpdateIdentity_UpdateSSHKeyPath(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "w@w.com"})
+	sshPath := "/home/user/.ssh/work_key"
+
+	updated, err := cfg.UpdateIdentity("work", IdentityUpdates{SSHKeyPath: &sshPath})
+	if err != nil {
+		t.Fatalf("UpdateIdentity failed: %v", err)
+	}
+	if updated.SSHKeyPath != sshPath {
+		t.Errorf("expected SSHKeyPath %q, got %q", sshPath, updated.SSHKeyPath)
+	}
+}
+
+func TestUpdateIdentity_UpdateGPGKeyID(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "w@w.com"})
+	gpgKey := "ABCD1234"
+
+	updated, err := cfg.UpdateIdentity("work", IdentityUpdates{GPGKeyID: &gpgKey})
+	if err != nil {
+		t.Fatalf("UpdateIdentity failed: %v", err)
+	}
+	if updated.GPGKeyID != gpgKey {
+		t.Errorf("expected GPGKeyID %q, got %q", gpgKey, updated.GPGKeyID)
+	}
+}
+
+func TestUpdateIdentity_InvalidEmail(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "w@w.com"})
+	bad := "not-an-email"
+
+	_, err := cfg.UpdateIdentity("work", IdentityUpdates{Email: &bad})
+	if err == nil {
+		t.Fatal("expected error for invalid email")
+	}
+}
+
 func TestUpdateIdentity_InvalidHookMode(t *testing.T) {
 	cfg := testConfig(Identity{Name: "work", Email: "w@w.com"})
 	bad := "invalid"
