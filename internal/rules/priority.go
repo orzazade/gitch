@@ -22,7 +22,7 @@ func (r Rule) Specificity() int {
 
 // directorySpecificity calculates specificity for directory patterns
 func directorySpecificity(pattern string) int {
-	expanded := filepath.Clean(expandTilde(pattern))
+	expanded := expandAndAbs(pattern)
 
 	// Count path segments
 	segments := strings.Split(expanded, string(filepath.Separator))
