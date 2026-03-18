@@ -157,7 +157,7 @@ func parseUID(uid string) (name, email string) {
 // decodeUID decodes percent-encoded characters in GPG UID strings.
 func decodeUID(s string) string {
 	// GPG encodes special characters as %XX
-	result := strings.Builder{}
+	var result strings.Builder
 	i := 0
 	for i < len(s) {
 		if s[i] == '%' && i+2 < len(s) {
