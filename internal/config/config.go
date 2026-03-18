@@ -166,6 +166,59 @@ func (c *Config) DeleteIdentity(name string) error {
 	return nil
 }
 
+// IdentityUpdates holds optional fields for updating an identity.
+// A nil pointer means "do not change this field".
+type IdentityUpdates struct {
+	GitName    *string
+	Email      *string
+	SSHKeyPath *string
+	GPGKeyID   *string
+	HookMode   *string
+}
+
+// UpdateIdentity applies partial updates to an existing identity.
+// Only non-nil fields in the updates struct are applied.
+// Returns the updated identity or an error if the identity is not found.
+func (c *Config) UpdateIdentity(name string, updates IdentityUpdates) (*Identity, error) {
+	idx := c.findIdentityIndex(name)
+	if idx == -1 {
+		return nil, errIdentityNotFound(name)
+	}
+
+	id := &c.Identities[idx]
+
+	if updates.GitName != nil {
+		id.GitName = *updates.GitName
+	}
+	if updates.Email != nil {
+		email := *updates.Email
+		if err := ValidateEmail(email); err != nil {
+			return nil, err
+		}
+		// Check for duplicate email among other identities
+		for i, existing := range c.Identities {
+			if i != idx && strings.EqualFold(existing.Email, email) {
+				return nil, fmt.Errorf("identity with email %q already exists (%s)", email, existing.Name)
+			}
+		}
+		id.Email = email
+	}
+	if updates.SSHKeyPath != nil {
+		id.SSHKeyPath = *updates.SSHKeyPath
+	}
+	if updates.GPGKeyID != nil {
+		id.GPGKeyID = *updates.GPGKeyID
+	}
+	if updates.HookMode != nil {
+		if err := ValidateHookMode(*updates.HookMode); err != nil {
+			return nil, err
+		}
+		id.HookMode = *updates.HookMode
+	}
+
+	return id, nil
+}
+
 // ListIdentities returns all identities
 // Returns an empty slice if there are no identities
 func (c *Config) ListIdentities() []Identity {
