@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
+	gitpkg "github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/hooks"
 	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
@@ -118,7 +119,7 @@ func runClone(cmd *cobra.Command, args []string) error {
 		return maybeInstallHook()
 	}
 
-	result, err := profile.Apply(identity, "local")
+	result, err := profile.Apply(identity, gitpkg.ScopeLocal)
 	if err != nil {
 		return fmt.Errorf("failed to apply identity: %w", err)
 	}
