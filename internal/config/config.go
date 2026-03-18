@@ -134,10 +134,10 @@ func (c *Config) AddIdentity(identity Identity) error {
 
 	// Duplicate emails make active profile detection ambiguous because git config
 	// only stores one user.email at a time.
-	for _, existing := range c.Identities {
-		if strings.EqualFold(existing.Email, identity.Email) {
-			return fmt.Errorf("identity with email %q already exists (%s)", identity.Email, existing.Name)
-		}
+	if idx := slices.IndexFunc(c.Identities, func(id Identity) bool {
+		return strings.EqualFold(id.Email, identity.Email)
+	}); idx != -1 {
+		return fmt.Errorf("identity with email %q already exists (%s)", identity.Email, c.Identities[idx].Name)
 	}
 
 	c.Identities = append(c.Identities, identity)
