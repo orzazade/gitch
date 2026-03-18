@@ -12,11 +12,10 @@ type GitEnv struct {
 	Dir          string
 	GlobalConfig string
 	ConfigPath   string
-	origEnv      map[string]string
-	origDir      string
 }
 
 // SetupGitEnv creates an isolated HOME, XDG config home, global git config, and git repo.
+// Environment variables and working directory are automatically restored via t.Setenv/t.Chdir.
 func SetupGitEnv(t *testing.T) *GitEnv {
 	t.Helper()
 
@@ -31,20 +30,10 @@ func SetupGitEnv(t *testing.T) *GitEnv {
 		t.Fatalf("failed to create config directory: %v", err)
 	}
 
-	origDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get working directory: %v", err)
-	}
-
-	origEnv := map[string]string{}
-	for _, key := range []string{"GIT_CONFIG_GLOBAL", "HOME", "XDG_CONFIG_HOME", "GITCH_CONFIG_PATH"} {
-		origEnv[key] = os.Getenv(key)
-	}
-
-	os.Setenv("GIT_CONFIG_GLOBAL", globalConfig)
-	os.Setenv("HOME", dir)
-	os.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, "xdg"))
-	os.Setenv("GITCH_CONFIG_PATH", configPath)
+	t.Setenv("GIT_CONFIG_GLOBAL", globalConfig)
+	t.Setenv("HOME", dir)
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, "xdg"))
+	t.Setenv("GITCH_CONFIG_PATH", configPath)
 
 	cmd := exec.Command("git", "init")
 	cmd.Dir = dir
@@ -56,34 +45,20 @@ func SetupGitEnv(t *testing.T) *GitEnv {
 		Dir:          dir,
 		GlobalConfig: globalConfig,
 		ConfigPath:   configPath,
-		origEnv:      origEnv,
-		origDir:      origDir,
 	}
 }
 
-// Cleanup restores the original environment and working directory.
+// Cleanup is a no-op retained for backward compatibility.
+// Environment and directory restoration is handled automatically by t.Setenv and t.Chdir.
 func (e *GitEnv) Cleanup(t *testing.T) {
 	t.Helper()
-
-	for key, value := range e.origEnv {
-		if value == "" {
-			os.Unsetenv(key)
-		} else {
-			os.Setenv(key, value)
-		}
-	}
-
-	if err := os.Chdir(e.origDir); err != nil {
-		t.Fatalf("failed to restore working directory: %v", err)
-	}
 }
 
 // Chdir moves into the test repository.
+// The original working directory is automatically restored when the test completes.
 func (e *GitEnv) Chdir(t *testing.T) {
 	t.Helper()
-	if err := os.Chdir(e.Dir); err != nil {
-		t.Fatalf("failed to change directory to test repo: %v", err)
-	}
+	t.Chdir(e.Dir)
 }
 
 // Run executes a command in the test repository.
