@@ -107,10 +107,7 @@ func runShow(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	hookMode := identity.HookMode
-	if hookMode == "" {
-		hookMode = "allow"
-	}
+	hookMode := identity.GetHookMode()
 
 	output := showOutput{
 		Name:      identity.Name,
