@@ -1,10 +1,11 @@
 package rules
 
 import (
-	"os/exec"
 	"strings"
 
 	giturls "github.com/whilp/git-urls"
+
+	"github.com/orzazade/gitch/internal/git"
 )
 
 // ParsedRemote represents a parsed git remote URL
@@ -41,11 +42,5 @@ func ParseRemote(rawURL string) (*ParsedRemote, error) {
 
 // GetGitRemoteURL retrieves the origin remote URL from the current git repository
 func GetGitRemoteURL() (string, error) {
-	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", err
-	}
-
-	return strings.TrimSpace(string(output)), nil
+	return git.GetConfigScoped("remote.origin.url", git.ScopeEffective)
 }
