@@ -13,8 +13,8 @@ import (
 	"github.com/orzazade/gitch/internal/ui"
 )
 
-// ConfirmPhrase is the exact phrase users must type to confirm destructive operations.
-const ConfirmPhrase = "I UNDERSTAND"
+// confirmPhrase is the exact phrase users must type to confirm destructive operations.
+const confirmPhrase = "I UNDERSTAND"
 
 // generateMailmap creates mailmap content to remap wrong emails to the expected email.
 // Mailmap format: <correct-email> <wrong-email>
@@ -143,7 +143,7 @@ func Fix(scanResult *ScanResult) error {
 	fmt.Println("This cannot be undone. Re-signing would create different commit hashes.")
 
 	// Step 5: Typed confirmation (AUDIT-08)
-	confirmed, err := ui.TypedConfirm("\nThis operation rewrites git history and cannot be undone.", ConfirmPhrase)
+	confirmed, err := ui.TypedConfirm("\nThis operation rewrites git history and cannot be undone.", confirmPhrase)
 	if err != nil {
 		return err
 	}
