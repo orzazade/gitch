@@ -84,12 +84,12 @@ func TestGetConfig_ExistingKey(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Set a value first
-	if err := SetConfig("user.name", "Test User", true); err != nil {
+	if err := SetConfigScoped("user.name", "Test User", ScopeGlobal); err != nil {
 		t.Fatalf("failed to set config: %v", err)
 	}
 
 	// Read it back
-	value, err := GetConfig("user.name", true)
+	value, err := GetConfigScoped("user.name", ScopeGlobal)
 	if err != nil {
 		t.Fatalf("GetConfig failed: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestGetConfig_MissingKey(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Read a key that doesn't exist
-	value, err := GetConfig("user.nonexistent", true)
+	value, err := GetConfigScoped("user.nonexistent", ScopeGlobal)
 	if err != nil {
 		t.Fatalf("GetConfig for missing key should not error: %v", err)
 	}
@@ -119,12 +119,12 @@ func TestSetConfig_Success(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Set a value
-	if err := SetConfig("user.email", "test@example.com", true); err != nil {
+	if err := SetConfigScoped("user.email", "test@example.com", ScopeGlobal); err != nil {
 		t.Fatalf("SetConfig failed: %v", err)
 	}
 
 	// Verify it was set by reading it back
-	value, err := GetConfig("user.email", true)
+	value, err := GetConfigScoped("user.email", ScopeGlobal)
 	if err != nil {
 		t.Fatalf("GetConfig failed: %v", err)
 	}
@@ -139,10 +139,10 @@ func TestGetCurrentIdentity_BothSet(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Set both values
-	if err := SetConfig("user.name", "Jane Doe", true); err != nil {
+	if err := SetConfigScoped("user.name", "Jane Doe", ScopeGlobal); err != nil {
 		t.Fatalf("failed to set name: %v", err)
 	}
-	if err := SetConfig("user.email", "jane@example.com", true); err != nil {
+	if err := SetConfigScoped("user.email", "jane@example.com", ScopeGlobal); err != nil {
 		t.Fatalf("failed to set email: %v", err)
 	}
 
@@ -165,7 +165,7 @@ func TestGetCurrentIdentity_PartiallySet(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Set only name (email will be missing)
-	if err := SetConfig("user.name", "Partial User", true); err != nil {
+	if err := SetConfigScoped("user.name", "Partial User", ScopeGlobal); err != nil {
 		t.Fatalf("failed to set name: %v", err)
 	}
 
@@ -239,16 +239,16 @@ func TestApplyIdentity_Success(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Apply identity
-	if err := ApplyIdentity("Alice Smith", "alice@example.com"); err != nil {
+	if err := ApplyIdentityScoped("Alice Smith", "alice@example.com", ScopeGlobal); err != nil {
 		t.Fatalf("ApplyIdentity failed: %v", err)
 	}
 
 	// Verify values were set
-	name, err := GetConfig("user.name", true)
+	name, err := GetConfigScoped("user.name", ScopeGlobal)
 	if err != nil {
 		t.Fatalf("failed to get name: %v", err)
 	}
-	email, err := GetConfig("user.email", true)
+	email, err := GetConfigScoped("user.email", ScopeGlobal)
 	if err != nil {
 		t.Fatalf("failed to get email: %v", err)
 	}
@@ -266,7 +266,7 @@ func TestApplyIdentity_VerifyPersistence(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Apply identity
-	if err := ApplyIdentity("Bob Jones", "bob@example.com"); err != nil {
+	if err := ApplyIdentityScoped("Bob Jones", "bob@example.com", ScopeGlobal); err != nil {
 		t.Fatalf("ApplyIdentity failed: %v", err)
 	}
 
@@ -294,12 +294,12 @@ func TestGetConfig_LocalScope(t *testing.T) {
 	os.Chdir(env.dir)
 
 	// Set local config (not global)
-	if err := SetConfig("user.name", "Local User", false); err != nil {
+	if err := SetConfigScoped("user.name", "Local User", ScopeLocal); err != nil {
 		t.Fatalf("failed to set local config: %v", err)
 	}
 
 	// Read local config
-	value, err := GetConfig("user.name", false)
+	value, err := GetConfigScoped("user.name", ScopeLocal)
 	if err != nil {
 		t.Fatalf("GetConfig local failed: %v", err)
 	}
@@ -309,7 +309,7 @@ func TestGetConfig_LocalScope(t *testing.T) {
 	}
 
 	// Global should still be empty
-	globalValue, err := GetConfig("user.name", true)
+	globalValue, err := GetConfigScoped("user.name", ScopeGlobal)
 	if err != nil {
 		t.Fatalf("GetConfig global failed: %v", err)
 	}

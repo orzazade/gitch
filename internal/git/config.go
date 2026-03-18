@@ -33,17 +33,6 @@ func scopeArgs(scope Scope) ([]string, error) {
 	}
 }
 
-// GetConfig reads a git config value.
-// If global is true, reads from --global scope; otherwise reads from local repo.
-// Returns empty string if key is not set (not an error).
-func GetConfig(key string, global bool) (string, error) {
-	scope := ScopeLocal
-	if global {
-		scope = ScopeGlobal
-	}
-	return GetConfigScoped(key, scope)
-}
-
 // GetConfigScoped reads a git config value from the requested scope.
 // Effective scope reads the value that git would currently use.
 func GetConfigScoped(key string, scope Scope) (string, error) {
@@ -70,16 +59,6 @@ func GetConfigScoped(key string, scope Scope) (string, error) {
 	}
 
 	return strings.TrimSpace(string(output)), nil
-}
-
-// SetConfig writes a git config value.
-// If global is true, writes to --global scope; otherwise writes to local repo.
-func SetConfig(key, value string, global bool) error {
-	scope := ScopeLocal
-	if global {
-		scope = ScopeGlobal
-	}
-	return SetConfigScoped(key, value, scope)
 }
 
 // SetConfigScoped writes a git config value to the requested scope.
@@ -160,24 +139,12 @@ func GetCurrentIdentityScoped(scope Scope) (name string, email string, err error
 	return name, email, nil
 }
 
-// ApplyIdentity sets git user.name and user.email globally.
-// Returns the first error encountered, if any.
-func ApplyIdentity(name, email string) error {
-	return ApplyIdentityScoped(name, email, ScopeGlobal)
-}
-
 // ApplyIdentityScoped sets git user.name and user.email in the requested scope.
 func ApplyIdentityScoped(name, email string, scope Scope) error {
 	if err := SetConfigScoped("user.name", name, scope); err != nil {
 		return err
 	}
 	return SetConfigScoped("user.email", email, scope)
-}
-
-// ApplySigningConfig configures git to use the specified GPG key for signing commits.
-// Sets user.signingkey and commit.gpgsign globally.
-func ApplySigningConfig(keyID string) error {
-	return ApplySigningConfigScoped(keyID, ScopeGlobal)
 }
 
 // ApplySigningConfigScoped configures git to use the specified GPG key for signing commits.
@@ -191,12 +158,6 @@ func ApplySigningConfigScoped(keyID string, scope Scope) error {
 	}
 
 	return nil
-}
-
-// ClearSigningConfig removes GPG signing configuration from git global config.
-// This is idempotent - returns nil even if the keys were not set.
-func ClearSigningConfig() error {
-	return ClearSigningConfigScoped(ScopeGlobal)
 }
 
 // ClearSigningConfigScoped removes GPG signing configuration from git config.
