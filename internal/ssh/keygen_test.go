@@ -11,6 +11,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// generateKeyPair is a test helper that generates an Ed25519 SSH keypair.
+func generateKeyPair(comment string, passphrase []byte) (privateKeyPEM, publicKey []byte, err error) {
+	return GenerateKeyPairWithType(KeyTypeEd25519, comment, passphrase)
+}
+
 func Test_generateKeyPair_NoPassphrase(t *testing.T) {
 	privKey, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
