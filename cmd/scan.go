@@ -12,6 +12,7 @@ import (
 	gitpkg "github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/hooks"
 	"github.com/orzazade/gitch/internal/rules"
+	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -73,12 +74,10 @@ func runScan(cmd *cobra.Command, args []string) error {
 		roots = []string{cwd}
 	}
 
-	// Expand tildes in paths
+	// Expand tildes and env vars in paths
 	for i, root := range roots {
-		if strings.HasPrefix(root, "~/") {
-			if home, err := os.UserHomeDir(); err == nil {
-				roots[i] = filepath.Join(home, root[2:])
-			}
+		if expanded, err := sshpkg.ExpandPath(root); err == nil {
+			roots[i] = expanded
 		}
 	}
 
