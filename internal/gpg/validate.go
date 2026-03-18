@@ -100,19 +100,15 @@ func parseMultipleKeys(output string) []KeyInfo {
 			}
 
 		case "fpr":
-			if currentKey != nil && currentKey.Fingerprint == "" {
-				if len(fields) > 9 && fields[9] != "" {
-					currentKey.Fingerprint = fields[9]
-				}
+			if currentKey != nil && currentKey.Fingerprint == "" && fields[9] != "" {
+				currentKey.Fingerprint = fields[9]
 			}
 
 		case "uid":
 			if currentKey != nil && currentKey.Email == "" {
-				if len(fields) > 9 {
-					name, email := parseUID(fields[9])
-					currentKey.Name = name
-					currentKey.Email = email
-				}
+				name, email := parseUID(fields[9])
+				currentKey.Name = name
+				currentKey.Email = email
 			}
 		}
 	}
