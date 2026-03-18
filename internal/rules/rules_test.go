@@ -365,6 +365,19 @@ func TestSpecificity(t *testing.T) {
 	for _, tt := range tests {
 		t.Logf("%s: specificity = %d", tt.name, tt.rule.Specificity())
 	}
+
+	// Unknown rule type returns 0
+	unknownRule := Rule{Type: "unknown", Pattern: "test"}
+	if unknownRule.Specificity() != 0 {
+		t.Errorf("unknown rule type specificity should be 0, got %d", unknownRule.Specificity())
+	}
+}
+
+func TestMatches_UnknownType(t *testing.T) {
+	rule := Rule{Type: "unknown", Pattern: "/some/path", Identity: "test"}
+	if rule.Matches("/some/path", "") {
+		t.Error("unknown rule type should not match anything")
+	}
 }
 
 func TestFindBestMatch(t *testing.T) {
