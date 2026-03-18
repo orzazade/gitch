@@ -168,6 +168,16 @@ func TestAddRule_DuplicatePattern(t *testing.T) {
 	}
 }
 
+func TestAddRule_InvalidPattern(t *testing.T) {
+	cfg := testConfig()
+	rule := rules.Rule{Type: rules.DirectoryRule, Pattern: "", Identity: "work"}
+
+	err := cfg.AddRule(rule)
+	if err == nil {
+		t.Fatal("expected error for empty pattern")
+	}
+}
+
 func TestRemoveRule_Success(t *testing.T) {
 	cfg := testConfig()
 	cfg.Rules = []rules.Rule{{Type: rules.DirectoryRule, Pattern: "/home/user/work", Identity: "work"}}
