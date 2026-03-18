@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -196,12 +197,11 @@ func scanSingleRepo(repoPath string, cfg *config.Config, globalHook bool) repoRe
 
 	// Check if identity is managed
 	if email != "" {
-		for i := range cfg.Identities {
-			if strings.EqualFold(cfg.Identities[i].Email, email) {
-				result.Managed = true
-				result.Identity = cfg.Identities[i].Name
-				break
-			}
+		if idx := slices.IndexFunc(cfg.Identities, func(id config.Identity) bool {
+			return strings.EqualFold(id.Email, email)
+		}); idx != -1 {
+			result.Managed = true
+			result.Identity = cfg.Identities[idx].Name
 		}
 	}
 
