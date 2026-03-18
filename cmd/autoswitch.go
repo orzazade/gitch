@@ -73,59 +73,46 @@ func runAutoSwitchCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// tryAutoSwitch checks if identity should switch based on rules and performs the switch
+// tryAutoSwitch checks if identity should switch based on rules and performs the switch.
 // Returns result indicating what happened (switched, already correct, no rule, etc.)
 func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
-	// 1. Get current working directory and remote
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
 	}
 	remoteURL, _ := rules.GetGitRemoteURL()
 
-	// 2. Find best matching rule
 	matchedRule := rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
 	if matchedRule == nil {
-		return &autoSwitchResult{
-			Switched:      false,
-			SkippedReason: "no matching rule",
-		}, nil
+		return &autoSwitchResult{SkippedReason: "no matching rule"}, nil
 	}
 
-	// 3. Get expected identity from rule
 	expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
 	if err != nil {
 		return &autoSwitchResult{
-			Switched:      false,
-	
 			SkippedReason: fmt.Sprintf("identity '%s' not found", matchedRule.Identity),
 		}, nil
 	}
 
 	scope := defaultApplyScope()
 
-	// 5. Check if already using the full expected profile
 	matches, err := profile.MatchesAtScope(expectedIdentity, scope)
 	if err != nil {
 		return nil, err
 	}
 	if matches {
 		return &autoSwitchResult{
-			Switched:      false,
 			ToIdentity:    expectedIdentity.Name,
-	
 			SkippedReason: "already using correct identity",
 		}, nil
 	}
 
-	// 6. Perform the switch
 	if err := applyConfiguredIdentity(expectedIdentity, scope); err != nil {
 		return nil, err
 	}
 
 	return &autoSwitchResult{
-		Switched:    true,
-		ToIdentity:  expectedIdentity.Name,
-
+		Switched:   true,
+		ToIdentity: expectedIdentity.Name,
 	}, nil
 }
