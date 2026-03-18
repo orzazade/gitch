@@ -16,6 +16,11 @@ import (
 // errNotInteractive is returned when stdin is not a TTY and confirmation is required.
 var errNotInteractive = errors.New("stdin is not a terminal; use --yes to skip confirmation")
 
+// isInteractive reports whether stdin is connected to an interactive terminal.
+func isInteractive() bool {
+	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
+}
+
 // ConfirmPrompt asks for y/N confirmation.
 // Returns true if user confirms, false otherwise.
 // If stdin is not a TTY and skipConfirm is false, returns errNotInteractive.
@@ -26,8 +31,7 @@ func ConfirmPrompt(message string, skipConfirm bool) (bool, error) {
 		return true, nil
 	}
 
-	// Check if stdin is a TTY
-	if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+	if !isInteractive() {
 		return false, errNotInteractive
 	}
 
@@ -55,8 +59,7 @@ func ConfirmPrompt(message string, skipConfirm bool) (bool, error) {
 // ReadPassphrase reads a passphrase from stdin without echoing.
 // Returns the passphrase bytes, or error if reading fails.
 func ReadPassphrase(prompt string) ([]byte, error) {
-	// Check if stdin is a TTY
-	if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+	if !isInteractive() {
 		return nil, errNotInteractive
 	}
 
@@ -109,8 +112,7 @@ func ReadPassphraseWithConfirm() ([]byte, error) {
 // Returns true only if the user types the exact phrase (case-sensitive).
 // Returns errNotInteractive if stdin is not a TTY.
 func TypedConfirm(message, phrase string) (bool, error) {
-	// Check if stdin is a TTY
-	if !isatty.IsTerminal(os.Stdin.Fd()) && !isatty.IsCygwinTerminal(os.Stdin.Fd()) {
+	if !isInteractive() {
 		return false, errNotInteractive
 	}
 
