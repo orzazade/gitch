@@ -49,8 +49,7 @@ func TestParseCommitLine_SpecialChars(t *testing.T) {
 		t.Errorf("unexpected subject: %q", commit.Subject)
 	}
 
-	// Subject containing delimiter - this will produce more than 5 parts
-	// The 5th field will be partial, but it should still work since we have >= 5 parts
+	// Subject containing delimiter - SplitN preserves delimiters in the 5th field
 	lineWithDelim := "abc1234|||Jane|||jane@example.com|||2024-01-15 10:30:00 -0500|||feat: add ||| support"
 
 	commit2, err := parseCommitLine(lineWithDelim)
@@ -58,10 +57,11 @@ func TestParseCommitLine_SpecialChars(t *testing.T) {
 		t.Fatalf("unexpected error for line with delimiter in subject: %v", err)
 	}
 
-	// Subject will be truncated at the first ||| since we split by it
-	// This is acceptable - the 5th part becomes the subject (may be partial)
 	if commit2.Hash != "abc1234" {
 		t.Errorf("expected hash 'abc1234', got %q", commit2.Hash)
+	}
+	if commit2.Subject != "feat: add ||| support" {
+		t.Errorf("expected subject to preserve delimiters, got %q", commit2.Subject)
 	}
 }
 

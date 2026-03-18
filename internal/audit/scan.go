@@ -97,7 +97,7 @@ func parseCommits(output string) ([]Commit, error) {
 
 // parseCommitLine parses a single commit line into a Commit struct
 func parseCommitLine(line string) (Commit, error) {
-	parts := strings.Split(line, fieldDelim)
+	parts := strings.SplitN(line, fieldDelim, 5)
 	if len(parts) < 5 {
 		return Commit{}, fmt.Errorf("malformed commit line: expected 5 fields, got %d", len(parts))
 	}
