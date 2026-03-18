@@ -48,12 +48,6 @@ func SetupGitEnv(t *testing.T) *GitEnv {
 	}
 }
 
-// Cleanup is a no-op retained for backward compatibility.
-// Environment and directory restoration is handled automatically by t.Setenv and t.Chdir.
-func (e *GitEnv) Cleanup(t *testing.T) {
-	t.Helper()
-}
-
 // Chdir moves into the test repository.
 // The original working directory is automatically restored when the test completes.
 func (e *GitEnv) Chdir(t *testing.T) {
