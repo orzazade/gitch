@@ -164,10 +164,7 @@ func ruleMismatchWarning(identity *config.Identity, cfg *config.Config) string {
 	if matched == nil || strings.EqualFold(matched.Identity, identity.Name) {
 		return ""
 	}
-	return fmt.Sprintf(
-		"Note: a rule for this directory expects '%s'. The pre-commit hook will catch this mismatch.",
-		matched.Identity,
-	)
+	return "Note: a rule for this directory expects '" + matched.Identity + "'. The pre-commit hook will catch this mismatch."
 }
 
 // closestIdentityName returns the best-matching identity name for a mistyped input,
