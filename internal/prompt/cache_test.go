@@ -12,9 +12,7 @@ func TestUpdateCache(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Override XDG cache path for testing
-	origXDG := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Setenv("XDG_CACHE_HOME", origXDG)
+	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Test writing identity name
 	identityName := "work"
@@ -42,9 +40,7 @@ func TestUpdateCache(t *testing.T) {
 func TestClearCache(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	origXDG := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Setenv("XDG_CACHE_HOME", origXDG)
+	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Create cache file first
 	if err := UpdateCache("test-identity"); err != nil {
@@ -67,9 +63,7 @@ func TestClearCache(t *testing.T) {
 func TestReadCacheMissing(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	origXDG := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Setenv("XDG_CACHE_HOME", origXDG)
+	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Don't create any file - just read
 	content, err := ReadCache()
@@ -85,9 +79,7 @@ func TestReadCacheMissing(t *testing.T) {
 func TestClearCacheMissing(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	origXDG := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Setenv("XDG_CACHE_HOME", origXDG)
+	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Clear without creating - should not error
 	if err := ClearCache(); err != nil {
@@ -99,9 +91,7 @@ func TestClearCacheMissing(t *testing.T) {
 func TestAtomicWrite(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	origXDG := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Setenv("XDG_CACHE_HOME", origXDG)
+	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Write to cache
 	if err := UpdateCache("atomic-test"); err != nil {
@@ -129,9 +119,7 @@ func TestAtomicWrite(t *testing.T) {
 func TestUpdateCacheEmpty(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	origXDG := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Setenv("XDG_CACHE_HOME", origXDG)
+	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Create with content first
 	if err := UpdateCache("some-identity"); err != nil {
@@ -157,9 +145,7 @@ func TestUpdateCacheEmpty(t *testing.T) {
 func TestReadCacheTrimsWhitespace(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	origXDG := os.Getenv("XDG_CACHE_HOME")
-	os.Setenv("XDG_CACHE_HOME", tmpDir)
-	defer os.Setenv("XDG_CACHE_HOME", origXDG)
+	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Write with whitespace directly to file (simulating external modification)
 	cachePath, _ := CachePath()
