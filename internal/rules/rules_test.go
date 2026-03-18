@@ -497,6 +497,21 @@ func TestValidatePattern(t *testing.T) {
 			rule:    Rule{Type: "invalid", Pattern: "test"},
 			wantErr: true,
 		},
+		{
+			name:    "invalid glob pattern",
+			rule:    Rule{Type: DirectoryRule, Pattern: "~/work/[invalid"},
+			wantErr: true,
+		},
+		{
+			name:    "invalid remote pattern - empty host",
+			rule:    Rule{Type: RemoteRule, Pattern: "/org/repo"},
+			wantErr: true,
+		},
+		{
+			name:    "valid absolute directory pattern",
+			rule:    Rule{Type: DirectoryRule, Pattern: "/home/user/work"},
+			wantErr: false,
+		},
 	}
 
 	for _, tt := range tests {
