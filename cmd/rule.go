@@ -159,7 +159,7 @@ func runRuleAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Rule added: %s -> %s", rule.Pattern, rule.Identity)))
+	fmt.Println(ui.SuccessStyle.Render("Rule added: " + rule.Pattern + " -> " + rule.Identity))
 
 	return nil
 }

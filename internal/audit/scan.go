@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,7 +50,7 @@ func getCommits(limit int) ([]Commit, error) {
 
 	args := []string{"log", formatArg}
 	if limit > 0 {
-		args = append(args, fmt.Sprintf("--max-count=%d", limit))
+		args = append(args, "--max-count="+strconv.Itoa(limit))
 	}
 
 	cmd := exec.Command("git", args...)

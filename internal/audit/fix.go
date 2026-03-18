@@ -30,7 +30,7 @@ func generateMailmap(mismatches []Result, expectedEmail string) string {
 	// Generate mailmap lines
 	var lines []string
 	for wrongEmail := range uniqueEmails {
-		lines = append(lines, fmt.Sprintf("<%s> <%s>", expectedEmail, wrongEmail))
+		lines = append(lines, "<"+expectedEmail+"> <"+wrongEmail+">")
 	}
 	slices.Sort(lines)
 
@@ -157,7 +157,7 @@ func Fix(scanResult *ScanResult) error {
 	if err != nil {
 		return fmt.Errorf("failed to get repository root: %w", err)
 	}
-	backupPath := filepath.Join(os.TempDir(), fmt.Sprintf("%s-backup-%s", filepath.Base(root), time.Now().Format("20060102-150405")))
+	backupPath := filepath.Join(os.TempDir(), filepath.Base(root)+"-backup-"+time.Now().Format("20060102-150405"))
 
 	fmt.Printf("\nCreating backup at: %s\n", backupPath)
 	if err := createMirrorBackup(backupPath); err != nil {

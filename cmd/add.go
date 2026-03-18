@@ -186,7 +186,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 
 		identity.SSHKeyPath = keyPath
 
-		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Generated %s SSH key:", keyType.Label())))
+		fmt.Println(ui.SuccessStyle.Render("Generated " + keyType.Label() + " SSH key:"))
 		fmt.Printf("  Path: %s\n", keyPath)
 		fmt.Printf("  Fingerprint: %s\n", fingerprint)
 		fmt.Println()
@@ -261,7 +261,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Added identity '%s' (%s)", addName, addEmail)))
+	fmt.Println(ui.SuccessStyle.Render("Added identity '" + addName + "' (" + addEmail + ")"))
 
 	if addDefault {
 		fmt.Println("Set as default identity")
