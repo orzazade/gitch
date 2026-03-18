@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -137,20 +138,19 @@ func suggestFromCurrentEmail(cfg *config.Config, remote *suggestParsedRemote, cu
 		return nil
 	}
 
-	for _, id := range cfg.Identities {
-		if !strings.EqualFold(id.Email, currentEmail) {
-			continue
-		}
-
-		return &ruleSuggestion{
-			Identity: id.Name,
-			Pattern:  buildSuggestPattern(remote),
-			RuleType: rules.RemoteRule,
-			Reason:   fmt.Sprintf("current git email (%s) matches identity '%s'", currentEmail, id.Name),
-		}
+	idx := slices.IndexFunc(cfg.Identities, func(id config.Identity) bool {
+		return strings.EqualFold(id.Email, currentEmail)
+	})
+	if idx == -1 {
+		return nil
 	}
 
-	return nil
+	return &ruleSuggestion{
+		Identity: cfg.Identities[idx].Name,
+		Pattern:  buildSuggestPattern(remote),
+		RuleType: rules.RemoteRule,
+		Reason:   fmt.Sprintf("current git email (%s) matches identity '%s'", currentEmail, cfg.Identities[idx].Name),
+	}
 }
 
 // suggestParsedRemote is a simple host/org/repo struct for suggestion logic.
