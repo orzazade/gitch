@@ -14,7 +14,7 @@ import (
 )
 
 // errNotInteractive is returned when stdin is not a TTY and confirmation is required.
-var errNotInteractive = errors.New("stdin is not a terminal; use --yes to skip confirmation")
+var errNotInteractive = errors.New("stdin is not a terminal; interactive confirmation required")
 
 // isInteractive reports whether stdin is connected to an interactive terminal.
 func isInteractive() bool {
