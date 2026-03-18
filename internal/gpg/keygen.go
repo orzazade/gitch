@@ -5,9 +5,7 @@ import (
 	"crypto"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
@@ -97,17 +95,6 @@ func importKeyToGPG(armoredKey []byte) error {
 	return nil
 }
 
-// defaultKeyPath returns the default path for a GPG key file for a gitch identity.
-// Format: ~/.gnupg/gitch-{identityName}.asc
-// Note: This is for exported key backup; the key is stored in gpg keyring.
-func defaultKeyPath(identityName string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(home, ".gnupg", fmt.Sprintf("gitch-%s.asc", identityName))
-}
-
 // ExportPublicKey exports the public key for the given key ID in armored ASCII format.
 // This is useful for displaying to the user to add to GitHub/GitLab.
 func ExportPublicKey(keyID string) (string, error) {
@@ -128,51 +115,3 @@ func ExportPublicKey(keyID string) (string, error) {
 	return string(output), nil
 }
 
-// exportPrivateKey exports the private key for the given key ID in armored ASCII format.
-// Warning: This exports the secret key material. Use with caution.
-func exportPrivateKey(keyID string) (string, error) {
-	cmd := exec.Command("gpg", "--armor", "--export-secret-keys", keyID)
-	output, err := cmd.Output()
-	if err != nil {
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			return "", fmt.Errorf("failed to export private key: %s", string(exitErr.Stderr))
-		}
-		return "", fmt.Errorf("failed to export private key: %w", err)
-	}
-
-	if len(output) == 0 {
-		return "", errKeyNotFound(keyID)
-	}
-
-	return string(output), nil
-}
-
-// writeKeyBackup writes the exported public and private keys to files.
-// This creates a backup of the key outside the gpg keyring.
-func writeKeyBackup(keyID, basePath string) error {
-	// Export and write public key
-	pubKey, err := ExportPublicKey(keyID)
-	if err != nil {
-		return fmt.Errorf("failed to export public key for backup: %w", err)
-	}
-
-	pubPath := basePath + ".pub.asc"
-	if err := os.WriteFile(pubPath, []byte(pubKey), 0644); err != nil {
-		return fmt.Errorf("failed to write public key backup: %w", err)
-	}
-
-	// Export and write private key with restricted permissions
-	privKey, err := exportPrivateKey(keyID)
-	if err != nil {
-		_ = os.Remove(pubPath) // best-effort cleanup
-		return fmt.Errorf("failed to export private key for backup: %w", err)
-	}
-
-	if err := os.WriteFile(basePath+".asc", []byte(privKey), 0600); err != nil {
-		_ = os.Remove(pubPath) // best-effort cleanup
-		return fmt.Errorf("failed to write private key backup: %w", err)
-	}
-
-	return nil
-}

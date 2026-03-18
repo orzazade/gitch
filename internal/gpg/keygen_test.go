@@ -1,10 +1,21 @@
 package gpg
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+// defaultKeyPath returns the default path for a GPG key file for a gitch identity.
+func defaultKeyPath(identityName string) string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	return filepath.Join(home, ".gnupg", fmt.Sprintf("gitch-%s.asc", identityName))
+}
 
 func Test_defaultKeyPath_Format(t *testing.T) {
 	path := defaultKeyPath("work")
