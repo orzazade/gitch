@@ -1,6 +1,7 @@
 package portability
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -117,7 +118,7 @@ func TestExportToFile_EmptyConfig(t *testing.T) {
 	}
 
 	// File should not exist
-	if _, err := os.Stat(exportPath); !os.IsNotExist(err) {
+	if _, err := os.Stat(exportPath); !errors.Is(err, os.ErrNotExist) {
 		t.Error("expected file not to be created")
 	}
 }

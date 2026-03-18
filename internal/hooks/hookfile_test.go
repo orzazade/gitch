@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -85,7 +86,7 @@ func TestRemoveManagedHook_RemovesManagedFile(t *testing.T) {
 		t.Fatalf("removeManagedHook failed: %v", err)
 	}
 
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
+	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
 		t.Error("expected hook file to be removed")
 	}
 }
@@ -102,7 +103,7 @@ func TestRemoveManagedHook_RefusesNonManaged(t *testing.T) {
 	}
 
 	// File should still exist — not managed, so not removed
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		t.Error("non-managed hook should not be removed")
 	}
 }
@@ -123,7 +124,7 @@ func TestEnsureHookPathWritable_NoExistingHook(t *testing.T) {
 	}
 
 	// Parent directory should have been created
-	if _, err := os.Stat(filepath.Dir(path)); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Dir(path)); errors.Is(err, os.ErrNotExist) {
 		t.Error("expected parent directory to be created")
 	}
 }

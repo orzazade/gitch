@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -25,7 +26,7 @@ func TestSaveAndLoad_RoundTrip(t *testing.T) {
 	}
 
 	// Verify file was created
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
 		t.Fatal("config file was not created")
 	}
 
@@ -84,7 +85,7 @@ func TestSave_CreatesDirectory(t *testing.T) {
 		t.Fatalf("Save should create nested directories: %v", err)
 	}
 
-	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+	if _, err := os.Stat(configPath); errors.Is(err, os.ErrNotExist) {
 		t.Fatal("config file was not created in nested directory")
 	}
 }

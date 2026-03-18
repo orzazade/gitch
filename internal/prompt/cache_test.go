@@ -40,7 +40,7 @@ func TestUpdateCache(t *testing.T) {
 
 	// Verify file exists
 	cachePath, _ := cachePath()
-	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
+	if _, err := os.Stat(cachePath); errors.Is(err, os.ErrNotExist) {
 		t.Fatal("Cache file was not created")
 	}
 
@@ -72,7 +72,7 @@ func TestClearCache(t *testing.T) {
 
 	// Verify file is gone
 	cachePath, _ := cachePath()
-	if _, err := os.Stat(cachePath); !os.IsNotExist(err) {
+	if _, err := os.Stat(cachePath); !errors.Is(err, os.ErrNotExist) {
 		t.Error("Cache file should not exist after ClearCache")
 	}
 }
@@ -119,7 +119,7 @@ func TestAtomicWrite(t *testing.T) {
 	// Verify .tmp file doesn't exist
 	cachePath, _ := cachePath()
 	tmpPath := cachePath + ".tmp"
-	if _, err := os.Stat(tmpPath); !os.IsNotExist(err) {
+	if _, err := os.Stat(tmpPath); !errors.Is(err, os.ErrNotExist) {
 		t.Error(".tmp file should be cleaned up after successful write")
 	}
 

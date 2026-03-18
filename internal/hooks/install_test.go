@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -71,7 +72,7 @@ func TestUninstallLocal_RemovesManagedHook(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to get local hook path: %v", err)
 	}
-	if _, err := os.Stat(hookPath); !os.IsNotExist(err) {
+	if _, err := os.Stat(hookPath); !errors.Is(err, os.ErrNotExist) {
 		t.Error("expected hook file to be removed after UninstallLocal")
 	}
 }

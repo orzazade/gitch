@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -33,7 +34,7 @@ func Test_createMirrorBackup_Success(t *testing.T) {
 	}
 
 	// Verify backup directory exists and is a git repo
-	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
+	if _, err := os.Stat(backupDir); errors.Is(err, os.ErrNotExist) {
 		t.Fatal("backup directory was not created")
 	}
 
