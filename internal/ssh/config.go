@@ -84,29 +84,26 @@ func IdentityToHosts(identity config.Identity) []HostConfig {
 // removeManagedBlock removes the gitch-managed block from SSH config content
 // Returns content unchanged if markers are not found or malformed
 func removeManagedBlock(content string) string {
-	startIdx := strings.Index(content, markerStart)
-	if startIdx == -1 {
+	before, rest, found := strings.Cut(content, markerStart)
+	if !found {
 		return content
 	}
 
-	endIdx := strings.Index(content, markerEnd)
-	if endIdx == -1 {
+	_, after, found := strings.Cut(rest, markerEnd)
+	if !found {
 		// Malformed - only start marker, no end marker
 		// Return unchanged for safety
 		return content
 	}
 
-	// Remove from start marker to end of end marker
-	endOfBlock := endIdx + len(markerEnd)
-
 	// Remove trailing newlines after the block (up to 2)
 	newlinesRemoved := 0
-	for endOfBlock < len(content) && content[endOfBlock] == '\n' && newlinesRemoved < 2 {
-		endOfBlock++
+	for len(after) > 0 && after[0] == '\n' && newlinesRemoved < 2 {
+		after = after[1:]
 		newlinesRemoved++
 	}
 
-	return content[:startIdx] + content[endOfBlock:]
+	return before + after
 }
 
 // UpdateSSHConfig updates the user's SSH config with the new gitch block
