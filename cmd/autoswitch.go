@@ -29,8 +29,8 @@ Examples:
 	RunE: runAutoSwitchCommand,
 }
 
-// AutoSwitchResult contains the result of an auto-switch attempt
-type AutoSwitchResult struct {
+// autoSwitchResult contains the result of an auto-switch attempt
+type autoSwitchResult struct {
 	Switched      bool
 	FromIdentity  string
 	ToIdentity    string
@@ -49,7 +49,7 @@ func runAutoSwitchCommand(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	result, err := TryAutoSwitch(cfg)
+	result, err := tryAutoSwitch(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to auto-switch: %w", err)
 	}
@@ -76,9 +76,9 @@ func runAutoSwitchCommand(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// TryAutoSwitch checks if identity should switch based on rules and performs the switch
+// tryAutoSwitch checks if identity should switch based on rules and performs the switch
 // Returns result indicating what happened (switched, already correct, no rule, etc.)
-func TryAutoSwitch(cfg *config.Config) (*AutoSwitchResult, error) {
+func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 	// 1. Get current working directory and remote
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -89,7 +89,7 @@ func TryAutoSwitch(cfg *config.Config) (*AutoSwitchResult, error) {
 	// 2. Find best matching rule
 	matchedRule := rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
 	if matchedRule == nil {
-		return &AutoSwitchResult{
+		return &autoSwitchResult{
 			Switched:      false,
 			SkippedReason: "no matching rule",
 		}, nil
@@ -98,7 +98,7 @@ func TryAutoSwitch(cfg *config.Config) (*AutoSwitchResult, error) {
 	// 3. Get expected identity from rule
 	expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
 	if err != nil {
-		return &AutoSwitchResult{
+		return &autoSwitchResult{
 			Switched:      false,
 			MatchedRule:   matchedRule,
 			SkippedReason: fmt.Sprintf("identity '%s' not found", matchedRule.Identity),
@@ -119,7 +119,7 @@ func TryAutoSwitch(cfg *config.Config) (*AutoSwitchResult, error) {
 		return nil, err
 	}
 	if matches {
-		return &AutoSwitchResult{
+		return &autoSwitchResult{
 			Switched:      false,
 			ToIdentity:    expectedIdentity.Name,
 			MatchedRule:   matchedRule,
@@ -132,7 +132,7 @@ func TryAutoSwitch(cfg *config.Config) (*AutoSwitchResult, error) {
 		return nil, err
 	}
 
-	return &AutoSwitchResult{
+	return &autoSwitchResult{
 		Switched:     true,
 		FromIdentity: formatCurrentIdentity(currentName, currentEmail),
 		ToIdentity:   expectedIdentity.Name,

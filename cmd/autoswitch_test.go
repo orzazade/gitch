@@ -34,7 +34,7 @@ func TestFormatCurrentIdentity(t *testing.T) {
 	}
 }
 
-func TestTryAutoSwitch_UsesLocalScopeInsideRepo(t *testing.T) {
+func Test_tryAutoSwitch_UsesLocalScopeInsideRepo(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	env.Chdir(t)
 
@@ -65,12 +65,12 @@ func TestTryAutoSwitch_UsesLocalScopeInsideRepo(t *testing.T) {
 		t.Fatalf("failed to save config: %v", err)
 	}
 
-	result, err := TryAutoSwitch(cfg)
+	result, err := tryAutoSwitch(cfg)
 	if err != nil {
-		t.Fatalf("TryAutoSwitch failed: %v", err)
+		t.Fatalf("tryAutoSwitch failed: %v", err)
 	}
 	if result == nil || !result.Switched {
-		t.Fatalf("expected TryAutoSwitch to switch, got %#v", result)
+		t.Fatalf("expected tryAutoSwitch to switch, got %#v", result)
 	}
 
 	localEmail, err := git.GetConfigScoped("user.email", git.ScopeLocal)

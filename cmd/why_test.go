@@ -36,9 +36,9 @@ func TestWhy_ShowsMatchedRule(t *testing.T) {
 	}
 
 	// Apply the identity so it's active
-	result, err := TryAutoSwitch(cfg)
+	result, err := tryAutoSwitch(cfg)
 	if err != nil {
-		t.Fatalf("TryAutoSwitch failed: %v", err)
+		t.Fatalf("tryAutoSwitch failed: %v", err)
 	}
 	if !result.Switched {
 		t.Fatal("expected switch to happen")

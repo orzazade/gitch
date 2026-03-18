@@ -61,7 +61,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	// Apply auto-switch only when explicitly requested.
 	if statusAutoSwitch {
-		result, err := TryAutoSwitch(cfg)
+		result, err := tryAutoSwitch(cfg)
 		if err != nil {
 			return fmt.Errorf("failed to auto-switch: %w", err)
 		}
