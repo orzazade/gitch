@@ -112,16 +112,13 @@ func removeManagedBlock(content string) string {
 // UpdateSSHConfig updates the user's SSH config with the new gitch block
 // Creates backup before modification and writes atomically
 func UpdateSSHConfig(newBlock string) error {
-	home, err := os.UserHomeDir()
+	configPath, err := SSHConfigPath()
 	if err != nil {
-		return fmt.Errorf("failed to get home directory: %w", err)
+		return err
 	}
 
-	sshDir := filepath.Join(home, ".ssh")
-	configPath := filepath.Join(sshDir, "config")
-
 	// Ensure .ssh directory exists with proper permissions
-	if err := os.MkdirAll(sshDir, 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
 		return fmt.Errorf("failed to create .ssh directory: %w", err)
 	}
 
