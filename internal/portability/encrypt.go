@@ -18,9 +18,9 @@ var (
 	errDecryptionFailed = errors.New("decryption failed: wrong passphrase or corrupted data")
 )
 
-// EncryptWithPassphrase encrypts plaintext using age with a passphrase.
+// encryptWithPassphrase encrypts plaintext using age with a passphrase.
 // Returns ASCII-armored ciphertext suitable for embedding in YAML.
-func EncryptWithPassphrase(plaintext, passphrase []byte) ([]byte, error) {
+func encryptWithPassphrase(plaintext, passphrase []byte) ([]byte, error) {
 	if len(passphrase) == 0 {
 		return nil, errEmptyPassphrase
 	}
@@ -54,9 +54,9 @@ func EncryptWithPassphrase(plaintext, passphrase []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// DecryptWithPassphrase decrypts age-encrypted ciphertext using a passphrase.
-// The ciphertext should be ASCII-armored (from EncryptWithPassphrase).
-func DecryptWithPassphrase(ciphertext, passphrase []byte) ([]byte, error) {
+// decryptWithPassphrase decrypts age-encrypted ciphertext using a passphrase.
+// The ciphertext should be ASCII-armored (from encryptWithPassphrase).
+func decryptWithPassphrase(ciphertext, passphrase []byte) ([]byte, error) {
 	if len(passphrase) == 0 {
 		return nil, errEmptyPassphrase
 	}

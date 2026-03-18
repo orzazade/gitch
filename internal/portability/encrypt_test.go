@@ -10,7 +10,7 @@ func TestEncryptDecrypt_Roundtrip(t *testing.T) {
 	plaintext := []byte("-----BEGIN OPENSSH PRIVATE KEY-----\ntest-key-content\n-----END OPENSSH PRIVATE KEY-----")
 	passphrase := []byte("test-passphrase-123")
 
-	encrypted, err := EncryptWithPassphrase(plaintext, passphrase)
+	encrypted, err := encryptWithPassphrase(plaintext, passphrase)
 	if err != nil {
 		t.Fatalf("encryption failed: %v", err)
 	}
@@ -20,7 +20,7 @@ func TestEncryptDecrypt_Roundtrip(t *testing.T) {
 		t.Error("encrypted output is not ASCII armored")
 	}
 
-	decrypted, err := DecryptWithPassphrase(encrypted, passphrase)
+	decrypted, err := decryptWithPassphrase(encrypted, passphrase)
 	if err != nil {
 		t.Fatalf("decryption failed: %v", err)
 	}
@@ -35,12 +35,12 @@ func TestDecrypt_WrongPassphrase(t *testing.T) {
 	passphrase := []byte("correct-passphrase")
 	wrongPassphrase := []byte("wrong-passphrase")
 
-	encrypted, err := EncryptWithPassphrase(plaintext, passphrase)
+	encrypted, err := encryptWithPassphrase(plaintext, passphrase)
 	if err != nil {
 		t.Fatalf("encryption failed: %v", err)
 	}
 
-	_, err = DecryptWithPassphrase(encrypted, wrongPassphrase)
+	_, err = decryptWithPassphrase(encrypted, wrongPassphrase)
 	if err == nil {
 		t.Error("expected error for wrong passphrase")
 	}
@@ -50,14 +50,14 @@ func TestDecrypt_WrongPassphrase(t *testing.T) {
 }
 
 func TestEncrypt_EmptyPassphrase(t *testing.T) {
-	_, err := EncryptWithPassphrase([]byte("data"), []byte{})
+	_, err := encryptWithPassphrase([]byte("data"), []byte{})
 	if !errors.Is(err, errEmptyPassphrase) {
 		t.Errorf("expected errEmptyPassphrase, got: %v", err)
 	}
 }
 
 func TestDecrypt_EmptyPassphrase(t *testing.T) {
-	_, err := DecryptWithPassphrase([]byte("data"), []byte{})
+	_, err := decryptWithPassphrase([]byte("data"), []byte{})
 	if !errors.Is(err, errEmptyPassphrase) {
 		t.Errorf("expected errEmptyPassphrase, got: %v", err)
 	}
@@ -67,12 +67,12 @@ func TestEncryptDecrypt_EmptyPlaintext(t *testing.T) {
 	plaintext := []byte{}
 	passphrase := []byte("passphrase")
 
-	encrypted, err := EncryptWithPassphrase(plaintext, passphrase)
+	encrypted, err := encryptWithPassphrase(plaintext, passphrase)
 	if err != nil {
 		t.Fatalf("encryption failed: %v", err)
 	}
 
-	decrypted, err := DecryptWithPassphrase(encrypted, passphrase)
+	decrypted, err := decryptWithPassphrase(encrypted, passphrase)
 	if err != nil {
 		t.Fatalf("decryption failed: %v", err)
 	}
@@ -90,12 +90,12 @@ func TestEncryptDecrypt_LargeData(t *testing.T) {
 	}
 	passphrase := []byte("test-passphrase")
 
-	encrypted, err := EncryptWithPassphrase(plaintext, passphrase)
+	encrypted, err := encryptWithPassphrase(plaintext, passphrase)
 	if err != nil {
 		t.Fatalf("encryption failed: %v", err)
 	}
 
-	decrypted, err := DecryptWithPassphrase(encrypted, passphrase)
+	decrypted, err := decryptWithPassphrase(encrypted, passphrase)
 	if err != nil {
 		t.Fatalf("decryption failed: %v", err)
 	}
@@ -106,7 +106,7 @@ func TestEncryptDecrypt_LargeData(t *testing.T) {
 }
 
 func TestDecrypt_InvalidCiphertext(t *testing.T) {
-	_, err := DecryptWithPassphrase([]byte("not-valid-age-data"), []byte("passphrase"))
+	_, err := decryptWithPassphrase([]byte("not-valid-age-data"), []byte("passphrase"))
 	if err == nil {
 		t.Error("expected error for invalid ciphertext")
 	}

@@ -104,18 +104,18 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 	export := &ExportConfig{
 		Version:    currentExportVersion,
 		ExportedAt: time.Now().UTC(),
-		Encryption: &EncryptionInfo{
+		Encryption: &encryptionInfo{
 			Method:  "age-scrypt",
 			Armored: true,
 		},
 		Default:             cfg.Default,
-		EncryptedIdentities: make([]EncryptedIdentity, 0, len(cfg.Identities)),
+		EncryptedIdentities: make([]encryptedIdentity, 0, len(cfg.Identities)),
 		Rules:               cfg.Rules,
 	}
 
 	// Process each identity
 	for _, id := range cfg.Identities {
-		encId := toEncryptedIdentity(id)
+		encId := toencryptedIdentity(id)
 
 		// If identity has SSH key, read and encrypt it
 		if id.SSHKeyPath != "" {
@@ -135,7 +135,7 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 			}
 
 			// Encrypt the key
-			encrypted, err := EncryptWithPassphrase(keyData, passphrase)
+			encrypted, err := encryptWithPassphrase(keyData, passphrase)
 			if err != nil {
 				return fmt.Errorf("failed to encrypt SSH key for %q: %w", id.Name, err)
 			}

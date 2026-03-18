@@ -293,7 +293,7 @@ func ExtractEncryptedKeys(export *ExportConfig, passphrase []byte, overwriteKeys
 		}
 
 		// Decrypt the key
-		decrypted, err := DecryptWithPassphrase([]byte(encId.SSHKeyEncrypted), passphrase)
+		decrypted, err := decryptWithPassphrase([]byte(encId.SSHKeyEncrypted), passphrase)
 		if err != nil {
 			result.Errors = append(result.Errors, fmt.Sprintf("%s: decryption failed: %v", encId.Name, err))
 			continue

@@ -6,7 +6,7 @@ import (
 	"github.com/orzazade/gitch/internal/config"
 )
 
-func Test_toEncryptedIdentity_AllFields(t *testing.T) {
+func Test_toencryptedIdentity_AllFields(t *testing.T) {
 	id := config.Identity{
 		Name:       "work",
 		GitName:    "Jane Doe",
@@ -16,7 +16,7 @@ func Test_toEncryptedIdentity_AllFields(t *testing.T) {
 		HookMode:   "block",
 	}
 
-	enc := toEncryptedIdentity(id)
+	enc := toencryptedIdentity(id)
 
 	if enc.Name != id.Name {
 		t.Errorf("Name: got %q, want %q", enc.Name, id.Name)
@@ -51,7 +51,7 @@ func TestToIdentity_RoundTrip(t *testing.T) {
 		HookMode:   "warn",
 	}
 
-	enc := toEncryptedIdentity(original)
+	enc := toencryptedIdentity(original)
 	back := enc.ToIdentity()
 
 	if back.Name != original.Name {
@@ -74,13 +74,13 @@ func TestToIdentity_RoundTrip(t *testing.T) {
 	}
 }
 
-func Test_toEncryptedIdentity_MinimalFields(t *testing.T) {
+func Test_toencryptedIdentity_MinimalFields(t *testing.T) {
 	id := config.Identity{
 		Name:  "minimal",
 		Email: "min@test.com",
 	}
 
-	enc := toEncryptedIdentity(id)
+	enc := toencryptedIdentity(id)
 	if enc.Name != "minimal" || enc.Email != "min@test.com" {
 		t.Error("basic fields should be preserved")
 	}
@@ -98,8 +98,8 @@ func TestHasEncryptedKeys_NoEncryption(t *testing.T) {
 
 func TestHasEncryptedKeys_WithEncryptedKey(t *testing.T) {
 	export := &ExportConfig{
-		Encryption: &EncryptionInfo{Method: "age-scrypt"},
-		EncryptedIdentities: []EncryptedIdentity{
+		Encryption: &encryptionInfo{Method: "age-scrypt"},
+		EncryptedIdentities: []encryptedIdentity{
 			{Name: "work", SSHKeyEncrypted: "encrypted-data"},
 		},
 	}
@@ -110,8 +110,8 @@ func TestHasEncryptedKeys_WithEncryptedKey(t *testing.T) {
 
 func TestHasEncryptedKeys_EncryptionButNoKeys(t *testing.T) {
 	export := &ExportConfig{
-		Encryption: &EncryptionInfo{Method: "age-scrypt"},
-		EncryptedIdentities: []EncryptedIdentity{
+		Encryption: &encryptionInfo{Method: "age-scrypt"},
+		EncryptedIdentities: []encryptedIdentity{
 			{Name: "work", SSHKeyEncrypted: ""},
 		},
 	}
@@ -130,7 +130,7 @@ func TestGetEncryptedKeyPaths_Empty(t *testing.T) {
 
 func TestGetEncryptedKeyPaths_WithPaths(t *testing.T) {
 	export := &ExportConfig{
-		EncryptedIdentities: []EncryptedIdentity{
+		EncryptedIdentities: []encryptedIdentity{
 			{Name: "work", SSHKeyPath: "/tmp/test_key", SSHKeyEncrypted: "data"},
 			{Name: "personal", SSHKeyPath: "", SSHKeyEncrypted: "data"},
 			{Name: "oss", SSHKeyPath: "/tmp/oss_key", SSHKeyEncrypted: ""},

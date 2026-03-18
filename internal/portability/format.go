@@ -12,15 +12,15 @@ import (
 // Increment this when making breaking changes to the export format.
 const currentExportVersion = 2
 
-// EncryptionInfo describes the encryption method used for SSH keys.
-type EncryptionInfo struct {
+// encryptionInfo describes the encryption method used for SSH keys.
+type encryptionInfo struct {
 	Method  string `yaml:"method"`  // "age-scrypt"
 	Armored bool   `yaml:"armored"` // true if ASCII armored
 }
 
-// EncryptedIdentity extends Identity with optional encrypted SSH key content.
+// encryptedIdentity extends Identity with optional encrypted SSH key content.
 // When exporting with --encrypt, SSHKeyEncrypted contains the age-encrypted private key.
-type EncryptedIdentity struct {
+type encryptedIdentity struct {
 	Name            string `yaml:"name"`
 	GitName         string `yaml:"git_name,omitempty"`
 	Email           string `yaml:"email"`
@@ -35,17 +35,17 @@ type EncryptedIdentity struct {
 type ExportConfig struct {
 	Version    int               `yaml:"version"`
 	ExportedAt time.Time         `yaml:"exported_at"`
-	Encryption *EncryptionInfo   `yaml:"encryption,omitempty"`
+	Encryption *encryptionInfo   `yaml:"encryption,omitempty"`
 	Default    string            `yaml:"default,omitempty"`
 	Identities []config.Identity `yaml:"identities,omitempty"`
 	// EncryptedIdentities is used when exporting with --encrypt flag
-	EncryptedIdentities []EncryptedIdentity `yaml:"encrypted_identities,omitempty"`
+	EncryptedIdentities []encryptedIdentity `yaml:"encrypted_identities,omitempty"`
 	Rules               []rules.Rule        `yaml:"rules,omitempty"`
 }
 
-// toEncryptedIdentity converts a config.Identity to EncryptedIdentity.
-func toEncryptedIdentity(id config.Identity) EncryptedIdentity {
-	return EncryptedIdentity{
+// toencryptedIdentity converts a config.Identity to encryptedIdentity.
+func toencryptedIdentity(id config.Identity) encryptedIdentity {
+	return encryptedIdentity{
 		Name:       id.Name,
 		GitName:    id.GitName,
 		Email:      id.Email,
@@ -55,8 +55,8 @@ func toEncryptedIdentity(id config.Identity) EncryptedIdentity {
 	}
 }
 
-// ToIdentity converts an EncryptedIdentity back to config.Identity.
-func (e EncryptedIdentity) ToIdentity() config.Identity {
+// ToIdentity converts an encryptedIdentity back to config.Identity.
+func (e encryptedIdentity) ToIdentity() config.Identity {
 	return config.Identity{
 		Name:       e.Name,
 		GitName:    e.GitName,
