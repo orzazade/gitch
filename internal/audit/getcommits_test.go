@@ -70,6 +70,52 @@ func TestGetCommits_WithLimit(t *testing.T) {
 	}
 }
 
+func TestGetLocalOnlyHashes_WithUpstream(t *testing.T) {
+	// Create a "remote" repo
+	remoteDir := t.TempDir()
+	for _, args := range [][]string{
+		{"git", "init", "--bare", remoteDir},
+	} {
+		cmd := exec.Command(args[0], args[1:]...)
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("%v failed: %v\n%s", args, err, out)
+		}
+	}
+
+	// Create local repo cloned from remote
+	localDir := t.TempDir()
+	t.Chdir(localDir)
+
+	cmds := [][]string{
+		{"git", "init"},
+		{"git", "config", "user.email", "test@test.com"},
+		{"git", "config", "user.name", "Test"},
+		{"git", "remote", "add", "origin", remoteDir},
+		{"git", "commit", "--allow-empty", "-m", "pushed commit"},
+		{"git", "push", "-u", "origin", "HEAD:main"},
+		{"git", "commit", "--allow-empty", "-m", "local only commit"},
+	}
+	for _, args := range cmds {
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Dir = localDir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("%v failed: %v\n%s", args, err, out)
+		}
+	}
+
+	hashes, err := GetLocalOnlyHashes()
+	if err != nil {
+		t.Fatalf("GetLocalOnlyHashes failed: %v", err)
+	}
+	if hashes == nil {
+		t.Fatal("expected non-nil map with upstream configured")
+	}
+	// Should have exactly 1 local-only commit
+	if len(hashes) != 1 {
+		t.Errorf("expected 1 local-only hash, got %d", len(hashes))
+	}
+}
+
 func TestGetLocalOnlyHashes_NoUpstream(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
