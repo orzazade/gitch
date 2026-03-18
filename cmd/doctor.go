@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/gpg"
@@ -59,7 +60,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		}
 		return nil
 	}
-	checks = append(checks, doctorCheck{true, fmt.Sprintf("%d %s configured", n, nounPlural(n, "identity", "identities")), ""})
+	checks = append(checks, doctorCheck{true, strconv.Itoa(n) + " " + nounPlural(n, "identity", "identities") + " configured", ""})
 
 	state, err := resolveCurrentProfileState(cfg)
 	if err != nil || (state.CurrentName == "" && state.CurrentEmail == "") {
@@ -73,16 +74,16 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		if identity == nil {
 			checks = append(checks, doctorCheck{false, fmt.Sprintf("active email %q is not managed by gitch", state.CurrentEmail), "run: gitch use <name>"})
 		} else {
-			checks = append(checks, doctorCheck{true, fmt.Sprintf("active identity: %s (%s)", identity.Name, identity.Email), ""})
+			checks = append(checks, doctorCheck{true, "active identity: " + identity.Name + " (" + identity.Email + ")", ""})
 
 			if identity.SSHKeyPath != "" {
 				keyPath, expandErr := sshpkg.ExpandPath(identity.SSHKeyPath)
 				if expandErr != nil {
-					checks = append(checks, doctorCheck{false, fmt.Sprintf("invalid SSH key path: %s", identity.SSHKeyPath), fmt.Sprintf("run: gitch edit %s --ssh-key <path>", identity.Name)})
+					checks = append(checks, doctorCheck{false, "invalid SSH key path: " + identity.SSHKeyPath, "run: gitch edit " + identity.Name + " --ssh-key <path>"})
 				} else if _, statErr := os.Stat(keyPath); statErr != nil {
-					checks = append(checks, doctorCheck{false, fmt.Sprintf("SSH key file missing: %s", identity.SSHKeyPath), fmt.Sprintf("run: gitch add to reconfigure '%s'", identity.Name)})
+					checks = append(checks, doctorCheck{false, "SSH key file missing: " + identity.SSHKeyPath, "run: gitch add to reconfigure '" + identity.Name + "'"})
 				} else {
-					checks = append(checks, doctorCheck{true, fmt.Sprintf("SSH key exists: %s", identity.SSHKeyPath), ""})
+					checks = append(checks, doctorCheck{true, "SSH key exists: " + identity.SSHKeyPath, ""})
 					if !sshpkg.IsAgentRunning() {
 						checks = append(checks, doctorCheck{false, "ssh-agent not running", "run: eval $(ssh-agent) && ssh-add " + keyPath})
 					} else if !sshpkg.IsKeyLoadedInAgent(keyPath) {
@@ -97,9 +98,9 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 				if !gpg.IsGPGAvailable() {
 					checks = append(checks, doctorCheck{false, "gpg not installed (required for commit signing)", "install GPG: sudo apt install gnupg"})
 				} else if gpgErr := gpg.ValidateKeyID(identity.GPGKeyID); gpgErr != nil {
-					checks = append(checks, doctorCheck{false, fmt.Sprintf("GPG key not found in keyring: %s", identity.GPGKeyID), "import the key or run: gitch add to reconfigure"})
+					checks = append(checks, doctorCheck{false, "GPG key not found in keyring: " + identity.GPGKeyID, "import the key or run: gitch add to reconfigure"})
 				} else {
-					checks = append(checks, doctorCheck{true, fmt.Sprintf("GPG key valid: %s", identity.GPGKeyID), ""})
+					checks = append(checks, doctorCheck{true, "GPG key valid: " + identity.GPGKeyID, ""})
 				}
 			}
 		}
@@ -120,7 +121,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		cwd, _ := os.Getwd()
 		remoteURL, _ := rules.GetGitRemoteURL()
 		if matched := rules.FindBestMatch(cfg.Rules, cwd, remoteURL); matched != nil {
-			checks = append(checks, doctorCheck{true, fmt.Sprintf("auto-switch rule matched: %s → %s", matched.Pattern, matched.Identity), ""})
+			checks = append(checks, doctorCheck{true, "auto-switch rule matched: " + matched.Pattern + " → " + matched.Identity, ""})
 		} else {
 			checks = append(checks, doctorCheck{false, "no auto-switch rule matches current directory", "run: gitch rule add"})
 		}
@@ -151,7 +152,7 @@ func printDoctorResults(checks []doctorCheck) int {
 	if warnings == 0 {
 		fmt.Println(ui.SuccessStyle.Render("Everything looks good."))
 	} else {
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("%d %s found.", warnings, nounPlural(warnings, "issue", "issues"))))
+		fmt.Println(ui.WarningStyle.Render(strconv.Itoa(warnings) + " " + nounPlural(warnings, "issue", "issues") + " found."))
 	}
 	return warnings
 }
