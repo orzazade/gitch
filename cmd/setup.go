@@ -31,8 +31,7 @@ func init() {
 }
 
 func runSetup(cmd *cobra.Command, args []string) error {
-	m := wizard.New()
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(wizard.New())
 
 	finalModel, err := p.Run()
 	if err != nil {
