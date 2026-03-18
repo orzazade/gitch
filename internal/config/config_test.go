@@ -475,12 +475,9 @@ func TestRenameIdentity_UpdatesRules(t *testing.T) {
 }
 
 func TestLoad_NonexistentFile(t *testing.T) {
-	// Save the original ConfigPath function behavior
-	// We can't easily mock it, but we can test the behavior with a clean XDG_CONFIG_HOME
 	tempDir := t.TempDir()
-	oldXDGConfigHome := os.Getenv("XDG_CONFIG_HOME")
-	os.Setenv("XDG_CONFIG_HOME", tempDir)
-	defer os.Setenv("XDG_CONFIG_HOME", oldXDGConfigHome)
+	t.Setenv("XDG_CONFIG_HOME", tempDir)
+	t.Setenv("GITCH_CONFIG_PATH", "")
 
 	cfg, err := Load()
 	if err != nil {
