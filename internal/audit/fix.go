@@ -171,7 +171,7 @@ func Fix(scanResult *ScanResult) error {
 	if err := os.WriteFile(mailmapPath, []byte(mailmapContent), 0644); err != nil {
 		return fmt.Errorf("failed to write mailmap: %w", err)
 	}
-	defer os.Remove(mailmapPath)
+	defer os.Remove(mailmapPath) //nolint:errcheck // best-effort cleanup of temp file
 
 	// Step 8: Run git-filter-repo (AUDIT-04)
 	fmt.Println("\nRewriting history...")
@@ -180,7 +180,10 @@ func Fix(scanResult *ScanResult) error {
 	}
 
 	// Step 9: Remove remotes (AUDIT-06)
-	remotesBefore, _ := GetRemotes()
+	remotesBefore, remotesErr := GetRemotes()
+	if remotesErr != nil {
+		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("\nWarning: failed to list remotes: %v", remotesErr)))
+	}
 	if err := RemoveRemotes(); err != nil {
 		// Non-fatal: warn but continue
 		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("\nWarning: failed to remove remotes: %v", err)))
