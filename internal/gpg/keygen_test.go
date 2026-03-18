@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-func TestDefaultKeyPath_Format(t *testing.T) {
-	path := DefaultKeyPath("work")
+func Test_defaultKeyPath_Format(t *testing.T) {
+	path := defaultKeyPath("work")
 
 	if path == "" {
 		t.Skip("could not determine home directory")
@@ -29,9 +29,9 @@ func TestDefaultKeyPath_Format(t *testing.T) {
 	}
 }
 
-func TestDefaultKeyPath_DifferentNames(t *testing.T) {
-	path1 := DefaultKeyPath("personal")
-	path2 := DefaultKeyPath("work")
+func Test_defaultKeyPath_DifferentNames(t *testing.T) {
+	path1 := defaultKeyPath("personal")
+	path2 := defaultKeyPath("work")
 
 	if path1 == "" || path2 == "" {
 		t.Skip("could not determine home directory")

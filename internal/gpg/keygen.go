@@ -71,7 +71,7 @@ func GenerateKey(name, email string, passphrase []byte) (*KeyInfo, error) {
 
 	// Get the key info from gpg (which now has the imported key)
 	// Use the email to find the key we just created
-	keys, err := FindKeyByEmail(email)
+	keys, err := findKeyByEmail(email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve imported key info: %w", err)
 	}
@@ -97,10 +97,10 @@ func importKeyToGPG(armoredKey []byte) error {
 	return nil
 }
 
-// DefaultKeyPath returns the default path for a GPG key file for a gitch identity.
+// defaultKeyPath returns the default path for a GPG key file for a gitch identity.
 // Format: ~/.gnupg/gitch-{identityName}.asc
 // Note: This is for exported key backup; the key is stored in gpg keyring.
-func DefaultKeyPath(identityName string) string {
+func defaultKeyPath(identityName string) string {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""
@@ -128,9 +128,9 @@ func ExportPublicKey(keyID string) (string, error) {
 	return string(output), nil
 }
 
-// ExportPrivateKey exports the private key for the given key ID in armored ASCII format.
+// exportPrivateKey exports the private key for the given key ID in armored ASCII format.
 // Warning: This exports the secret key material. Use with caution.
-func ExportPrivateKey(keyID string) (string, error) {
+func exportPrivateKey(keyID string) (string, error) {
 	cmd := exec.Command("gpg", "--armor", "--export-secret-keys", keyID)
 	output, err := cmd.Output()
 	if err != nil {
@@ -148,9 +148,9 @@ func ExportPrivateKey(keyID string) (string, error) {
 	return string(output), nil
 }
 
-// WriteKeyBackup writes the exported public and private keys to files.
+// writeKeyBackup writes the exported public and private keys to files.
 // This creates a backup of the key outside the gpg keyring.
-func WriteKeyBackup(keyID, basePath string) error {
+func writeKeyBackup(keyID, basePath string) error {
 	// Export and write public key
 	pubKey, err := ExportPublicKey(keyID)
 	if err != nil {
@@ -163,7 +163,7 @@ func WriteKeyBackup(keyID, basePath string) error {
 	}
 
 	// Export and write private key with restricted permissions
-	privKey, err := ExportPrivateKey(keyID)
+	privKey, err := exportPrivateKey(keyID)
 	if err != nil {
 		_ = os.Remove(pubPath) // best-effort cleanup
 		return fmt.Errorf("failed to export private key for backup: %w", err)

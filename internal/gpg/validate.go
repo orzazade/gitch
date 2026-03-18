@@ -41,10 +41,10 @@ func ValidateKeyID(keyID string) error {
 	return nil
 }
 
-// FindKeyByEmail searches for GPG secret keys associated with the given email address.
+// findKeyByEmail searches for GPG secret keys associated with the given email address.
 // Returns a slice of KeyInfo for all matching keys (may be empty if none found).
 // This enables auto-detection of existing GPG keys for an identity.
-func FindKeyByEmail(email string) ([]KeyInfo, error) {
+func findKeyByEmail(email string) ([]KeyInfo, error) {
 	cmd := exec.Command("gpg", "--list-secret-keys", "--keyid-format", "LONG", "--with-colons", email)
 	output, err := cmd.Output()
 	if err != nil {
