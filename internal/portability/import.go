@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -193,13 +194,7 @@ func MergeConfig(cfg *config.Config, export *ExportConfig, overwrite map[string]
 
 	// Process rules
 	for _, incoming := range export.Rules {
-		existingIdx := -1
-		for i, existing := range cfg.Rules {
-			if existing.Pattern == incoming.Pattern {
-				existingIdx = i
-				break
-			}
-		}
+		existingIdx := slices.IndexFunc(cfg.Rules, func(r rules.Rule) bool { return r.Pattern == incoming.Pattern })
 
 		if existingIdx == -1 {
 			// Rule doesn't exist, add it
@@ -232,15 +227,16 @@ func MergeConfig(cfg *config.Config, export *ExportConfig, overwrite map[string]
 
 // updateIdentity updates an existing identity with new values.
 func updateIdentity(cfg *config.Config, updated config.Identity) error {
-	for i, id := range cfg.Identities {
-		if strings.EqualFold(id.Name, updated.Name) {
-			// Preserve the original name case
-			updated.Name = id.Name
-			cfg.Identities[i] = updated
-			return nil
-		}
+	idx := slices.IndexFunc(cfg.Identities, func(id config.Identity) bool {
+		return strings.EqualFold(id.Name, updated.Name)
+	})
+	if idx == -1 {
+		return fmt.Errorf("identity %q not found", updated.Name)
 	}
-	return fmt.Errorf("identity %q not found", updated.Name)
+	// Preserve the original name case
+	updated.Name = cfg.Identities[idx].Name
+	cfg.Identities[idx] = updated
+	return nil
 }
 
 // KeyExtractionResult tracks extracted SSH keys.
