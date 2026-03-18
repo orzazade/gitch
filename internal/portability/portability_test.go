@@ -16,7 +16,7 @@ import (
 // Export Tests
 // ============================================================================
 
-func TestBuildExportConfig(t *testing.T) {
+func Test_buildExportConfig(t *testing.T) {
 	cfg := &config.Config{
 		Default: "work",
 		Identities: []config.Identity{
@@ -28,7 +28,7 @@ func TestBuildExportConfig(t *testing.T) {
 		},
 	}
 
-	export := BuildExportConfig(cfg)
+	export := buildExportConfig(cfg)
 
 	if export.Version != currentExportVersion {
 		t.Errorf("expected version %d, got %d", currentExportVersion, export.Version)
@@ -112,8 +112,8 @@ func TestExportToFile_EmptyConfig(t *testing.T) {
 	exportPath := filepath.Join(tmpDir, "gitch-export.yaml")
 
 	err := ExportToFile(cfg, exportPath)
-	if err != ErrNoIdentities {
-		t.Errorf("expected ErrNoIdentities, got %v", err)
+	if err != errNoIdentities {
+		t.Errorf("expected errNoIdentities, got %v", err)
 	}
 
 	// File should not exist
@@ -819,7 +819,7 @@ func TestExportedAtTimestamp(t *testing.T) {
 	}
 
 	before := time.Now().UTC().Add(-time.Second)
-	export := BuildExportConfig(cfg)
+	export := buildExportConfig(cfg)
 	after := time.Now().UTC().Add(time.Second)
 
 	if export.ExportedAt.Before(before) || export.ExportedAt.After(after) {

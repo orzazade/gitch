@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	// ErrEmptyPassphrase is returned when an empty passphrase is provided.
-	ErrEmptyPassphrase = errors.New("passphrase cannot be empty")
+	// errEmptyPassphrase is returned when an empty passphrase is provided.
+	errEmptyPassphrase = errors.New("passphrase cannot be empty")
 	// ErrDecryptionFailed is returned when decryption fails due to wrong passphrase or corrupted data.
 	ErrDecryptionFailed = errors.New("decryption failed: wrong passphrase or corrupted data")
 )
@@ -22,7 +22,7 @@ var (
 // Returns ASCII-armored ciphertext suitable for embedding in YAML.
 func EncryptWithPassphrase(plaintext, passphrase []byte) ([]byte, error) {
 	if len(passphrase) == 0 {
-		return nil, ErrEmptyPassphrase
+		return nil, errEmptyPassphrase
 	}
 
 	recipient, err := age.NewScryptRecipient(string(passphrase))
@@ -58,7 +58,7 @@ func EncryptWithPassphrase(plaintext, passphrase []byte) ([]byte, error) {
 // The ciphertext should be ASCII-armored (from EncryptWithPassphrase).
 func DecryptWithPassphrase(ciphertext, passphrase []byte) ([]byte, error) {
 	if len(passphrase) == 0 {
-		return nil, ErrEmptyPassphrase
+		return nil, errEmptyPassphrase
 	}
 
 	identity, err := age.NewScryptIdentity(string(passphrase))

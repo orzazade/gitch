@@ -51,15 +51,15 @@ func TestDecrypt_WrongPassphrase(t *testing.T) {
 
 func TestEncrypt_EmptyPassphrase(t *testing.T) {
 	_, err := EncryptWithPassphrase([]byte("data"), []byte{})
-	if !errors.Is(err, ErrEmptyPassphrase) {
-		t.Errorf("expected ErrEmptyPassphrase, got: %v", err)
+	if !errors.Is(err, errEmptyPassphrase) {
+		t.Errorf("expected errEmptyPassphrase, got: %v", err)
 	}
 }
 
 func TestDecrypt_EmptyPassphrase(t *testing.T) {
 	_, err := DecryptWithPassphrase([]byte("data"), []byte{})
-	if !errors.Is(err, ErrEmptyPassphrase) {
-		t.Errorf("expected ErrEmptyPassphrase, got: %v", err)
+	if !errors.Is(err, errEmptyPassphrase) {
+		t.Errorf("expected errEmptyPassphrase, got: %v", err)
 	}
 }
 

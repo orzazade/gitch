@@ -12,12 +12,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ErrNoIdentities is returned when trying to export a config with no identities.
-var ErrNoIdentities = errors.New("no identities to export")
+// errNoIdentities is returned when trying to export a config with no identities.
+var errNoIdentities = errors.New("no identities to export")
 
-// BuildExportConfig builds an ExportConfig from the given config.
+// buildExportConfig builds an ExportConfig from the given config.
 // Returns the export structure with all identities and rules.
-func BuildExportConfig(cfg *config.Config) *ExportConfig {
+func buildExportConfig(cfg *config.Config) *ExportConfig {
 	return &ExportConfig{
 		Version:    currentExportVersion,
 		ExportedAt: time.Now().UTC(),
@@ -68,10 +68,10 @@ func prepareExportPath(path string) (string, error) {
 
 // ExportToFile exports the configuration to a YAML file at the specified path.
 // The path supports ~ expansion for home directory.
-// Returns ErrNoIdentities if there are no identities to export.
+// Returns errNoIdentities if there are no identities to export.
 func ExportToFile(cfg *config.Config, path string) error {
 	if len(cfg.Identities) == 0 {
-		return ErrNoIdentities
+		return errNoIdentities
 	}
 
 	expandedPath, err := prepareExportPath(path)
@@ -79,7 +79,7 @@ func ExportToFile(cfg *config.Config, path string) error {
 		return err
 	}
 
-	export := BuildExportConfig(cfg)
+	export := buildExportConfig(cfg)
 	header := fmt.Sprintf("# gitch configuration export\n# Exported: %s\n# Version: %d\n\n",
 		export.ExportedAt.Format(time.RFC3339),
 		export.Version,
@@ -89,10 +89,10 @@ func ExportToFile(cfg *config.Config, path string) error {
 
 // ExportToFileEncrypted exports configuration with encrypted SSH private keys.
 // Reads SSH private key files, encrypts them with the passphrase, and embeds in YAML.
-// Returns ErrNoIdentities if there are no identities to export.
+// Returns errNoIdentities if there are no identities to export.
 func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) error {
 	if len(cfg.Identities) == 0 {
-		return ErrNoIdentities
+		return errNoIdentities
 	}
 
 	expandedPath, err := prepareExportPath(path)
@@ -115,7 +115,7 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 
 	// Process each identity
 	for _, id := range cfg.Identities {
-		encId := ToEncryptedIdentity(id)
+		encId := toEncryptedIdentity(id)
 
 		// If identity has SSH key, read and encrypt it
 		if id.SSHKeyPath != "" {

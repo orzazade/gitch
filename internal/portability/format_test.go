@@ -6,7 +6,7 @@ import (
 	"github.com/orzazade/gitch/internal/config"
 )
 
-func TestToEncryptedIdentity_AllFields(t *testing.T) {
+func Test_toEncryptedIdentity_AllFields(t *testing.T) {
 	id := config.Identity{
 		Name:       "work",
 		GitName:    "Jane Doe",
@@ -16,7 +16,7 @@ func TestToEncryptedIdentity_AllFields(t *testing.T) {
 		HookMode:   "block",
 	}
 
-	enc := ToEncryptedIdentity(id)
+	enc := toEncryptedIdentity(id)
 
 	if enc.Name != id.Name {
 		t.Errorf("Name: got %q, want %q", enc.Name, id.Name)
@@ -51,7 +51,7 @@ func TestToIdentity_RoundTrip(t *testing.T) {
 		HookMode:   "warn",
 	}
 
-	enc := ToEncryptedIdentity(original)
+	enc := toEncryptedIdentity(original)
 	back := enc.ToIdentity()
 
 	if back.Name != original.Name {
@@ -74,13 +74,13 @@ func TestToIdentity_RoundTrip(t *testing.T) {
 	}
 }
 
-func TestToEncryptedIdentity_MinimalFields(t *testing.T) {
+func Test_toEncryptedIdentity_MinimalFields(t *testing.T) {
 	id := config.Identity{
 		Name:  "minimal",
 		Email: "min@test.com",
 	}
 
-	enc := ToEncryptedIdentity(id)
+	enc := toEncryptedIdentity(id)
 	if enc.Name != "minimal" || enc.Email != "min@test.com" {
 		t.Error("basic fields should be preserved")
 	}
