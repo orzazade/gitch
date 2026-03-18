@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -89,7 +90,7 @@ func runEdit(cmd *cobra.Command, args []string) error {
 	}
 
 	if !changed {
-		return fmt.Errorf("no changes specified; use flags like --email, --git-name, --ssh-key, --gpg-key, or --hook-mode")
+		return errors.New("no changes specified; use flags like --email, --git-name, --ssh-key, --gpg-key, or --hook-mode")
 	}
 
 	cfg, err := config.Load()
