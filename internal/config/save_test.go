@@ -88,3 +88,28 @@ func TestSave_CreatesDirectory(t *testing.T) {
 		t.Fatal("config file was not created in nested directory")
 	}
 }
+
+func TestConfigPath_RespectsGitchConfigPath(t *testing.T) {
+	t.Setenv("GITCH_CONFIG_PATH", "/custom/path/config.yaml")
+
+	path, err := ConfigPath()
+	if err != nil {
+		t.Fatalf("ConfigPath failed: %v", err)
+	}
+	if path != "/custom/path/config.yaml" {
+		t.Errorf("expected /custom/path/config.yaml, got %q", path)
+	}
+}
+
+func TestConfigPath_RespectsXDGConfigHome(t *testing.T) {
+	t.Setenv("GITCH_CONFIG_PATH", "")
+	t.Setenv("XDG_CONFIG_HOME", "/tmp/xdg-test")
+
+	path, err := ConfigPath()
+	if err != nil {
+		t.Fatalf("ConfigPath failed: %v", err)
+	}
+	if path != "/tmp/xdg-test/gitch/config.yaml" {
+		t.Errorf("expected /tmp/xdg-test/gitch/config.yaml, got %q", path)
+	}
+}
