@@ -18,6 +18,9 @@ var doctorCmd = &cobra.Command{
 	Short: "Check gitch setup for common problems",
 	Long: `Run health checks on your gitch setup and report issues with fix instructions.
 
+Exits with code 1 if any issues are found, so it can be used in scripts:
+  gitch doctor && echo "ready to commit"
+
 Examples:
   gitch doctor`,
 	RunE: runDoctor,
@@ -39,14 +42,14 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 	if err != nil {
 		checks = append(checks, doctorCheck{false, "cannot load gitch config", "check ~/.config/gitch/config.yaml for syntax errors"})
-		printDoctorResults(checks)
+		exitDoctorWithCode(checks)
 		return nil
 	}
 
 	n := len(cfg.Identities)
 	if n == 0 {
 		checks = append(checks, doctorCheck{false, "no identities configured", "run: gitch add"})
-		printDoctorResults(checks)
+		exitDoctorWithCode(checks)
 		return nil
 	}
 	checks = append(checks, doctorCheck{true, fmt.Sprintf("%d %s configured", n, nounPlural(n, "identity", "identities")), ""})
@@ -113,11 +116,18 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	printDoctorResults(checks)
+	exitDoctorWithCode(checks)
 	return nil
 }
 
-func printDoctorResults(checks []doctorCheck) {
+// exitDoctorWithCode prints results and exits with code 1 if any issues were found.
+func exitDoctorWithCode(checks []doctorCheck) {
+	if printDoctorResults(checks) > 0 {
+		os.Exit(1)
+	}
+}
+
+func printDoctorResults(checks []doctorCheck) int {
 	fmt.Println(ui.DimStyle.Render("gitch doctor — health check"))
 	fmt.Println()
 	warnings := 0
