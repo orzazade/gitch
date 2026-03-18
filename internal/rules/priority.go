@@ -61,10 +61,7 @@ func (r Rule) Matches(cwd, remoteURL string) bool {
 	switch r.Type {
 	case DirectoryRule:
 		matched, err := matchDirectory(r.Pattern, cwd)
-		if err != nil {
-			return false
-		}
-		return matched
+		return err == nil && matched
 	case RemoteRule:
 		if remoteURL == "" {
 			return false
