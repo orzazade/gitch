@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -117,7 +118,7 @@ func buildIdentityEnv(identity *config.Identity) []string {
 func appendOrReplace(env []string, key, value string) []string {
 	prefix := key + "="
 	for i, e := range env {
-		if len(e) > len(prefix) && e[:len(prefix)] == prefix {
+		if strings.HasPrefix(e, prefix) {
 			env[i] = prefix + value
 			return env
 		}
