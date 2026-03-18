@@ -187,7 +187,7 @@ func MergeConfig(cfg *config.Config, export *ExportConfig, overwrite map[string]
 		}
 
 		// Check if we should overwrite
-		if shouldOverwrite, ok := overwrite[incoming.Name]; ok && shouldOverwrite {
+		if overwrite[incoming.Name] {
 			// Update the identity
 			if err := updateIdentity(cfg, incoming); err != nil {
 				return nil, fmt.Errorf("failed to update identity %q: %w", incoming.Name, err)
@@ -225,7 +225,7 @@ func MergeConfig(cfg *config.Config, export *ExportConfig, overwrite map[string]
 		}
 
 		// Check if we should overwrite
-		if shouldOverwrite, ok := overwrite[incoming.Pattern]; ok && shouldOverwrite {
+		if overwrite[incoming.Pattern] {
 			// Update the rule
 			cfg.Rules[existingIdx] = incoming
 			result.UpdatedRules = append(result.UpdatedRules, incoming.Pattern)
