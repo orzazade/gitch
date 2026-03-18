@@ -278,7 +278,6 @@ func TestResult_CaseInsensitive(t *testing.T) {
 	}
 }
 
-
 // TestCommit_ZeroValue tests that zero-value Commit has empty fields
 func TestCommit_ZeroValue(t *testing.T) {
 	var c Commit
