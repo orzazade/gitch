@@ -71,14 +71,6 @@ func ImportFromFile(path string) (*ExportConfig, error) {
 			ErrVersionTooNew, export.Version, CurrentExportVersion)
 	}
 
-	// Ensure slices are not nil
-	if export.Identities == nil {
-		export.Identities = []config.Identity{}
-	}
-	if export.Rules == nil {
-		export.Rules = []rules.Rule{}
-	}
-
 	// Convert EncryptedIdentities to Identities for config merge
 	if len(export.EncryptedIdentities) > 0 && len(export.Identities) == 0 {
 		export.Identities = make([]config.Identity, len(export.EncryptedIdentities))
