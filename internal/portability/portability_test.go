@@ -611,6 +611,56 @@ func TestMergeConfig_MixedDecisions(t *testing.T) {
 	}
 }
 
+func TestMergeConfig_NilOverwriteMap(t *testing.T) {
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "existing", Email: "existing@e.com"},
+		},
+	}
+	export := &ExportConfig{
+		Identities: []config.Identity{
+			{Name: "new-one", Email: "new@e.com"},
+			{Name: "existing", Email: "different@e.com"}, // conflict
+		},
+	}
+
+	// nil overwrite map — conflicts should be skipped
+	result, err := MergeConfig(cfg, export, nil)
+	if err != nil {
+		t.Fatalf("MergeConfig failed: %v", err)
+	}
+
+	if len(result.AddedIdentities) != 1 || result.AddedIdentities[0] != "new-one" {
+		t.Errorf("expected 1 added identity 'new-one', got %v", result.AddedIdentities)
+	}
+	if len(result.Skipped) != 1 {
+		t.Errorf("expected 1 skipped, got %v", result.Skipped)
+	}
+}
+
+func TestMergeConfig_IdenticalSkippedSilently(t *testing.T) {
+	id := config.Identity{Name: "work", Email: "work@e.com", GitName: "Jane"}
+	cfg := &config.Config{
+		Identities: []config.Identity{id},
+	}
+	export := &ExportConfig{
+		Identities: []config.Identity{id}, // exact duplicate
+	}
+
+	result, err := MergeConfig(cfg, export, nil)
+	if err != nil {
+		t.Fatalf("MergeConfig failed: %v", err)
+	}
+
+	// Identical identity should be silently skipped (not in Skipped list)
+	if len(result.AddedIdentities) != 0 {
+		t.Errorf("expected 0 added, got %v", result.AddedIdentities)
+	}
+	if len(result.Skipped) != 0 {
+		t.Errorf("expected 0 skipped for identical identity, got %v", result.Skipped)
+	}
+}
+
 // ============================================================================
 // Round-trip Tests
 // ============================================================================
