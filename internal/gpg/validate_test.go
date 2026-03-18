@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+func TestIsGPGAvailable(t *testing.T) {
+	// Just verify it doesn't panic and returns a valid bool
+	result := IsGPGAvailable()
+	t.Logf("IsGPGAvailable() = %v", result)
+}
+
 func TestErrKeyNotFound_ContainsKeyID(t *testing.T) {
 	err := errKeyNotFound("ABCD1234")
 	if err == nil {
