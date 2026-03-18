@@ -85,3 +85,50 @@ func TestApply_LocalScope(t *testing.T) {
 		t.Fatal("expected local scope to match applied identity")
 	}
 }
+
+func TestMatches_EffectiveScope(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	identity := &config.Identity{
+		Name:    "work",
+		GitName: "Jane Doe",
+		Email:   "jane@example.com",
+	}
+
+	if _, err := Apply(identity, git.ScopeLocal); err != nil {
+		t.Fatalf("Apply failed: %v", err)
+	}
+
+	// Matches uses ScopeEffective, which should see local config
+	match, err := Matches(identity)
+	if err != nil {
+		t.Fatalf("Matches failed: %v", err)
+	}
+	if !match {
+		t.Error("expected Matches to return true for applied identity")
+	}
+}
+
+func TestMatches_NoMatch(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Apply one identity
+	applied := &config.Identity{Name: "work", GitName: "Jane", Email: "jane@work.com"}
+	if _, err := Apply(applied, git.ScopeLocal); err != nil {
+		t.Fatalf("Apply failed: %v", err)
+	}
+
+	// Check against a different identity
+	other := &config.Identity{Name: "personal", GitName: "Jane", Email: "jane@personal.com"}
+	match, err := Matches(other)
+	if err != nil {
+		t.Fatalf("Matches failed: %v", err)
+	}
+	if match {
+		t.Error("expected Matches to return false for different identity")
+	}
+}
