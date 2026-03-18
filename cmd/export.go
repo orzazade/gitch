@@ -62,6 +62,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	var keysEncrypted int
 	if exportEncrypt {
 		// Prompt for passphrase with confirmation
 		passphrase, err := ui.ReadPassphraseWithConfirm()
@@ -73,44 +74,34 @@ func runExport(cmd *cobra.Command, args []string) error {
 		}
 
 		// Count identities with SSH keys
-		keysToEncrypt := 0
 		for _, id := range cfg.Identities {
 			if id.SSHKeyPath != "" {
-				keysToEncrypt++
+				keysEncrypted++
 			}
 		}
 
-		if keysToEncrypt == 0 {
+		if keysEncrypted == 0 {
 			fmt.Println(ui.WarningStyle.Render("Warning: No SSH keys to encrypt"))
 		}
 
 		if err := portability.ExportToFileEncrypted(cfg, outputPath, passphrase); err != nil {
 			return fmt.Errorf("failed to export: %w", err)
 		}
-
-		// Print success message
 		fmt.Println(ui.SuccessStyle.Render("Encrypted export complete!"))
-		fmt.Printf("  File: %s\n", outputPath)
-		fmt.Printf("  Identities: %d\n", len(cfg.Identities))
-		if keysToEncrypt > 0 {
-			fmt.Printf("  SSH keys encrypted: %d\n", keysToEncrypt)
-		}
-		if len(cfg.Rules) > 0 {
-			fmt.Printf("  Rules: %d\n", len(cfg.Rules))
-		}
 	} else {
-		// Original non-encrypted export
 		if err := portability.ExportToFile(cfg, outputPath); err != nil {
 			return fmt.Errorf("failed to export: %w", err)
 		}
-
-		// Print success message
 		fmt.Println(ui.SuccessStyle.Render("Export complete!"))
-		fmt.Printf("  File: %s\n", outputPath)
-		fmt.Printf("  Identities: %d\n", len(cfg.Identities))
-		if len(cfg.Rules) > 0 {
-			fmt.Printf("  Rules: %d\n", len(cfg.Rules))
-		}
+	}
+
+	fmt.Printf("  File: %s\n", outputPath)
+	fmt.Printf("  Identities: %d\n", len(cfg.Identities))
+	if keysEncrypted > 0 {
+		fmt.Printf("  SSH keys encrypted: %d\n", keysEncrypted)
+	}
+	if len(cfg.Rules) > 0 {
+		fmt.Printf("  Rules: %d\n", len(cfg.Rules))
 	}
 
 	return nil
