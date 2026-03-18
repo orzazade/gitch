@@ -26,7 +26,7 @@ func LocalHookPath() (string, error) {
 func InstallLocal() error {
 	preCommitPath, err := LocalHookPath()
 	if err != nil {
-		return fmt.Errorf("failed to determine local hook path: %w", err)
+		return err
 	}
 
 	if err := ensureHookPathWritable(preCommitPath); err != nil {
@@ -40,7 +40,7 @@ func InstallLocal() error {
 func UninstallLocal() error {
 	preCommitPath, err := LocalHookPath()
 	if err != nil {
-		return fmt.Errorf("failed to determine local hook path: %w", err)
+		return err
 	}
 
 	return removeManagedHook(preCommitPath)
@@ -50,7 +50,7 @@ func UninstallLocal() error {
 func IsInstalledLocal() (bool, error) {
 	preCommitPath, err := LocalHookPath()
 	if err != nil {
-		return false, fmt.Errorf("failed to determine local hook path: %w", err)
+		return false, err
 	}
 	return isManagedHook(preCommitPath)
 }
