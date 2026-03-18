@@ -54,6 +54,63 @@ func TestInstallLocal_RefusesOverwriteNonManagedHook(t *testing.T) {
 	}
 }
 
+func TestUninstallLocal_RemovesManagedHook(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Install first
+	if err := InstallLocal(); err != nil {
+		t.Fatalf("InstallLocal failed: %v", err)
+	}
+
+	// Uninstall
+	if err := UninstallLocal(); err != nil {
+		t.Fatalf("UninstallLocal failed: %v", err)
+	}
+
+	// Verify hook is gone
+	hookPath, err := LocalHookPath()
+	if err != nil {
+		t.Fatalf("failed to get local hook path: %v", err)
+	}
+	if _, err := os.Stat(hookPath); !os.IsNotExist(err) {
+		t.Error("expected hook file to be removed after UninstallLocal")
+	}
+}
+
+func TestIsInstalledLocal_NotInstalled(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	installed, err := IsInstalledLocal()
+	if err != nil {
+		t.Fatalf("IsInstalledLocal failed: %v", err)
+	}
+	if installed {
+		t.Error("expected IsInstalledLocal=false when no hook installed")
+	}
+}
+
+func TestIsInstalledLocal_Installed(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	if err := InstallLocal(); err != nil {
+		t.Fatalf("InstallLocal failed: %v", err)
+	}
+
+	installed, err := IsInstalledLocal()
+	if err != nil {
+		t.Fatalf("IsInstalledLocal failed: %v", err)
+	}
+	if !installed {
+		t.Error("expected IsInstalledLocal=true after install")
+	}
+}
+
 func TestInstallGlobal_RefusesOverwriteExistingHooksPath(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	defer env.Cleanup(t)
