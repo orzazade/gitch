@@ -5,13 +5,12 @@ import "github.com/charmbracelet/lipgloss"
 
 // Colors
 var (
-	ActiveColor   = lipgloss.Color("10") // Green
+	ActiveColor   = lipgloss.Color("10") // Green (also used for success)
 	inactiveColor = lipgloss.Color("8")  // Gray
 	nameColor     = lipgloss.Color("15") // White
 	emailColor    = lipgloss.Color("7")  // Light gray
 	warningColor  = lipgloss.Color("11") // Yellow
 	errorColor    = lipgloss.Color("9")  // Red
-	successColor  = lipgloss.Color("10") // Green
 )
 
 // Card styles
@@ -36,6 +35,6 @@ var (
 	CheckmarkStyle = lipgloss.NewStyle().Foreground(ActiveColor).Bold(true)
 	WarningStyle   = lipgloss.NewStyle().Foreground(warningColor)
 	ErrorStyle     = lipgloss.NewStyle().Foreground(errorColor)
-	SuccessStyle   = lipgloss.NewStyle().Foreground(successColor)
+	SuccessStyle   = lipgloss.NewStyle().Foreground(ActiveColor)
 	DimStyle       = lipgloss.NewStyle().Foreground(inactiveColor)
 )
