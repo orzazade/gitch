@@ -182,11 +182,11 @@ func Fix(scanResult *ScanResult) error {
 	// Step 9: Remove remotes (AUDIT-06)
 	remotesBefore, remotesErr := getRemotes()
 	if remotesErr != nil {
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("\nWarning: failed to list remotes: %v", remotesErr)))
+		fmt.Println(ui.WarningStyle.Render("\nWarning: failed to list remotes: " + remotesErr.Error()))
 	}
 	if err := removeRemotes(); err != nil {
 		// Non-fatal: warn but continue
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("\nWarning: failed to remove remotes: %v", err)))
+		fmt.Println(ui.WarningStyle.Render("\nWarning: failed to remove remotes: " + err.Error()))
 	}
 	if len(remotesBefore) > 0 {
 		fmt.Println(ui.WarningStyle.Render("\nRemote(s) removed to prevent accidental force-push."))
