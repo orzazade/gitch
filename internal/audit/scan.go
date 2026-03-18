@@ -235,15 +235,8 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 	var mismatchCount, localOnlyCount, pushedCount int
 
 	for _, commit := range commits {
-		// Determine if pushed
-		var isPushed bool
-		if noUpstream {
-			// Can't determine - assume pushed (conservative)
-			isPushed = true
-		} else {
-			// Not in localHashes means it's pushed
-			isPushed = !localHashes[commit.Hash]
-		}
+		// Determine if pushed; if no upstream, assume pushed (conservative)
+		isPushed := noUpstream || !localHashes[commit.Hash]
 
 		// Count pushed vs local
 		if isPushed {
