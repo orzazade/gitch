@@ -9,7 +9,6 @@ import (
 
 func TestUpdateIdentity_Email(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{

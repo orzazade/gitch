@@ -11,7 +11,6 @@ import (
 
 func TestScan_NoRuleMatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Config with no rules matching this directory
@@ -49,7 +48,6 @@ func TestScan_NoRuleMatch(t *testing.T) {
 
 func TestScan_WithMatchingRule(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{
@@ -94,7 +92,6 @@ func TestScan_WithMatchingRule(t *testing.T) {
 
 func TestScan_ShowAllIncludesMatches(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{

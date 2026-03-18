@@ -12,7 +12,6 @@ import (
 
 func TestInstallLocal_WritesManagedHook(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	if err := InstallLocal(); err != nil {
@@ -35,7 +34,6 @@ func TestInstallLocal_WritesManagedHook(t *testing.T) {
 
 func TestInstallLocal_RefusesOverwriteNonManagedHook(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	hookPath, err := LocalHookPath()
@@ -56,7 +54,6 @@ func TestInstallLocal_RefusesOverwriteNonManagedHook(t *testing.T) {
 
 func TestUninstallLocal_RemovesManagedHook(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Install first
@@ -81,7 +78,6 @@ func TestUninstallLocal_RemovesManagedHook(t *testing.T) {
 
 func TestIsInstalledLocal_NotInstalled(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	installed, err := IsInstalledLocal()
@@ -95,7 +91,6 @@ func TestIsInstalledLocal_NotInstalled(t *testing.T) {
 
 func TestIsInstalledLocal_Installed(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	if err := InstallLocal(); err != nil {
@@ -113,7 +108,6 @@ func TestIsInstalledLocal_Installed(t *testing.T) {
 
 func TestInstallGlobal_Success(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	if err := InstallGlobal(); err != nil {
@@ -142,7 +136,6 @@ func TestInstallGlobal_Success(t *testing.T) {
 
 func TestInstallGlobal_Idempotent(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Install twice — second call should succeed (our own hooks path)
@@ -156,7 +149,6 @@ func TestInstallGlobal_Idempotent(t *testing.T) {
 
 func TestInstallGlobal_RefusesOverwriteExistingHooksPath(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	customHooksPath := filepath.Join(env.Dir, "custom-hooks")
@@ -174,7 +166,6 @@ func TestInstallGlobal_RefusesOverwriteExistingHooksPath(t *testing.T) {
 
 func TestUninstallGlobal_AfterInstall(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Install first
@@ -199,7 +190,6 @@ func TestUninstallGlobal_AfterInstall(t *testing.T) {
 
 func TestUninstallGlobal_NotInstalled(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Uninstall when nothing is installed — should not error
@@ -210,7 +200,6 @@ func TestUninstallGlobal_NotInstalled(t *testing.T) {
 
 func TestIsInstalled_NotInstalled(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	installed, err := IsInstalled()
@@ -224,7 +213,6 @@ func TestIsInstalled_NotInstalled(t *testing.T) {
 
 func TestIsInstalled_AfterInstall(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	if err := InstallGlobal(); err != nil {

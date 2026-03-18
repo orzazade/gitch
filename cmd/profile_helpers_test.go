@@ -48,7 +48,6 @@ func TestResolveApplyScope_NeitherFlag(t *testing.T) {
 
 func TestResolveCurrentProfileState_ExactMatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{
@@ -82,7 +81,6 @@ func TestResolveCurrentProfileState_ExactMatch(t *testing.T) {
 
 func TestResolveCurrentProfileState_PartialEmailMatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{

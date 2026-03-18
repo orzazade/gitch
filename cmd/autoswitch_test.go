@@ -36,7 +36,6 @@ func TestFormatCurrentIdentity(t *testing.T) {
 
 func TestTryAutoSwitch_UsesLocalScopeInsideRepo(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	keyPath := filepath.Join(env.Dir, "id_test")

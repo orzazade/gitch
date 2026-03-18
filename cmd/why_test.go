@@ -13,7 +13,6 @@ import (
 
 func TestWhy_ShowsMatchedRule(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Set up an identity and rule that matches the test directory
@@ -84,7 +83,6 @@ func TestWhy_ShowsMatchedRule(t *testing.T) {
 
 func TestWhy_NoRules(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Set a git identity so we get past the "no identity" check
@@ -129,7 +127,6 @@ func TestWhy_NoRules(t *testing.T) {
 
 func TestWhy_NoIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Empty config

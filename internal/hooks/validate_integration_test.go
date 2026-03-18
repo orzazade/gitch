@@ -11,7 +11,6 @@ import (
 
 func TestValidate_NoRuleMatches(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Save config with no rules
@@ -35,7 +34,6 @@ func TestValidate_NoRuleMatches(t *testing.T) {
 
 func TestValidate_MatchingIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Save config with identity and directory rule
@@ -70,7 +68,6 @@ func TestValidate_MatchingIdentity(t *testing.T) {
 
 func TestValidate_UnknownRuleIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Rule references an identity that doesn't exist
@@ -94,7 +91,6 @@ func TestValidate_UnknownRuleIdentity(t *testing.T) {
 
 func TestValidate_MismatchedIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{

@@ -31,7 +31,6 @@ func TestNounPlural(t *testing.T) {
 
 func TestDoctorCmd_NoIdentities(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{Identities: []config.Identity{}}
@@ -76,7 +75,6 @@ func TestPrintDoctorResults_ReturnsWarningCount(t *testing.T) {
 
 func TestDoctorCmd_ActiveIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	cfg := &config.Config{

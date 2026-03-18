@@ -14,7 +14,6 @@ import (
 
 func TestApply_LocalScope(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	keyPath := filepath.Join(env.Dir, "id_test")
@@ -89,7 +88,6 @@ func TestApply_LocalScope(t *testing.T) {
 
 func TestMatches_EffectiveScope(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	identity := &config.Identity{
@@ -114,7 +112,6 @@ func TestMatches_EffectiveScope(t *testing.T) {
 
 func TestApply_MinimalIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Apply identity with no SSH key and no GPG key
@@ -146,7 +143,6 @@ func TestApply_MinimalIdentity(t *testing.T) {
 
 func TestApply_ClearsSigningWhenNoGPG(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// First apply identity with GPG
@@ -170,7 +166,6 @@ func TestApply_ClearsSigningWhenNoGPG(t *testing.T) {
 
 func TestApply_SSHKeyNotFound(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	identity := &config.Identity{
@@ -204,7 +199,6 @@ func TestApply_SSHKeyNotFound(t *testing.T) {
 
 func TestApply_ClearsSSHWhenNoKey(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// First apply with SSH key path
@@ -231,7 +225,6 @@ func TestApply_ClearsSSHWhenNoKey(t *testing.T) {
 
 func TestMatchesAtScope_NameMismatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Apply one name
@@ -252,7 +245,6 @@ func TestMatchesAtScope_NameMismatch(t *testing.T) {
 
 func TestMatches_NoMatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
-	defer env.Cleanup(t)
 	env.Chdir(t)
 
 	// Apply one identity
