@@ -103,7 +103,7 @@ func ExportPublicKey(keyID string) (string, error) {
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			return "", fmt.Errorf("failed to export public key: %s", string(exitErr.Stderr))
+			return "", fmt.Errorf("failed to export public key: %s: %w", string(exitErr.Stderr), err)
 		}
 		return "", fmt.Errorf("failed to export public key: %w", err)
 	}
