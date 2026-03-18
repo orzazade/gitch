@@ -35,10 +35,7 @@ type KeyInfo struct {
 // parseKeyInfo parses gpg --with-colons output to extract key information.
 // Delegates to parseMultipleKeys and returns the first key found.
 func parseKeyInfo(output string) (*KeyInfo, error) {
-	keys, err := parseMultipleKeys(output)
-	if err != nil {
-		return nil, err
-	}
+	keys := parseMultipleKeys(output)
 	if len(keys) == 0 {
 		return nil, errors.New("failed to parse GPG key information")
 	}

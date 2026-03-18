@@ -59,7 +59,7 @@ func findKeyByEmail(email string) ([]KeyInfo, error) {
 		return nil, fmt.Errorf("failed to search for GPG keys: %w", err)
 	}
 
-	return parseMultipleKeys(string(output))
+	return parseMultipleKeys(string(output)), nil
 }
 
 // IsGPGAvailable checks if the gpg command is installed and accessible.
@@ -69,7 +69,7 @@ func IsGPGAvailable() bool {
 }
 
 // parseMultipleKeys parses gpg --with-colons output that may contain multiple keys.
-func parseMultipleKeys(output string) ([]KeyInfo, error) {
+func parseMultipleKeys(output string) []KeyInfo {
 	var keys []KeyInfo
 	var currentKey *KeyInfo
 	lines := strings.Split(output, "\n")
@@ -122,7 +122,7 @@ func parseMultipleKeys(output string) ([]KeyInfo, error) {
 		keys = append(keys, *currentKey)
 	}
 
-	return keys, nil
+	return keys
 }
 
 // parseUnixTimestamp parses a Unix timestamp string to time.Time.

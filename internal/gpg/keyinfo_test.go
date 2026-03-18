@@ -179,10 +179,7 @@ fpr:::::::::FINGERPRINT2222222222222222222222222222222:
 uid:u::::1700100000::HASH::Bob <bob@example.com>::::::::::
 `
 
-	keys, err := parseMultipleKeys(output)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	keys := parseMultipleKeys(output)
 
 	if len(keys) != 2 {
 		t.Fatalf("got %d keys, want 2", len(keys))
@@ -204,10 +201,7 @@ uid:u::::1700100000::HASH::Bob <bob@example.com>::::::::::
 }
 
 func TestParseMultipleKeysEmpty(t *testing.T) {
-	keys, err := parseMultipleKeys("")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	keys := parseMultipleKeys("")
 	if len(keys) != 0 {
 		t.Errorf("got %d keys, want 0", len(keys))
 	}
