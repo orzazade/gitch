@@ -140,7 +140,7 @@ func getLocalOnlyHashes() map[string]bool {
 	}
 
 	// Get local-only commits (commits in HEAD but not in upstream)
-	rangeArg := fmt.Sprintf("%s..HEAD", upstream)
+	rangeArg := upstream + "..HEAD"
 	cmd = exec.Command("git", "log", rangeArg, "--format=%H")
 	output, err := cmd.Output()
 	if err != nil {
