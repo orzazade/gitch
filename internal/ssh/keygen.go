@@ -25,7 +25,7 @@ func GenerateKeyPair(comment string, passphrase []byte) (privateKeyPEM, publicKe
 // Returns the private key in PEM format and the public key in authorized_keys format.
 // If passphrase is provided, the private key will be encrypted.
 func GenerateKeyPairWithType(keyType KeyType, comment string, passphrase []byte) (privateKeyPEM, publicKey []byte, err error) {
-	var privateKey interface{}
+	var privateKey any
 	var sshPubKey ssh.PublicKey
 
 	switch keyType {

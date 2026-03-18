@@ -122,7 +122,7 @@ func AddKeyToAgentWithPassphrase(keyPath string, passphrase []byte) error {
 	}
 
 	// Parse key
-	var privKey interface{}
+	var privKey any
 	if len(passphrase) > 0 {
 		privKey, err = ssh.ParseRawPrivateKeyWithPassphrase(keyData, passphrase)
 	} else {

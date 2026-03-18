@@ -27,8 +27,8 @@ const (
 type Conflict struct {
 	Type     ConflictType
 	Key      string      // identity name or rule pattern
-	Existing interface{} // existing config.Identity or rules.Rule
-	Incoming interface{} // incoming config.Identity or rules.Rule
+	Existing any // existing config.Identity or rules.Rule
+	Incoming any // incoming config.Identity or rules.Rule
 }
 
 // ImportResult tracks what was added, updated, and skipped during merge.
