@@ -15,6 +15,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var errDoctorFoundIssues = errors.New("doctor found issues")
+
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Check gitch setup for common problems",
@@ -47,7 +49,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		checks = append(checks, doctorCheck{false, "cannot load gitch config", "check ~/.config/gitch/config.yaml for syntax errors"})
 		if printDoctorResults(checks) > 0 {
-			return errors.New("doctor found issues")
+			return errDoctorFoundIssues
 		}
 		return nil
 	}
@@ -56,7 +58,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	if n == 0 {
 		checks = append(checks, doctorCheck{false, "no identities configured", "run: gitch add"})
 		if printDoctorResults(checks) > 0 {
-			return errors.New("doctor found issues")
+			return errDoctorFoundIssues
 		}
 		return nil
 	}
@@ -128,7 +130,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	}
 
 	if printDoctorResults(checks) > 0 {
-		return errors.New("doctor found issues")
+		return errDoctorFoundIssues
 	}
 	return nil
 }

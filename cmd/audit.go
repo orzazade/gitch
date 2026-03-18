@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -53,7 +52,7 @@ func init() {
 func runAudit(cmd *cobra.Command, args []string) error {
 	// Check if we're in a git repo
 	if !git.IsGitRepository() {
-		return errors.New("not in a git repository")
+		return errNotGitRepo
 	}
 
 	// Set limit based on flags

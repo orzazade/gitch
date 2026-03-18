@@ -40,7 +40,7 @@ func init() {
 
 func runVerify(cmd *cobra.Command, args []string) error {
 	if !git.IsGitRepository() {
-		return errors.New("not in a git repository")
+		return errNotGitRepo
 	}
 
 	result, err := audit.VerifyUnpushed()

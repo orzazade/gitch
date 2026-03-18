@@ -1,11 +1,15 @@
 package cmd
 
 import (
+	"errors"
+
 	"github.com/spf13/cobra"
 )
 
 // Version is the current version of gitch
 var Version = "dev"
+
+var errNotGitRepo = errors.New("not in a git repository")
 
 var rootCmd = &cobra.Command{
 	Use:   "gitch",
