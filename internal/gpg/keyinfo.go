@@ -3,7 +3,6 @@ package gpg
 
 import (
 	"errors"
-	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -31,20 +30,6 @@ type KeyInfo struct {
 
 	// Name is the user name associated with the key
 	Name string
-}
-
-// getKeyInfo retrieves information about a GPG key by its key ID.
-// The keyID can be a short ID, long ID, fingerprint, or email address.
-// Returns an error if the key is not found in the gpg keyring.
-func getKeyInfo(keyID string) (*KeyInfo, error) {
-	// Run gpg to list secret keys with colon-delimited output
-	cmd := exec.Command("gpg", "--list-secret-keys", "--keyid-format", "LONG", "--with-colons", keyID)
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, errKeyNotFound(keyID)
-	}
-
-	return parseKeyInfo(string(output))
 }
 
 // parseKeyInfo parses gpg --with-colons output to extract key information.
