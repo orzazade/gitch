@@ -77,34 +77,8 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 			checks = append(checks, doctorCheck{false, fmt.Sprintf("active email %q is not managed by gitch", state.CurrentEmail), "run: gitch use <name>"})
 		} else {
 			checks = append(checks, doctorCheck{true, "active identity: " + identity.Name + " (" + identity.Email + ")", ""})
-
-			if identity.SSHKeyPath != "" {
-				keyPath, expandErr := sshpkg.ExpandPath(identity.SSHKeyPath)
-				if expandErr != nil {
-					checks = append(checks, doctorCheck{false, "invalid SSH key path: " + identity.SSHKeyPath, "run: gitch edit " + identity.Name + " --ssh-key <path>"})
-				} else if _, statErr := os.Stat(keyPath); statErr != nil {
-					checks = append(checks, doctorCheck{false, "SSH key file missing: " + identity.SSHKeyPath, "run: gitch add to reconfigure '" + identity.Name + "'"})
-				} else {
-					checks = append(checks, doctorCheck{true, "SSH key exists: " + identity.SSHKeyPath, ""})
-					if !sshpkg.IsAgentRunning() {
-						checks = append(checks, doctorCheck{false, "ssh-agent not running", "run: eval $(ssh-agent) && ssh-add " + keyPath})
-					} else if !sshpkg.IsKeyLoadedInAgent(keyPath) {
-						checks = append(checks, doctorCheck{false, "SSH key not loaded in agent", "run: ssh-add " + keyPath})
-					} else {
-						checks = append(checks, doctorCheck{true, "SSH key loaded in agent", ""})
-					}
-				}
-			}
-
-			if identity.GPGKeyID != "" {
-				if !gpg.IsGPGAvailable() {
-					checks = append(checks, doctorCheck{false, "gpg not installed (required for commit signing)", "install GPG: sudo apt install gnupg"})
-				} else if gpgErr := gpg.ValidateKeyID(identity.GPGKeyID); gpgErr != nil {
-					checks = append(checks, doctorCheck{false, "GPG key not found in keyring: " + identity.GPGKeyID, "import the key or run: gitch add to reconfigure"})
-				} else {
-					checks = append(checks, doctorCheck{true, "GPG key valid: " + identity.GPGKeyID, ""})
-				}
-			}
+			checks = append(checks, checkSSHKey(identity)...)
+			checks = append(checks, checkGPGKey(identity)...)
 		}
 	}
 
@@ -133,6 +107,44 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		return errDoctorFoundIssues
 	}
 	return nil
+}
+
+func checkSSHKey(identity *config.Identity) []doctorCheck {
+	if identity.SSHKeyPath == "" {
+		return nil
+	}
+
+	keyPath, err := sshpkg.ExpandPath(identity.SSHKeyPath)
+	if err != nil {
+		return []doctorCheck{{false, "invalid SSH key path: " + identity.SSHKeyPath, "run: gitch edit " + identity.Name + " --ssh-key <path>"}}
+	}
+	if _, err := os.Stat(keyPath); err != nil {
+		return []doctorCheck{{false, "SSH key file missing: " + identity.SSHKeyPath, "run: gitch add to reconfigure '" + identity.Name + "'"}}
+	}
+
+	checks := []doctorCheck{{true, "SSH key exists: " + identity.SSHKeyPath, ""}}
+	if !sshpkg.IsAgentRunning() {
+		checks = append(checks, doctorCheck{false, "ssh-agent not running", "run: eval $(ssh-agent) && ssh-add " + keyPath})
+	} else if !sshpkg.IsKeyLoadedInAgent(keyPath) {
+		checks = append(checks, doctorCheck{false, "SSH key not loaded in agent", "run: ssh-add " + keyPath})
+	} else {
+		checks = append(checks, doctorCheck{true, "SSH key loaded in agent", ""})
+	}
+	return checks
+}
+
+func checkGPGKey(identity *config.Identity) []doctorCheck {
+	if identity.GPGKeyID == "" {
+		return nil
+	}
+
+	if !gpg.IsGPGAvailable() {
+		return []doctorCheck{{false, "gpg not installed (required for commit signing)", "install GPG: sudo apt install gnupg"}}
+	}
+	if err := gpg.ValidateKeyID(identity.GPGKeyID); err != nil {
+		return []doctorCheck{{false, "GPG key not found in keyring: " + identity.GPGKeyID, "import the key or run: gitch add to reconfigure"}}
+	}
+	return []doctorCheck{{true, "GPG key valid: " + identity.GPGKeyID, ""}}
 }
 
 func printDoctorResults(checks []doctorCheck) int {
