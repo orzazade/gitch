@@ -226,6 +226,37 @@ identities: []
 	}
 }
 
+func TestImportFromFile_EncryptedIdentitiesConversion(t *testing.T) {
+	tmpDir := t.TempDir()
+	importPath := filepath.Join(tmpDir, "encrypted-export.yaml")
+
+	content := `version: 2
+encrypted_identities:
+  - name: work
+    email: work@example.com
+    git_name: Jane Doe
+    ssh_key_path: ~/.ssh/work_key
+    ssh_key_encrypted: "encrypted-data-here"
+  - name: personal
+    email: personal@example.com
+`
+	if err := os.WriteFile(importPath, []byte(content), 0644); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	export, err := ImportFromFile(importPath)
+	if err != nil {
+		t.Fatalf("ImportFromFile failed: %v", err)
+	}
+
+	if len(export.Identities) != 2 {
+		t.Fatalf("expected 2 identities from encrypted conversion, got %d", len(export.Identities))
+	}
+	if export.Identities[0].Name != "work" {
+		t.Errorf("expected first identity 'work', got %q", export.Identities[0].Name)
+	}
+}
+
 // ============================================================================
 // Conflict Detection Tests
 // ============================================================================
