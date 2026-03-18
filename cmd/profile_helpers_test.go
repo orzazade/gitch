@@ -8,6 +8,44 @@ import (
 	"github.com/orzazade/gitch/internal/testutil"
 )
 
+func TestResolveApplyScope_BothFlags(t *testing.T) {
+	_, err := resolveApplyScope(true, true)
+	if err == nil {
+		t.Fatal("expected error when both --local and --global are set")
+	}
+}
+
+func TestResolveApplyScope_LocalOnly(t *testing.T) {
+	scope, err := resolveApplyScope(true, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if scope != git.ScopeLocal {
+		t.Errorf("expected ScopeLocal, got %q", scope)
+	}
+}
+
+func TestResolveApplyScope_GlobalOnly(t *testing.T) {
+	scope, err := resolveApplyScope(false, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if scope != git.ScopeGlobal {
+		t.Errorf("expected ScopeGlobal, got %q", scope)
+	}
+}
+
+func TestResolveApplyScope_NeitherFlag(t *testing.T) {
+	// When neither flag is set, should return a valid scope without error
+	scope, err := resolveApplyScope(false, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if scope != git.ScopeLocal && scope != git.ScopeGlobal {
+		t.Errorf("expected ScopeLocal or ScopeGlobal, got %q", scope)
+	}
+}
+
 func TestResolveCurrentProfileState_ExactMatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	defer env.Cleanup(t)
