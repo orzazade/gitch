@@ -20,12 +20,12 @@ const (
 
 // Identity represents a git identity with name and email
 type Identity struct {
-	Name       string `mapstructure:"name" yaml:"name"`
-	GitName    string `mapstructure:"git_name" yaml:"git_name,omitempty"`
-	Email      string `mapstructure:"email" yaml:"email"`
-	SSHKeyPath string `mapstructure:"ssh_key_path" yaml:"ssh_key_path,omitempty"`
-	GPGKeyID   string `mapstructure:"gpg_key_id" yaml:"gpg_key_id,omitempty"`
-	HookMode   string `mapstructure:"hook_mode" yaml:"hook_mode,omitempty"`
+	Name       string `yaml:"name"`
+	GitName    string `yaml:"git_name,omitempty"`
+	Email      string `yaml:"email"`
+	SSHKeyPath string `yaml:"ssh_key_path,omitempty"`
+	GPGKeyID   string `yaml:"gpg_key_id,omitempty"`
+	HookMode   string `yaml:"hook_mode,omitempty"`
 }
 
 // ValidateHookMode validates that the hook mode is a valid value

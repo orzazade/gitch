@@ -14,9 +14,9 @@ import (
 
 // Config is the root configuration structure
 type Config struct {
-	Default    string       `mapstructure:"default" yaml:"default"`
-	Identities []Identity   `mapstructure:"identities" yaml:"identities"`
-	Rules      []rules.Rule `mapstructure:"rules" yaml:"rules,omitempty"`
+	Default    string       `yaml:"default"`
+	Identities []Identity   `yaml:"identities"`
+	Rules      []rules.Rule `yaml:"rules,omitempty"`
 }
 
 const configPathEnv = "GITCH_CONFIG_PATH"
