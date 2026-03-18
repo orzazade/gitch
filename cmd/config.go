@@ -73,32 +73,24 @@ func runConfigHookMode(cmd *cobra.Command, args []string) error {
 	identityName := args[0]
 	mode := args[1]
 
-	// Validate the mode
-	if err := config.ValidateHookMode(mode); err != nil {
-		return err
-	}
-
 	// Load config
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Find the identity
-	identity, err := cfg.GetIdentity(identityName)
+	// Update identity via UpdateIdentity (validates mode and finds identity)
+	updated, err := cfg.UpdateIdentity(identityName, config.IdentityUpdates{HookMode: &mode})
 	if err != nil {
-		return fmt.Errorf("identity '%s' not found. Use 'gitch list' to see available identities", identityName)
+		return err
 	}
-
-	// Update the hook mode
-	identity.HookMode = mode
 
 	// Save config
 	if err := cfg.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Hook mode for '%s' set to '%s'", identity.Name, mode)))
+	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Hook mode for '%s' set to '%s'", updated.Name, mode)))
 
 	return nil
 }
