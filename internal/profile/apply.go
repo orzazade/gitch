@@ -85,10 +85,10 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 			if errors.Is(err, os.ErrNotExist) {
 				result.Warnings = append(result.Warnings, "SSH key not found: "+keyPath)
 			} else {
-				result.Warnings = append(result.Warnings, fmt.Sprintf("failed to access SSH key %s: %v", keyPath, err))
+				result.Warnings = append(result.Warnings, "failed to access SSH key "+keyPath+": "+err.Error())
 			}
 		} else if err := sshpkg.AddKeyToAgent(keyPath); err != nil {
-			result.Warnings = append(result.Warnings, fmt.Sprintf("failed to add SSH key to agent: %v", err))
+			result.Warnings = append(result.Warnings, "failed to add SSH key to agent: "+err.Error())
 		}
 	} else {
 		if err := git.UnsetConfigScoped("core.sshCommand", scope); err != nil {
@@ -97,7 +97,7 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 	}
 
 	if err := prompt.UpdateCache(identity.Name); err != nil {
-		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to update prompt cache: %v", err))
+		result.Warnings = append(result.Warnings, "failed to update prompt cache: "+err.Error())
 	}
 
 	return result, nil

@@ -263,14 +263,14 @@ func ExtractEncryptedKeys(export *ExportConfig, passphrase []byte, overwriteKeys
 
 		// Skip if no path specified
 		if encId.SSHKeyPath == "" {
-			result.Errors = append(result.Errors, fmt.Sprintf("%s: no SSH key path specified", encId.Name))
+			result.Errors = append(result.Errors, encId.Name+": no SSH key path specified")
 			continue
 		}
 
 		// Expand path
 		keyPath, err := ssh.ExpandPath(encId.SSHKeyPath)
 		if err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("%s: invalid path: %v", encId.Name, err))
+			result.Errors = append(result.Errors, encId.Name+": invalid path: "+err.Error())
 			continue
 		}
 
@@ -283,19 +283,19 @@ func ExtractEncryptedKeys(export *ExportConfig, passphrase []byte, overwriteKeys
 		// Decrypt the key
 		decrypted, err := decryptWithPassphrase([]byte(encId.SSHKeyEncrypted), passphrase)
 		if err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("%s: decryption failed: %v", encId.Name, err))
+			result.Errors = append(result.Errors, encId.Name+": decryption failed: "+err.Error())
 			continue
 		}
 
 		// Create parent directory if needed
 		if err := os.MkdirAll(filepath.Dir(keyPath), 0700); err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("%s: failed to create directory: %v", encId.Name, err))
+			result.Errors = append(result.Errors, encId.Name+": failed to create directory: "+err.Error())
 			continue
 		}
 
 		// Write key with 0600 permissions (owner read/write only)
 		if err := os.WriteFile(keyPath, decrypted, 0600); err != nil {
-			result.Errors = append(result.Errors, fmt.Sprintf("%s: failed to write key: %v", encId.Name, err))
+			result.Errors = append(result.Errors, encId.Name+": failed to write key: "+err.Error())
 			continue
 		}
 
