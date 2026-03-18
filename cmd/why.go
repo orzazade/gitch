@@ -6,8 +6,6 @@ import (
 	"text/tabwriter"
 
 	"github.com/orzazade/gitch/internal/config"
-	gitpkg "github.com/orzazade/gitch/internal/git"
-	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
@@ -39,10 +37,12 @@ func runWhy(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	currentName, currentEmail, err := gitpkg.GetCurrentIdentity()
+	state, err := resolveCurrentProfileState(cfg)
 	if err != nil {
 		return fmt.Errorf("failed to read git identity: %w", err)
 	}
+	currentName := state.CurrentName
+	currentEmail := state.CurrentEmail
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -59,16 +59,7 @@ func runWhy(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	var matchedIdentity *config.Identity
-	for i := range cfg.Identities {
-		identity := &cfg.Identities[i]
-		matches, err := profile.Matches(identity)
-		if err == nil && matches {
-			matchedIdentity = identity
-			break
-		}
-	}
-
+	matchedIdentity := state.ExactMatch
 	managed := matchedIdentity != nil
 	if managed {
 		fmt.Printf("  %s (%s)\n", matchedIdentity.GitAuthorName(), matchedIdentity.Email)
