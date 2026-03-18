@@ -64,7 +64,7 @@ func VerifyUnpushed() (*VerifyResult, error) {
 	}
 
 	// Get recent commits (enough to cover all local-only ones)
-	commits, err := getCommits(len(localHashes) + 100)
+	commits, err := GetCommits(len(localHashes) + 100)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get commits: %w", err)
 	}

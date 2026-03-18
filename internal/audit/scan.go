@@ -39,10 +39,10 @@ type Result struct {
 	IsPushed      bool // true = pushed to remote, false = local-only
 }
 
-// getCommits retrieves commits from git log
-// If limit > 0, limits the number of commits returned
-// Returns empty slice with nil error for empty repos
-func getCommits(limit int) ([]Commit, error) {
+// GetCommits retrieves commits from git log.
+// If limit > 0, limits the number of commits returned.
+// Returns empty slice with nil error for empty repos.
+func GetCommits(limit int) ([]Commit, error) {
 	// Build git log command with custom format
 	// Format: <<<COMMIT>>>hash|||name|||email|||date|||subject
 	formatArg := fmt.Sprintf("--format=%s%%H%s%%an%s%%ae%s%%ai%s%%s",
@@ -226,7 +226,7 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 	}
 
 	// Get commits
-	commits, err := getCommits(limit)
+	commits, err := GetCommits(limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get commits: %w", err)
 	}

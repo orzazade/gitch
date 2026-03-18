@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func Test_getCommits_WithCommits(t *testing.T) {
+func Test_GetCommits_WithCommits(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
 
@@ -24,9 +24,9 @@ func Test_getCommits_WithCommits(t *testing.T) {
 		}
 	}
 
-	commits, err := getCommits(0)
+	commits, err := GetCommits(0)
 	if err != nil {
-		t.Fatalf("getCommits failed: %v", err)
+		t.Fatalf("GetCommits failed: %v", err)
 	}
 
 	if len(commits) != 2 {
@@ -40,7 +40,7 @@ func Test_getCommits_WithCommits(t *testing.T) {
 	}
 }
 
-func Test_getCommits_WithLimit(t *testing.T) {
+func Test_GetCommits_WithLimit(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
 
@@ -60,9 +60,9 @@ func Test_getCommits_WithLimit(t *testing.T) {
 		}
 	}
 
-	commits, err := getCommits(2)
+	commits, err := GetCommits(2)
 	if err != nil {
-		t.Fatalf("getCommits failed: %v", err)
+		t.Fatalf("GetCommits failed: %v", err)
 	}
 
 	if len(commits) != 2 {
@@ -138,16 +138,16 @@ func Test_getLocalOnlyHashes_NoUpstream(t *testing.T) {
 	}
 }
 
-func Test_getCommits_NotAGitRepo(t *testing.T) {
+func Test_GetCommits_NotAGitRepo(t *testing.T) {
 	t.Chdir(t.TempDir())
 
-	_, err := getCommits(0)
+	_, err := GetCommits(0)
 	if err == nil {
 		t.Fatal("expected error when not in a git repo")
 	}
 }
 
-func Test_getCommits_EmptyRepo(t *testing.T) {
+func Test_GetCommits_EmptyRepo(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
 
@@ -157,9 +157,9 @@ func Test_getCommits_EmptyRepo(t *testing.T) {
 		t.Fatalf("git init failed: %v", err)
 	}
 
-	commits, err := getCommits(0)
+	commits, err := GetCommits(0)
 	if err != nil {
-		t.Fatalf("getCommits should handle empty repo: %v", err)
+		t.Fatalf("GetCommits should handle empty repo: %v", err)
 	}
 
 	if len(commits) != 0 {
