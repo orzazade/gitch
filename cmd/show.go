@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -39,22 +38,22 @@ func init() {
 }
 
 type showOutput struct {
-	Name       string       `json:"name"`
-	GitName    string       `json:"git_name"`
-	Email      string       `json:"email"`
-	IsDefault  bool         `json:"is_default"`
-	IsActive   bool         `json:"is_active"`
-	HookMode   string       `json:"hook_mode"`
-	SSHKey     *showSSHKey  `json:"ssh_key,omitempty"`
-	GPGKey     *showGPGKey  `json:"gpg_key,omitempty"`
-	Rules      []showRule   `json:"rules"`
+	Name      string      `json:"name"`
+	GitName   string      `json:"git_name"`
+	Email     string      `json:"email"`
+	IsDefault bool        `json:"is_default"`
+	IsActive  bool        `json:"is_active"`
+	HookMode  string      `json:"hook_mode"`
+	SSHKey    *showSSHKey `json:"ssh_key,omitempty"`
+	GPGKey    *showGPGKey `json:"gpg_key,omitempty"`
+	Rules     []showRule  `json:"rules"`
 }
 
 type showSSHKey struct {
-	Path          string `json:"path"`
-	Exists        bool   `json:"exists"`
-	Fingerprint   string `json:"fingerprint,omitempty"`
-	AgentLoaded   bool   `json:"agent_loaded"`
+	Path        string `json:"path"`
+	Exists      bool   `json:"exists"`
+	Fingerprint string `json:"fingerprint,omitempty"`
+	AgentLoaded bool   `json:"agent_loaded"`
 }
 
 type showGPGKey struct {
@@ -63,8 +62,8 @@ type showGPGKey struct {
 }
 
 type showRule struct {
-	Type     string `json:"type"`
-	Pattern  string `json:"pattern"`
+	Type    string `json:"type"`
+	Pattern string `json:"pattern"`
 }
 
 func runShow(cmd *cobra.Command, args []string) error {
@@ -171,12 +170,7 @@ func printShowJSON(output showOutput) error {
 	if output.Rules == nil {
 		output.Rules = []showRule{}
 	}
-	data, err := json.MarshalIndent(output, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal JSON: %w", err)
-	}
-	fmt.Println(string(data))
-	return nil
+	return printJSON(output)
 }
 
 func printShowHuman(output showOutput) {

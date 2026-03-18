@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -81,12 +80,7 @@ func runList(cmd *cobra.Command, args []string) error {
 				IsDefault:  strings.EqualFold(id.Name, cfg.Default),
 			}
 		}
-		out, err := json.MarshalIndent(items, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal JSON: %w", err)
-		}
-		fmt.Println(string(out))
-		return nil
+		return printJSON(items)
 	}
 
 	// Render and print identity list

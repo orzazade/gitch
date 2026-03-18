@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -11,6 +12,16 @@ import (
 	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/ui"
 )
+
+// printJSON marshals v as indented JSON and prints it to stdout.
+func printJSON(v any) error {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	fmt.Println(string(data))
+	return nil
+}
 
 type currentProfileState struct {
 	CurrentName  string

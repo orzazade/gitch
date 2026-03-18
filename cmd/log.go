@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -134,12 +133,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 	}
 
 	if logJSON {
-		jsonBytes, err := json.MarshalIndent(entries, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal JSON: %w", err)
-		}
-		fmt.Println(string(jsonBytes))
-		return nil
+		return printJSON(entries)
 	}
 
 	// Print header with rule context

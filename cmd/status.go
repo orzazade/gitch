@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -83,12 +82,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		if statusJSON {
 			// Output empty JSON for no identity case
 			output := statusOutput{}
-			jsonBytes, err := json.MarshalIndent(output, "", "  ")
-			if err != nil {
-				return fmt.Errorf("failed to marshal JSON: %w", err)
-			}
-			fmt.Println(string(jsonBytes))
-			return nil
+			return printJSON(output)
 		}
 		fmt.Println("No active identity. Use 'gitch use <name>' to set one.")
 		return nil
@@ -121,12 +115,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			output.Name = name
 			output.GitName = name
 		}
-		jsonBytes, err := json.MarshalIndent(output, "", "  ")
-		if err != nil {
-			return fmt.Errorf("failed to marshal JSON: %w", err)
-		}
-		fmt.Println(string(jsonBytes))
-		return nil
+		return printJSON(output)
 	}
 
 	// Format output
