@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"slices"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
@@ -90,10 +91,7 @@ func IsKeyLoadedInAgent(keyPath string) bool {
 	}
 
 	target := ssh.FingerprintSHA256(pubKey)
-	for _, k := range keys {
-		if ssh.FingerprintSHA256(k) == target {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(keys, func(k *agent.Key) bool {
+		return ssh.FingerprintSHA256(k) == target
+	})
 }
