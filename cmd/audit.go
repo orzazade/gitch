@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/orzazade/gitch/internal/audit"
+	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -50,7 +51,7 @@ func init() {
 
 func runAudit(cmd *cobra.Command, args []string) error {
 	// Check if we're in a git repo
-	if !audit.IsGitRepo() {
+	if !git.IsGitRepository() {
 		return errors.New("not in a git repository")
 	}
 

@@ -278,24 +278,6 @@ func TestResult_CaseInsensitive(t *testing.T) {
 	}
 }
 
-// TestIsGitRepo_InRepo tests IsGitRepo returns true inside a git repo
-func TestIsGitRepo_InRepo(t *testing.T) {
-	// The test runs inside the gitch repo, so IsGitRepo should return true
-	if !IsGitRepo() {
-		t.Error("expected IsGitRepo() to return true inside git repo")
-	}
-}
-
-// TestIsGitRepo_NotInRepo tests IsGitRepo returns false outside a git repo
-func TestIsGitRepo_NotInRepo(t *testing.T) {
-	// t.TempDir creates an isolated directory; t.Chdir auto-restores cwd
-	t.Chdir(t.TempDir())
-
-	// IsGitRepo should return false in a non-git directory
-	if IsGitRepo() {
-		t.Error("expected IsGitRepo() to return false outside git repo")
-	}
-}
 
 // TestCommit_ZeroValue tests that zero-value Commit has empty fields
 func TestCommit_ZeroValue(t *testing.T) {
