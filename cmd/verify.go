@@ -83,7 +83,7 @@ func runVerify(cmd *cobra.Command, args []string) error {
 	for _, r := range result.Mismatches {
 		subject := truncateSubject(r.Commit.Subject, 50)
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
-			r.Commit.Hash[:8],
+			shortHash(r.Commit.Hash),
 			ui.ErrorStyle.Render(r.Commit.AuthorEmail),
 			r.Commit.Date.Format("2006-01-02"),
 			subject)

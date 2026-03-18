@@ -92,6 +92,14 @@ func resolveApplyScope(forceLocal, forceGlobal bool) (gitpkg.Scope, error) {
 	return defaultApplyScope(), nil
 }
 
+// shortHash returns the first 8 characters of a commit hash, or the full hash if shorter.
+func shortHash(hash string) string {
+	if len(hash) > 8 {
+		return hash[:8]
+	}
+	return hash
+}
+
 // truncateSubject shortens a commit subject to maxLen characters, appending "..." if truncated.
 func truncateSubject(subject string, maxLen int) string {
 	if len(subject) <= maxLen {

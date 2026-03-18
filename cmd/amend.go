@@ -201,10 +201,7 @@ func printAmendResult(out amendOutput) error {
 
 	switch out.Action {
 	case "amended":
-		hash := out.CommitHash
-		if len(hash) > 8 {
-			hash = hash[:8]
-		}
+		hash := shortHash(out.CommitHash)
 		fmt.Printf("%s Amended commit %s\n",
 			ui.SuccessStyle.Render("OK"),
 			hash)

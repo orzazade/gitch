@@ -102,7 +102,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 	entries := make([]logEntry, 0, len(commits))
 	for _, c := range commits {
 		entry := logEntry{
-			Hash:    c.Hash[:8],
+			Hash:    shortHash(c.Hash),
 			Date:    c.Date.Format("2006-01-02"),
 			Email:   c.AuthorEmail,
 			Subject: c.Subject,

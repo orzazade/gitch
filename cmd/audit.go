@@ -117,7 +117,7 @@ func printAuditResults(result *audit.ScanResult) error {
 
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			status,
-			r.Commit.Hash[:8],
+			shortHash(r.Commit.Hash),
 			r.Commit.AuthorEmail,
 			r.Commit.Date.Format("2006-01-02"),
 			subject)
