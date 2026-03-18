@@ -18,12 +18,12 @@ func TestClosestIdentityName(t *testing.T) {
 		input string
 		want  string
 	}{
-		{"wrk", "work"},       // 1 deletion
-		{"woork", "work"},     // 1 insertion
+		{"wrk", "work"},         // 1 deletion
+		{"woork", "work"},       // 1 insertion
 		{"prsonal", "personal"}, // 1 substitution
-		{"os", "oss"},         // 1 insertion
-		{"xyz123", ""},        // too distant — no suggestion
-		{"work", "work"},      // exact match via distance 0
+		{"os", "oss"},           // 1 insertion
+		{"xyz123", ""},          // too distant — no suggestion
+		{"work", "work"},        // exact match via distance 0
 	}
 
 	for _, tt := range tests {

@@ -143,7 +143,6 @@ func formatStatus(r audit.Result) string {
 	return ui.WarningStyle.Render("LOCAL")
 }
 
-
 func printSummary(result *audit.ScanResult) {
 	if result.MismatchCount == 0 {
 		return

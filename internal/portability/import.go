@@ -26,9 +26,9 @@ const (
 // Conflict represents a detected conflict between existing and imported configuration.
 type Conflict struct {
 	Type     ConflictType
-	Key      string      // identity name or rule pattern
-	Existing any // existing config.Identity or rules.Rule
-	Incoming any // incoming config.Identity or rules.Rule
+	Key      string // identity name or rule pattern
+	Existing any    // existing config.Identity or rules.Rule
+	Incoming any    // incoming config.Identity or rules.Rule
 }
 
 // ImportResult tracks what was added, updated, and skipped during merge.

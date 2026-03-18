@@ -949,4 +949,3 @@ func (m Model) renderHints() string {
 func (m Model) Result() *WizardResult {
 	return m.result
 }
-

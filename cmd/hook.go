@@ -216,4 +216,3 @@ func runHookMode(cmd *cobra.Command, args []string) error {
 	fmt.Print(result.ExpectedIdentity.GetHookMode())
 	return nil
 }
-
