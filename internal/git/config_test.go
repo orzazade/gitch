@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -316,5 +317,60 @@ func TestGetConfig_LocalScope(t *testing.T) {
 
 	if globalValue != "" {
 		t.Errorf("expected empty global value, got '%s'", globalValue)
+	}
+}
+
+func TestGitPath_HooksDir(t *testing.T) {
+	env := setupTestEnv(t)
+	defer env.cleanup(t)
+
+	origDir, _ := os.Getwd()
+	defer os.Chdir(origDir)
+	os.Chdir(env.dir)
+
+	path, err := GitPath("hooks/pre-commit")
+	if err != nil {
+		t.Fatalf("GitPath failed: %v", err)
+	}
+	if path == "" {
+		t.Error("expected non-empty path")
+	}
+	if !strings.Contains(path, "hooks") || !strings.Contains(path, "pre-commit") {
+		t.Errorf("expected path containing hooks/pre-commit, got %q", path)
+	}
+}
+
+func TestUnsetConfigScoped_Idempotent(t *testing.T) {
+	env := setupTestEnv(t)
+	defer env.cleanup(t)
+
+	// Unsetting a key that was never set should not error
+	err := UnsetConfigScoped("user.nonexistent", ScopeGlobal)
+	if err != nil {
+		t.Fatalf("UnsetConfigScoped should be idempotent: %v", err)
+	}
+}
+
+func TestUnsetConfigScoped_RemovesKey(t *testing.T) {
+	env := setupTestEnv(t)
+	defer env.cleanup(t)
+
+	// Set a value
+	if err := SetConfigScoped("user.name", "To Remove", ScopeGlobal); err != nil {
+		t.Fatalf("SetConfigScoped failed: %v", err)
+	}
+
+	// Unset it
+	if err := UnsetConfigScoped("user.name", ScopeGlobal); err != nil {
+		t.Fatalf("UnsetConfigScoped failed: %v", err)
+	}
+
+	// Verify it's gone
+	value, err := GetConfigScoped("user.name", ScopeGlobal)
+	if err != nil {
+		t.Fatalf("GetConfigScoped failed: %v", err)
+	}
+	if value != "" {
+		t.Errorf("expected empty value after unset, got %q", value)
 	}
 }
