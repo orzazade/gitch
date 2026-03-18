@@ -176,7 +176,7 @@ func New() Model {
 	)
 
 	// Detect Azure DevOps remote for key type default
-	isAzureDevOps := gitpkg.GetCurrentRemoteType()
+	isAzureDevOps := gitpkg.IsAzureDevOps()
 	sshKeyTypeDefault := sshKeyTypeEd25519
 	if isAzureDevOps {
 		sshKeyTypeDefault = sshKeyTypeRSA

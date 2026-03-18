@@ -135,7 +135,7 @@ func runAdd(cmd *cobra.Command, args []string) error {
 
 		// Determine key type
 		var keyType sshpkg.KeyType
-		isAzureDevOps := gitpkg.GetCurrentRemoteType()
+		isAzureDevOps := gitpkg.IsAzureDevOps()
 
 		if addKeyType != "" {
 			// User explicitly specified key type

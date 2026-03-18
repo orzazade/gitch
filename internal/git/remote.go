@@ -30,11 +30,10 @@ func isAzureDevOpsRemote(remoteURL string) bool {
 		strings.Contains(host, "visualstudio.com")
 }
 
-// GetCurrentRemoteType detects if the current git repository's origin remote
+// IsAzureDevOps reports whether the current git repository's origin remote
 // is an Azure DevOps repository.
-// Returns true if Azure DevOps is detected, false otherwise (including
-// when not in a git repo or no origin remote exists).
-func GetCurrentRemoteType() bool {
+// Returns false when not in a git repo or no origin remote exists.
+func IsAzureDevOps() bool {
 	url, err := GetConfigScoped("remote.origin.url", ScopeEffective)
 	if err != nil {
 		return false
