@@ -313,12 +313,9 @@ func HasEncryptedKeys(export *ExportConfig) bool {
 	if export.Encryption == nil {
 		return false
 	}
-	for _, encId := range export.EncryptedIdentities {
-		if encId.SSHKeyEncrypted != "" {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(export.EncryptedIdentities, func(e encryptedIdentity) bool {
+		return e.SSHKeyEncrypted != ""
+	})
 }
 
 // GetEncryptedKeyPaths returns paths of encrypted keys that would be written.
