@@ -52,7 +52,7 @@ func runRename(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to save config: %w", err)
 	}
 
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Renamed '%s' to '%s'", actualOldName, newName)))
+	fmt.Println(ui.SuccessStyle.Render("Renamed '" + actualOldName + "' to '" + newName + "'"))
 
 	// Show how many rules were updated
 	updatedRules := 0

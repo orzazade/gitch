@@ -30,7 +30,7 @@ func applyConfiguredIdentity(identity *config.Identity, scope gitpkg.Scope) erro
 }
 
 func printSwitchSuccess(identity *config.Identity) {
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Switched to '%s' (%s)", identity.Name, identity.Email)))
+	fmt.Println(ui.SuccessStyle.Render("Switched to '" + identity.Name + "' (" + identity.Email + ")"))
 	fmt.Printf("Git author: %s\n", identity.GitAuthorName())
 }
 

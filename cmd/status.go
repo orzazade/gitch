@@ -66,9 +66,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("failed to auto-switch: %w", err)
 		}
 		if result.Switched && !statusJSON {
-			fmt.Println(ui.SuccessStyle.Render(
-				fmt.Sprintf("Switched to '%s' identity", result.ToIdentity),
-			))
+			fmt.Println(ui.SuccessStyle.Render("Switched to '" + result.ToIdentity + "' identity"))
 			fmt.Println()
 		}
 	}
@@ -133,14 +131,14 @@ func runStatus(cmd *cobra.Command, args []string) error {
 
 	// Format output
 	if managed {
-		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Active: %s (%s)", managedIdentity.Name, email)))
+		fmt.Println(ui.SuccessStyle.Render("Active: " + managedIdentity.Name + " (" + email + ")"))
 		fmt.Printf("Git Author: %s\n", managedIdentity.GitAuthorName())
 		if managedIdentity.GPGKeyID != "" {
 			fmt.Printf("GPG Key: %s\n", managedIdentity.GPGKeyID)
 		}
 	} else if partialMatch {
 		fmt.Printf("Active: %s (%s) ", name, email)
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("[profile '%s' not fully applied]", emailMatchedIdentity.Name)))
+		fmt.Println(ui.WarningStyle.Render("[profile '" + emailMatchedIdentity.Name + "' not fully applied]"))
 		fmt.Printf("Expected Profile: %s\n", emailMatchedIdentity.Name)
 		fmt.Printf("Expected Git Author: %s\n", emailMatchedIdentity.GitAuthorName())
 	} else {
