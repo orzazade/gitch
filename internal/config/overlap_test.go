@@ -120,3 +120,31 @@ func TestFindOverlappingRules_DifferentTypes(t *testing.T) {
 		t.Errorf("expected 0 overlapping rules across different types, got %d", len(overlapping))
 	}
 }
+
+func TestFindOverlappingRules_RemoteOverlap(t *testing.T) {
+	cfg := &Config{
+		Rules: []rules.Rule{
+			{Type: rules.RemoteRule, Pattern: "github.com/company/*", Identity: "work"},
+		},
+	}
+	newRule := rules.Rule{Type: rules.RemoteRule, Pattern: "github.com/company/repo", Identity: "work-repo"}
+
+	overlapping := cfg.FindOverlappingRules(newRule)
+	if len(overlapping) != 1 {
+		t.Errorf("expected 1 overlapping remote rule, got %d", len(overlapping))
+	}
+}
+
+func TestFindOverlappingRules_RemoteNoOverlap(t *testing.T) {
+	cfg := &Config{
+		Rules: []rules.Rule{
+			{Type: rules.RemoteRule, Pattern: "github.com/org-a/*", Identity: "a"},
+		},
+	}
+	newRule := rules.Rule{Type: rules.RemoteRule, Pattern: "gitlab.com/org-b/*", Identity: "b"}
+
+	overlapping := cfg.FindOverlappingRules(newRule)
+	if len(overlapping) != 0 {
+		t.Errorf("expected 0 overlapping remote rules for different hosts, got %d", len(overlapping))
+	}
+}
