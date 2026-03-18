@@ -275,12 +275,9 @@ func ExtractEncryptedKeys(export *ExportConfig, passphrase []byte, overwriteKeys
 		}
 
 		// Check if file exists
-		if _, err := os.Stat(keyPath); err == nil {
-			// File exists, check if we should overwrite
-			if shouldOverwrite, ok := overwriteKeys[keyPath]; !ok || !shouldOverwrite {
-				result.SkippedKeys = append(result.SkippedKeys, keyPath)
-				continue
-			}
+		if _, err := os.Stat(keyPath); err == nil && !overwriteKeys[keyPath] {
+			result.SkippedKeys = append(result.SkippedKeys, keyPath)
+			continue
 		}
 
 		// Decrypt the key
