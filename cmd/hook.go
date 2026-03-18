@@ -172,14 +172,10 @@ func runHookValidate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if result.Match {
-		// Identity matches or no rule applies - exit silently
-		return nil
+	if !result.Match {
+		fmt.Println(result.FormatMismatch())
+		os.Exit(1)
 	}
-
-	// Identity mismatch - print message and exit with error
-	fmt.Println(result.FormatMismatch())
-	os.Exit(1)
 	return nil
 }
 
@@ -206,23 +202,18 @@ func runHookSwitch(cmd *cobra.Command, args []string) error {
 }
 
 func runHookMode(cmd *cobra.Command, args []string) error {
-	// Get validation result to find expected identity
 	result, err := hooks.Validate()
 	if err != nil {
-		// Default to warn on error
 		fmt.Print("warn")
 		return nil
 	}
 
-	// If no expected identity (no rule matched), default to warn
 	if result.ExpectedIdentity == nil {
 		fmt.Print("warn")
 		return nil
 	}
 
-	// Get the hook mode for this identity
-	mode := result.ExpectedIdentity.GetHookMode()
-	fmt.Print(mode)
+	fmt.Print(result.ExpectedIdentity.GetHookMode())
 	return nil
 }
 
