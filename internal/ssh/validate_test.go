@@ -12,37 +12,6 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func TestIsEncrypted_Encrypted(t *testing.T) {
-	// Generate an encrypted key
-	privKey, _, err := GenerateKeyPair("test@gitch", []byte("passphrase"))
-	if err != nil {
-		t.Fatalf("Failed to generate key: %v", err)
-	}
-
-	if !IsEncrypted(privKey) {
-		t.Error("IsEncrypted should return true for encrypted key")
-	}
-}
-
-func TestIsEncrypted_NotEncrypted(t *testing.T) {
-	// Generate an unencrypted key
-	privKey, _, err := GenerateKeyPair("test@gitch", nil)
-	if err != nil {
-		t.Fatalf("Failed to generate key: %v", err)
-	}
-
-	if IsEncrypted(privKey) {
-		t.Error("IsEncrypted should return false for unencrypted key")
-	}
-}
-
-func TestIsEncrypted_InvalidData(t *testing.T) {
-	// Invalid data should not be considered encrypted
-	if IsEncrypted([]byte("invalid data")) {
-		t.Error("IsEncrypted should return false for invalid data")
-	}
-}
-
 func TestValidateKeyPath_ValidKey(t *testing.T) {
 	tmpDir := t.TempDir()
 

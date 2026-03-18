@@ -56,18 +56,6 @@ func GetKeyType(pemData []byte) (KeyType, error) {
 	}
 }
 
-// IsEncrypted checks if the given PEM data represents an encrypted private key.
-func IsEncrypted(pemData []byte) bool {
-	_, err := ssh.ParseRawPrivateKey(pemData)
-	if err == nil {
-		return false // Key parsed without passphrase, not encrypted
-	}
-
-	// Check if the error is because passphrase is required
-	var passErr *ssh.PassphraseMissingError
-	return errors.As(err, &passErr)
-}
-
 // ValidateKeyPath validates an SSH key file at the given path.
 // Expands the path, checks the file exists, validates it's not a .pub file,
 // and verifies it's a supported key type (Ed25519 or RSA).
