@@ -3,6 +3,7 @@ package profile
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -164,6 +165,67 @@ func TestApply_ClearsSigningWhenNoGPG(t *testing.T) {
 	key, _ := git.GetConfigScoped("user.signingkey", git.ScopeLocal)
 	if key != "" {
 		t.Errorf("user.signingkey should be cleared, got %q", key)
+	}
+}
+
+func TestApply_SSHKeyNotFound(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	identity := &config.Identity{
+		Name:       "work",
+		GitName:    "Jane Doe",
+		Email:      "jane@work.com",
+		SSHKeyPath: "/nonexistent/ssh/key",
+	}
+
+	result, err := Apply(identity, git.ScopeLocal)
+	if err != nil {
+		t.Fatalf("Apply failed: %v", err)
+	}
+
+	// Should have a warning about SSH key not found
+	if len(result.Warnings) == 0 {
+		t.Error("expected warning about missing SSH key")
+	}
+
+	found := false
+	for _, w := range result.Warnings {
+		if strings.Contains(w, "SSH key not found") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected 'SSH key not found' warning, got: %v", result.Warnings)
+	}
+}
+
+func TestApply_ClearsSSHWhenNoKey(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// First apply with SSH key path
+	keyPath := filepath.Join(env.Dir, "id_test")
+	if err := os.WriteFile(keyPath, []byte("not-a-key"), 0600); err != nil {
+		t.Fatalf("failed to create key fixture: %v", err)
+	}
+	withSSH := &config.Identity{Name: "ssh-user", GitName: "SSH", Email: "ssh@e.com", SSHKeyPath: keyPath}
+	if _, err := Apply(withSSH, git.ScopeLocal); err != nil {
+		t.Fatalf("Apply with SSH failed: %v", err)
+	}
+
+	// Then apply without SSH — should clear core.sshCommand
+	noSSH := &config.Identity{Name: "plain", GitName: "Plain", Email: "plain@e.com"}
+	if _, err := Apply(noSSH, git.ScopeLocal); err != nil {
+		t.Fatalf("Apply without SSH failed: %v", err)
+	}
+
+	sshCmd, _ := git.GetConfigScoped("core.sshCommand", git.ScopeLocal)
+	if sshCmd != "" {
+		t.Errorf("core.sshCommand should be cleared, got %q", sshCmd)
 	}
 }
 
