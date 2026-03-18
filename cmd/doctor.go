@@ -76,14 +76,17 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 			checks = append(checks, doctorCheck{true, fmt.Sprintf("active identity: %s (%s)", identity.Name, identity.Email), ""})
 
 			if identity.SSHKeyPath != "" {
-				if _, statErr := os.Stat(identity.SSHKeyPath); statErr != nil {
+				keyPath, expandErr := sshpkg.ExpandPath(identity.SSHKeyPath)
+				if expandErr != nil {
+					checks = append(checks, doctorCheck{false, fmt.Sprintf("invalid SSH key path: %s", identity.SSHKeyPath), fmt.Sprintf("run: gitch edit %s --ssh-key <path>", identity.Name)})
+				} else if _, statErr := os.Stat(keyPath); statErr != nil {
 					checks = append(checks, doctorCheck{false, fmt.Sprintf("SSH key file missing: %s", identity.SSHKeyPath), fmt.Sprintf("run: gitch add to reconfigure '%s'", identity.Name)})
 				} else {
 					checks = append(checks, doctorCheck{true, fmt.Sprintf("SSH key exists: %s", identity.SSHKeyPath), ""})
 					if !sshpkg.IsAgentRunning() {
-						checks = append(checks, doctorCheck{false, "ssh-agent not running", "run: eval $(ssh-agent) && ssh-add " + identity.SSHKeyPath})
-					} else if !sshpkg.IsKeyLoadedInAgent(identity.SSHKeyPath) {
-						checks = append(checks, doctorCheck{false, "SSH key not loaded in agent", "run: ssh-add " + identity.SSHKeyPath})
+						checks = append(checks, doctorCheck{false, "ssh-agent not running", "run: eval $(ssh-agent) && ssh-add " + keyPath})
+					} else if !sshpkg.IsKeyLoadedInAgent(keyPath) {
+						checks = append(checks, doctorCheck{false, "SSH key not loaded in agent", "run: ssh-add " + keyPath})
 					} else {
 						checks = append(checks, doctorCheck{true, "SSH key loaded in agent", ""})
 					}
