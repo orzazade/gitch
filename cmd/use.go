@@ -195,7 +195,7 @@ func levenshtein(a, b string) int {
 			if ra[i-1] == rb[j-1] {
 				cost = 0
 			}
-			val := min3(row[j]+1, prev+1, row[j-1]+cost)
+			val := min(row[j]+1, prev+1, row[j-1]+cost)
 			row[j-1] = prev
 			prev = val
 		}
@@ -204,15 +204,3 @@ func levenshtein(a, b string) int {
 	return row[lb]
 }
 
-func min3(a, b, c int) int {
-	if a < b {
-		if a < c {
-			return a
-		}
-		return c
-	}
-	if b < c {
-		return b
-	}
-	return c
-}
