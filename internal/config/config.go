@@ -193,10 +193,10 @@ func (c *Config) UpdateIdentity(name string, updates IdentityUpdates) (*Identity
 			return nil, err
 		}
 		// Check for duplicate email among other identities
-		for i, existing := range c.Identities {
-			if i != idx && strings.EqualFold(existing.Email, email) {
-				return nil, fmt.Errorf("identity with email %q already exists (%s)", email, existing.Name)
-			}
+		if dupIdx := slices.IndexFunc(c.Identities, func(id Identity) bool {
+			return strings.EqualFold(id.Email, email)
+		}); dupIdx != -1 && dupIdx != idx {
+			return nil, fmt.Errorf("identity with email %q already exists (%s)", email, c.Identities[dupIdx].Name)
 		}
 		id.Email = email
 	}
