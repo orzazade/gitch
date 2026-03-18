@@ -48,59 +48,16 @@ func getKeyInfo(keyID string) (*KeyInfo, error) {
 }
 
 // parseKeyInfo parses gpg --with-colons output to extract key information.
-// GnuPG colon format documentation: https://www.gnupg.org/documentation/manuals/gnupg/gpg-colon-formats.html
+// Delegates to parseMultipleKeys and returns the first key found.
 func parseKeyInfo(output string) (*KeyInfo, error) {
-	info := &KeyInfo{}
-	lines := strings.Split(output, "\n")
-
-	for _, line := range lines {
-		fields := strings.Split(line, ":")
-		if len(fields) < 10 {
-			continue
-		}
-
-		switch fields[0] {
-		case "sec":
-			// Secret key record
-			// Field 3: key length
-			// Field 4: algorithm (1=RSA, 16=Elgamal, 17=DSA, 18=ECDH, 19=ECDSA, 22=EdDSA)
-			// Field 5: key ID (long format)
-			// Field 6: creation date (Unix timestamp)
-			// Field 7: expiration date (Unix timestamp, empty if no expiry)
-			info.ID = fields[4]
-			info.Algorithm = parseAlgorithm(fields[3])
-
-			if t, err := parseUnixTimestamp(fields[5]); err == nil {
-				info.Created = t
-			}
-
-			if t, err := parseUnixTimestamp(fields[6]); err == nil {
-				info.Expires = &t
-			}
-
-		case "fpr":
-			// Fingerprint record
-			// Field 10: fingerprint (40 hex chars)
-			if len(fields) > 9 && fields[9] != "" {
-				info.Fingerprint = fields[9]
-			}
-
-		case "uid":
-			// User ID record
-			// Field 10: user ID string (Name <email>)
-			if len(fields) > 9 && info.Email == "" {
-				name, email := parseUID(fields[9])
-				info.Name = name
-				info.Email = email
-			}
-		}
+	keys, err := parseMultipleKeys(output)
+	if err != nil {
+		return nil, err
 	}
-
-	if info.ID == "" {
+	if len(keys) == 0 {
 		return nil, errors.New("failed to parse GPG key information")
 	}
-
-	return info, nil
+	return &keys[0], nil
 }
 
 // parseAlgorithm converts gpg algorithm number to human-readable string.
