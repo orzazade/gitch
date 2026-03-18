@@ -27,31 +27,15 @@ func TestIsAgentRunning(t *testing.T) {
 }
 
 func TestIsAgentRunning_NoSocket(t *testing.T) {
-	// Save and clear the socket
-	original := os.Getenv("SSH_AUTH_SOCK")
-	os.Unsetenv("SSH_AUTH_SOCK")
-	defer func() {
-		if original != "" {
-			os.Setenv("SSH_AUTH_SOCK", original)
-		}
-	}()
+	t.Setenv("SSH_AUTH_SOCK", "")
 
 	if IsAgentRunning() {
-		t.Error("IsAgentRunning() returned true when SSH_AUTH_SOCK is unset")
+		t.Error("IsAgentRunning() returned true when SSH_AUTH_SOCK is empty")
 	}
 }
 
 func TestIsAgentRunning_InvalidSocket(t *testing.T) {
-	// Save and set an invalid socket
-	original := os.Getenv("SSH_AUTH_SOCK")
-	os.Setenv("SSH_AUTH_SOCK", "/nonexistent/path/to/socket")
-	defer func() {
-		if original != "" {
-			os.Setenv("SSH_AUTH_SOCK", original)
-		} else {
-			os.Unsetenv("SSH_AUTH_SOCK")
-		}
-	}()
+	t.Setenv("SSH_AUTH_SOCK", "/nonexistent/path/to/socket")
 
 	if IsAgentRunning() {
 		t.Error("IsAgentRunning() returned true for invalid socket path")
@@ -59,14 +43,7 @@ func TestIsAgentRunning_InvalidSocket(t *testing.T) {
 }
 
 func TestAddKeyToAgent_NoAgent(t *testing.T) {
-	// Save and clear the socket
-	original := os.Getenv("SSH_AUTH_SOCK")
-	os.Unsetenv("SSH_AUTH_SOCK")
-	defer func() {
-		if original != "" {
-			os.Setenv("SSH_AUTH_SOCK", original)
-		}
-	}()
+	t.Setenv("SSH_AUTH_SOCK", "")
 
 	err := AddKeyToAgent("/some/key/path")
 	if err == nil {
@@ -80,14 +57,7 @@ func TestAddKeyToAgent_NoAgent(t *testing.T) {
 }
 
 func TestAddKeyToAgentWithPassphrase_NoAgent(t *testing.T) {
-	// Save and clear the socket
-	original := os.Getenv("SSH_AUTH_SOCK")
-	os.Unsetenv("SSH_AUTH_SOCK")
-	defer func() {
-		if original != "" {
-			os.Setenv("SSH_AUTH_SOCK", original)
-		}
-	}()
+	t.Setenv("SSH_AUTH_SOCK", "")
 
 	err := AddKeyToAgentWithPassphrase("/some/key/path", nil)
 	if err == nil {
