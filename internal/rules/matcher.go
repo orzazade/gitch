@@ -17,15 +17,23 @@ func matchDirectory(pattern, cwd string) (bool, error) {
 	return doublestar.PathMatch(expandedPattern, expandedCwd)
 }
 
-func normalizeDirectoryPattern(pattern string) string {
-	expanded := filepath.Clean(expandTilde(pattern))
+// expandAndAbs expands tilde, cleans, and resolves the absolute path.
+// Returns "." unchanged. Shared by pattern and path normalization.
+func expandAndAbs(s string) string {
+	expanded := filepath.Clean(expandTilde(s))
 	if expanded == "." {
 		return expanded
 	}
+	if abs, err := filepath.Abs(expanded); err == nil {
+		return abs
+	}
+	return expanded
+}
 
-	absPattern, err := filepath.Abs(expanded)
-	if err == nil {
-		expanded = absPattern
+func normalizeDirectoryPattern(pattern string) string {
+	expanded := expandAndAbs(pattern)
+	if expanded == "." {
+		return expanded
 	}
 
 	prefix, suffix := splitStaticPrefix(expanded)
@@ -46,14 +54,9 @@ func normalizeDirectoryPattern(pattern string) string {
 }
 
 func normalizeDirectoryPath(path string) string {
-	expanded := filepath.Clean(expandTilde(path))
+	expanded := expandAndAbs(path)
 	if expanded == "." {
 		return expanded
-	}
-
-	absPath, err := filepath.Abs(expanded)
-	if err == nil {
-		expanded = absPath
 	}
 
 	resolved, err := filepath.EvalSymlinks(expanded)
