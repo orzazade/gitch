@@ -153,14 +153,11 @@ func Fix(scanResult *ScanResult) error {
 	}
 
 	// Step 6: Create backup (AUDIT-05)
-	// Get repo name for backup path
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	output, err := cmd.Output()
+	root, err := repoRoot()
 	if err != nil {
 		return fmt.Errorf("failed to get repository root: %w", err)
 	}
-	repoRoot := strings.TrimSpace(string(output))
-	backupPath := filepath.Join(os.TempDir(), fmt.Sprintf("%s-backup-%s", filepath.Base(repoRoot), time.Now().Format("20060102-150405")))
+	backupPath := filepath.Join(os.TempDir(), fmt.Sprintf("%s-backup-%s", filepath.Base(root), time.Now().Format("20060102-150405")))
 
 	fmt.Printf("\nCreating backup at: %s\n", backupPath)
 	if err := createMirrorBackup(backupPath); err != nil {
