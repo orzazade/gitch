@@ -274,10 +274,10 @@ func TestSaveAndLoad(t *testing.T) {
 	}
 
 	// Use yaml directly for test
-	import_yaml_test(t, original, configPath)
+	importYAMLForTest(t, original, configPath)
 
 	// Load from the temp path
-	loaded := load_yaml_test(t, configPath)
+	loaded := loadYAMLForTest(t, configPath)
 
 	// Verify loaded config matches original
 	if loaded.Default != original.Default {
@@ -303,7 +303,7 @@ func TestSaveAndLoad(t *testing.T) {
 }
 
 // Helper to save config to a specific path for testing
-func import_yaml_test(t *testing.T, cfg *Config, path string) {
+func importYAMLForTest(t *testing.T, cfg *Config, path string) {
 	t.Helper()
 	// Use gopkg.in/yaml.v3 directly
 	data := []byte(`default: ` + cfg.Default + `
@@ -320,7 +320,7 @@ identities:
 }
 
 // Helper to load config from a specific path for testing
-func load_yaml_test(t *testing.T, path string) *Config {
+func loadYAMLForTest(t *testing.T, path string) *Config {
 	t.Helper()
 	data, err := os.ReadFile(path)
 	if err != nil {
