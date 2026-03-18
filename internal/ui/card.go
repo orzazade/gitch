@@ -28,7 +28,7 @@ func buildIndicators(hasSSHKey, hasGPGKey bool) string {
 // If hasSSHKey or hasGPGKey: shows indicators on a third line.
 func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey, hasGPGKey bool) string {
 	var prefix string
-	var style = CardStyle
+	style := CardStyle
 
 	if isActive {
 		prefix = CheckmarkStyle.Render("✓ ")
