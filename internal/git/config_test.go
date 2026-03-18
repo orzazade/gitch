@@ -42,13 +42,8 @@ func setupTestEnv(t *testing.T) *testGitEnv {
 	return &testGitEnv{dir: dir}
 }
 
-// cleanup is a no-op retained for call-site compatibility.
-// All cleanup is handled automatically by t.TempDir() and t.Setenv().
-func (e *testGitEnv) cleanup(t *testing.T) {}
-
 func TestGetConfig_ExistingKey(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Set a value first
 	if err := SetConfigScoped("user.name", "Test User", ScopeGlobal); err != nil {
@@ -67,8 +62,7 @@ func TestGetConfig_ExistingKey(t *testing.T) {
 }
 
 func TestGetConfig_MissingKey(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Read a key that doesn't exist
 	value, err := GetConfigScoped("user.nonexistent", ScopeGlobal)
@@ -82,8 +76,7 @@ func TestGetConfig_MissingKey(t *testing.T) {
 }
 
 func TestSetConfig_Success(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Set a value
 	if err := SetConfigScoped("user.email", "test@example.com", ScopeGlobal); err != nil {
@@ -102,8 +95,7 @@ func TestSetConfig_Success(t *testing.T) {
 }
 
 func TestGetCurrentIdentity_BothSet(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Set both values
 	if err := SetConfigScoped("user.name", "Jane Doe", ScopeGlobal); err != nil {
@@ -128,8 +120,7 @@ func TestGetCurrentIdentity_BothSet(t *testing.T) {
 }
 
 func TestGetCurrentIdentity_PartiallySet(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Set only name (email will be missing)
 	if err := SetConfigScoped("user.name", "Partial User", ScopeGlobal); err != nil {
@@ -151,8 +142,7 @@ func TestGetCurrentIdentity_PartiallySet(t *testing.T) {
 }
 
 func TestGetCurrentIdentity_NoneSet(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Get identity with nothing set
 	name, email, err := GetCurrentIdentity()
@@ -170,8 +160,6 @@ func TestGetCurrentIdentity_NoneSet(t *testing.T) {
 
 func TestGetCurrentIdentity_EffectivePrefersLocal(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
-
 	t.Chdir(env.dir)
 
 	if err := SetConfigScoped("user.name", "Global User", ScopeGlobal); err != nil {
@@ -200,8 +188,7 @@ func TestGetCurrentIdentity_EffectivePrefersLocal(t *testing.T) {
 }
 
 func TestApplyIdentity_Success(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Apply identity
 	if err := ApplyIdentityScoped("Alice Smith", "alice@example.com", ScopeGlobal); err != nil {
@@ -227,8 +214,7 @@ func TestApplyIdentity_Success(t *testing.T) {
 }
 
 func TestApplyIdentity_VerifyPersistence(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Apply identity
 	if err := ApplyIdentityScoped("Bob Jones", "bob@example.com", ScopeGlobal); err != nil {
@@ -251,9 +237,6 @@ func TestApplyIdentity_VerifyPersistence(t *testing.T) {
 
 func TestGetConfig_LocalScope(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
-
-	// Change to temp directory for local config operations
 	t.Chdir(env.dir)
 
 	// Set local config (not global)
@@ -284,8 +267,6 @@ func TestGetConfig_LocalScope(t *testing.T) {
 
 func TestGitPath_HooksDir(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
-
 	t.Chdir(env.dir)
 
 	path, err := GitPath("hooks/pre-commit")
@@ -301,8 +282,7 @@ func TestGitPath_HooksDir(t *testing.T) {
 }
 
 func TestUnsetConfigScoped_Idempotent(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Unsetting a key that was never set should not error
 	err := UnsetConfigScoped("user.nonexistent", ScopeGlobal)
@@ -312,8 +292,7 @@ func TestUnsetConfigScoped_Idempotent(t *testing.T) {
 }
 
 func TestUnsetConfigScoped_RemovesKey(t *testing.T) {
-	env := setupTestEnv(t)
-	defer env.cleanup(t)
+	setupTestEnv(t)
 
 	// Set a value
 	if err := SetConfigScoped("user.name", "To Remove", ScopeGlobal); err != nil {
@@ -354,7 +333,6 @@ func TestSetConfigScoped_InvalidScope(t *testing.T) {
 
 func TestGetCurrentIdentityScoped_LocalScope(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
 	t.Chdir(env.dir)
 
 	if err := SetConfigScoped("user.name", "Local", ScopeLocal); err != nil {

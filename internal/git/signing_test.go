@@ -6,7 +6,6 @@ import (
 
 func TestApplySigningConfigScoped_SetsKeys(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
 	t.Chdir(env.dir)
 
 	keyID := "ABCD1234"
@@ -33,7 +32,6 @@ func TestApplySigningConfigScoped_SetsKeys(t *testing.T) {
 
 func TestClearSigningConfigScoped_RemovesKeys(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
 	t.Chdir(env.dir)
 
 	if err := ApplySigningConfigScoped("ABCD1234", ScopeLocal); err != nil {
@@ -54,7 +52,6 @@ func TestClearSigningConfigScoped_RemovesKeys(t *testing.T) {
 
 func TestClearSigningConfigScoped_Idempotent(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
 	t.Chdir(env.dir)
 
 	// Clear when nothing is set — should not error
@@ -65,7 +62,6 @@ func TestClearSigningConfigScoped_Idempotent(t *testing.T) {
 
 func TestIsGitRepository_InRepo(t *testing.T) {
 	env := setupTestEnv(t)
-	defer env.cleanup(t)
 	t.Chdir(env.dir)
 
 	if !IsGitRepository() {
