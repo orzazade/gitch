@@ -53,6 +53,27 @@ func TestDoctorCmd_NoIdentities(t *testing.T) {
 	}
 }
 
+func TestPrintDoctorResults_ReturnsWarningCount(t *testing.T) {
+	cases := []struct {
+		name   string
+		checks []doctorCheck
+		want   int
+	}{
+		{"all ok", []doctorCheck{{true, "a", ""}, {true, "b", ""}}, 0},
+		{"one warning", []doctorCheck{{true, "a", ""}, {false, "b", "fix b"}}, 1},
+		{"all warnings", []doctorCheck{{false, "a", ""}, {false, "b", ""}}, 2},
+		{"empty", []doctorCheck{}, 0},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := printDoctorResults(tc.checks)
+			if got != tc.want {
+				t.Errorf("printDoctorResults() = %d, want %d", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestDoctorCmd_ActiveIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	defer env.Cleanup(t)

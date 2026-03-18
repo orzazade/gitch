@@ -148,6 +148,7 @@ func printDoctorResults(checks []doctorCheck) int {
 	} else {
 		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("%d %s found.", warnings, nounPlural(warnings, "issue", "issues"))))
 	}
+	return warnings
 }
 
 func nounPlural(n int, singular, plural string) string {
