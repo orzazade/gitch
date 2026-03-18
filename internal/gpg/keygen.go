@@ -114,4 +114,3 @@ func ExportPublicKey(keyID string) (string, error) {
 
 	return string(output), nil
 }
-

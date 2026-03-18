@@ -58,4 +58,3 @@ func ClearCache() error {
 	}
 	return err
 }
-

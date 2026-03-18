@@ -37,7 +37,7 @@ Examples:
   gitch clone https://github.com/personal/dotfiles.git ~/repos/dotfiles
   gitch clone --hook git@github.com:company/project.git
   gitch clone git@github.com:company/project.git -- --depth 1`,
-	Args:               cobra.MinimumNArgs(1),
+	Args: cobra.MinimumNArgs(1),
 	RunE: runClone,
 }
 
