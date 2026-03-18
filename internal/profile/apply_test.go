@@ -111,6 +111,83 @@ func TestMatches_EffectiveScope(t *testing.T) {
 	}
 }
 
+func TestApply_MinimalIdentity(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Apply identity with no SSH key and no GPG key
+	identity := &config.Identity{
+		Name:    "minimal",
+		GitName: "Min User",
+		Email:   "min@example.com",
+	}
+
+	result, err := Apply(identity, git.ScopeLocal)
+	if err != nil {
+		t.Fatalf("Apply failed: %v", err)
+	}
+
+	// Should succeed with no warnings (no SSH key to load, no GPG to configure)
+	if len(result.Warnings) != 0 {
+		t.Errorf("expected 0 warnings for minimal identity, got %v", result.Warnings)
+	}
+
+	// Verify identity was applied
+	name, err := git.GetConfigScoped("user.name", git.ScopeLocal)
+	if err != nil {
+		t.Fatalf("failed to read user.name: %v", err)
+	}
+	if name != "Min User" {
+		t.Errorf("user.name = %q, want %q", name, "Min User")
+	}
+}
+
+func TestApply_ClearsSigningWhenNoGPG(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// First apply identity with GPG
+	withGPG := &config.Identity{Name: "signed", GitName: "Signer", Email: "s@e.com", GPGKeyID: "KEY123"}
+	if _, err := Apply(withGPG, git.ScopeLocal); err != nil {
+		t.Fatalf("Apply with GPG failed: %v", err)
+	}
+
+	// Then apply identity without GPG — should clear signing config
+	withoutGPG := &config.Identity{Name: "unsigned", GitName: "Plain", Email: "p@e.com"}
+	if _, err := Apply(withoutGPG, git.ScopeLocal); err != nil {
+		t.Fatalf("Apply without GPG failed: %v", err)
+	}
+
+	// Signing key should be cleared
+	key, _ := git.GetConfigScoped("user.signingkey", git.ScopeLocal)
+	if key != "" {
+		t.Errorf("user.signingkey should be cleared, got %q", key)
+	}
+}
+
+func TestMatchesAtScope_NameMismatch(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Apply one name
+	if err := git.ApplyIdentityScoped("Alice", "alice@e.com", git.ScopeLocal); err != nil {
+		t.Fatalf("ApplyIdentityScoped failed: %v", err)
+	}
+
+	// Check against identity with same email but different name
+	identity := &config.Identity{Name: "work", GitName: "Bob", Email: "alice@e.com"}
+	match, err := MatchesAtScope(identity, git.ScopeLocal)
+	if err != nil {
+		t.Fatalf("MatchesAtScope failed: %v", err)
+	}
+	if match {
+		t.Error("expected no match when git name differs")
+	}
+}
+
 func TestMatches_NoMatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	defer env.Cleanup(t)
