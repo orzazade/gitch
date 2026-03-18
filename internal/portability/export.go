@@ -28,12 +28,16 @@ func BuildExportConfig(cfg *config.Config) *ExportConfig {
 }
 
 // writeExportFile creates the file at expandedPath, writes header, then encodes export as YAML.
-func writeExportFile(expandedPath, header string, export *ExportConfig) error {
+func writeExportFile(expandedPath, header string, export *ExportConfig) (retErr error) {
 	file, err := os.Create(expandedPath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
 	}
-	defer file.Close()
+	defer func() {
+		if cerr := file.Close(); cerr != nil && retErr == nil {
+			retErr = fmt.Errorf("failed to close file: %w", cerr)
+		}
+	}()
 
 	if _, err := file.WriteString(header); err != nil {
 		return fmt.Errorf("failed to write header: %w", err)
