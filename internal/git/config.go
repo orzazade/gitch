@@ -81,17 +81,6 @@ func SetConfigScoped(key, value string, scope Scope) error {
 	return nil
 }
 
-// UnsetConfig removes a git config key.
-// If global is true, removes from --global scope; otherwise removes from local repo.
-// Returns nil if the key was not set (idempotent).
-func UnsetConfig(key string, global bool) error {
-	scope := ScopeLocal
-	if global {
-		scope = ScopeGlobal
-	}
-	return UnsetConfigScoped(key, scope)
-}
-
 // UnsetConfigScoped removes a git config key from the requested scope.
 func UnsetConfigScoped(key string, scope Scope) error {
 	args, err := scopeArgs(scope)
