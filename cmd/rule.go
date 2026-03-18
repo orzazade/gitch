@@ -209,7 +209,7 @@ func runRuleRemove(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print success
-	fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("Rule removed: %s", pattern)))
+	fmt.Println(ui.SuccessStyle.Render("Rule removed: " + pattern))
 
 	return nil
 }

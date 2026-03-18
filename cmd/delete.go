@@ -48,7 +48,7 @@ func runDelete(cmd *cobra.Command, args []string) error {
 	// Verify identity exists
 	identity, err := cfg.GetIdentity(name)
 	if err != nil {
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("Identity '%s' not found, nothing to delete.", name)))
+		fmt.Println(ui.WarningStyle.Render("Identity '" + name + "' not found, nothing to delete."))
 		return nil
 	}
 
