@@ -84,12 +84,7 @@ func runStatus(cmd *cobra.Command, args []string) error {
 	if name == "" && email == "" {
 		if statusJSON {
 			// Output empty JSON for no identity case
-			output := statusOutput{
-				Name:    "",
-				GitName: "",
-				Email:   "",
-				Managed: false,
-			}
+			output := statusOutput{}
 			jsonBytes, err := json.MarshalIndent(output, "", "  ")
 			if err != nil {
 				return fmt.Errorf("failed to marshal JSON: %w", err)
