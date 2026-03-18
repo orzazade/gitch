@@ -145,6 +145,17 @@ func TestIdentity_Validate(t *testing.T) {
 			wantErr:   true,
 			errSubstr: "empty",
 		},
+		{
+			name:      "whitespace-only git name",
+			identity:  Identity{Name: "work", GitName: "   ", Email: "user@example.com"},
+			wantErr:   true,
+			errSubstr: "git author name cannot be empty",
+		},
+		{
+			name:     "no git name is valid",
+			identity: Identity{Name: "work", Email: "user@example.com"},
+			wantErr:  false,
+		},
 	}
 
 	for _, tt := range tests {
