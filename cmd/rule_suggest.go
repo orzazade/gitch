@@ -108,10 +108,9 @@ func suggestFromExistingRules(cfg *config.Config, remote *suggestParsedRemote) *
 	// Prefer org-level matches
 	for _, c := range candidates {
 		if c.matchOrg {
-			pattern := remote.Host + "/" + remote.Org + "/*"
 			return &ruleSuggestion{
 				Identity: c.identity,
-				Pattern:  pattern,
+				Pattern:  buildSuggestPattern(remote),
 				RuleType: rules.RemoteRule,
 				Reason:   fmt.Sprintf("you already use '%s' for %s/%s repos", c.identity, remote.Host, remote.Org),
 			}
@@ -121,13 +120,9 @@ func suggestFromExistingRules(cfg *config.Config, remote *suggestParsedRemote) *
 	// Fall back to host-level match
 	if len(candidates) > 0 {
 		c := candidates[0]
-		pattern := remote.Host + "/" + remote.Org + "/*"
-		if remote.Org == "" {
-			pattern = remote.Host + "/*"
-		}
 		return &ruleSuggestion{
 			Identity: c.identity,
-			Pattern:  pattern,
+			Pattern:  buildSuggestPattern(remote),
 			RuleType: rules.RemoteRule,
 			Reason:   fmt.Sprintf("you use '%s' for other repos on %s", c.identity, remote.Host),
 		}
@@ -147,13 +142,9 @@ func suggestFromCurrentEmail(cfg *config.Config, remote *suggestParsedRemote, cu
 			continue
 		}
 
-		pattern := remote.Host + "/" + remote.Org + "/*"
-		if remote.Org == "" {
-			pattern = remote.Host + "/*"
-		}
 		return &ruleSuggestion{
 			Identity: id.Name,
-			Pattern:  pattern,
+			Pattern:  buildSuggestPattern(remote),
 			RuleType: rules.RemoteRule,
 			Reason:   fmt.Sprintf("current git email (%s) matches identity '%s'", currentEmail, id.Name),
 		}
@@ -167,6 +158,15 @@ type suggestParsedRemote struct {
 	Host string
 	Org  string
 	Repo string
+}
+
+// buildSuggestPattern builds a remote rule pattern from a parsed remote.
+// Returns "host/org/*" if org is set, or "host/*" otherwise.
+func buildSuggestPattern(remote *suggestParsedRemote) string {
+	if remote.Org == "" {
+		return remote.Host + "/*"
+	}
+	return remote.Host + "/" + remote.Org + "/*"
 }
 
 // parseRemoteForSuggest extracts host/org/repo from a remote URL for suggestions.
