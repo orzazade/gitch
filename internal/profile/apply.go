@@ -83,7 +83,7 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 		}
 		if _, err := os.Stat(keyPath); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				result.Warnings = append(result.Warnings, fmt.Sprintf("SSH key not found: %s", keyPath))
+				result.Warnings = append(result.Warnings, "SSH key not found: "+keyPath)
 			} else {
 				result.Warnings = append(result.Warnings, fmt.Sprintf("failed to access SSH key %s: %v", keyPath, err))
 			}

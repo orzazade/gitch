@@ -183,7 +183,7 @@ func MergeConfig(cfg *config.Config, export *ExportConfig, overwrite map[string]
 			result.UpdatedIdentities = append(result.UpdatedIdentities, incoming.Name)
 		} else {
 			// Skip this identity
-			result.Skipped = append(result.Skipped, fmt.Sprintf("identity:%s", incoming.Name))
+			result.Skipped = append(result.Skipped, "identity:"+incoming.Name)
 		}
 	}
 
@@ -213,7 +213,7 @@ func MergeConfig(cfg *config.Config, export *ExportConfig, overwrite map[string]
 			result.UpdatedRules = append(result.UpdatedRules, incoming.Pattern)
 		} else {
 			// Skip this rule
-			result.Skipped = append(result.Skipped, fmt.Sprintf("rule:%s", incoming.Pattern))
+			result.Skipped = append(result.Skipped, "rule:"+incoming.Pattern)
 		}
 	}
 

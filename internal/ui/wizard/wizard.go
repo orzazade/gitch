@@ -3,8 +3,8 @@ package wizard
 
 import (
 	"errors"
-	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/progress"
@@ -429,7 +429,7 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			// Check if key already exists and warn
 			keyPath := sshpkg.DefaultSSHKeyPath(strings.TrimSpace(m.nameInput.Value()))
 			if _, err := os.Stat(keyPath); err == nil {
-				m.warning = fmt.Sprintf("SSH key already exists at %s (will be overwritten)", keyPath)
+				m.warning = "SSH key already exists at " + keyPath + " (will be overwritten)"
 			}
 			// Continue to SSH key type step
 			m.step = stepSSHKeyType
@@ -576,7 +576,7 @@ func choiceToKeyType(choice int) sshpkg.KeyType {
 // startSSHKeyGeneration initiates SSH key generation
 func (m Model) startSSHKeyGeneration() (tea.Model, tea.Cmd) {
 	m.loading = true
-	m.loadingMessage = fmt.Sprintf("Generating %s SSH key...", choiceToKeyType(m.sshKeyTypeChoice).Label())
+	m.loadingMessage = "Generating " + choiceToKeyType(m.sshKeyTypeChoice).Label() + " SSH key..."
 
 	return m, tea.Batch(
 		m.spinner.Tick,
@@ -833,7 +833,7 @@ func (m Model) renderProgress() string {
 	percent := float64(displayStep) / float64(total)
 	progressBar := m.progress.ViewAs(percent)
 
-	stepText := ui.DimStyle.Render(fmt.Sprintf(" Step %d of %d", displayStep, total))
+	stepText := ui.DimStyle.Render(" Step " + strconv.Itoa(displayStep) + " of " + strconv.Itoa(total))
 
 	return progressBar + stepText
 }
