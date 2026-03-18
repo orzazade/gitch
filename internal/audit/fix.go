@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -134,7 +135,7 @@ func Fix(scanResult *ScanResult) error {
 	fmt.Printf("Will rewrite %d commit(s):\n", len(toFix))
 	fmt.Printf("  - %d local-only (safe)\n", localCount)
 	if pushedCount > 0 {
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("  - %d already pushed (will require force-push)", pushedCount)))
+		fmt.Println(ui.WarningStyle.Render("  - " + strconv.Itoa(pushedCount) + " already pushed (will require force-push)"))
 	}
 
 	// Step 4: GPG warning (AUDIT-07)
