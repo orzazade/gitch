@@ -79,6 +79,18 @@ func TestExpandPath_Empty(t *testing.T) {
 	}
 }
 
+func TestExpandPath_EnvVar(t *testing.T) {
+	t.Setenv("GITCH_TEST_DIR", "/opt/keys")
+
+	path, err := ExpandPath("$GITCH_TEST_DIR/mykey")
+	if err != nil {
+		t.Fatalf("ExpandPath failed: %v", err)
+	}
+	if path != "/opt/keys/mykey" {
+		t.Errorf("expected /opt/keys/mykey, got %q", path)
+	}
+}
+
 func TestExpandPath_AbsolutePath(t *testing.T) {
 	path, err := ExpandPath("/tmp/test")
 	if err != nil {
