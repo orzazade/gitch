@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -46,12 +47,12 @@ func runExec(cmd *cobra.Command, args []string) error {
 	// Find the command args after "--"
 	cmdArgs := cmd.ArgsLenAtDash()
 	if cmdArgs == -1 || cmdArgs >= len(args) {
-		return fmt.Errorf("usage: gitch exec <identity> -- <command> [args...]\n\nUse '--' to separate the identity name from the command to run.")
+		return errors.New("usage: gitch exec <identity> -- <command> [args...]\n\nUse '--' to separate the identity name from the command to run.")
 	}
 
 	subArgs := args[cmdArgs:]
 	if len(subArgs) == 0 {
-		return fmt.Errorf("no command specified after '--'")
+		return errors.New("no command specified after '--'")
 	}
 
 	// Load config and find identity
