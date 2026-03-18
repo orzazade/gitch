@@ -55,4 +55,3 @@ func TestAddKeyToAgent_NoAgent(t *testing.T) {
 		t.Errorf("AddKeyToAgent() error = %q, want %q", err.Error(), expected)
 	}
 }
-

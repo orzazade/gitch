@@ -97,4 +97,3 @@ func IsKeyLoadedInAgent(keyPath string) bool {
 	}
 	return false
 }
-
