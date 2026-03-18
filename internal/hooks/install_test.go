@@ -171,3 +171,71 @@ func TestInstallGlobal_RefusesOverwriteExistingHooksPath(t *testing.T) {
 		t.Fatal("expected InstallGlobal to refuse overwriting custom core.hooksPath")
 	}
 }
+
+func TestUninstallGlobal_AfterInstall(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Install first
+	if err := InstallGlobal(); err != nil {
+		t.Fatalf("InstallGlobal failed: %v", err)
+	}
+
+	// Uninstall
+	if err := UninstallGlobal(); err != nil {
+		t.Fatalf("UninstallGlobal failed: %v", err)
+	}
+
+	// Verify core.hooksPath is cleared
+	hooksPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	if err != nil {
+		t.Fatalf("failed to get core.hooksPath: %v", err)
+	}
+	if hooksPath != "" {
+		t.Errorf("core.hooksPath should be empty after uninstall, got %q", hooksPath)
+	}
+}
+
+func TestUninstallGlobal_NotInstalled(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Uninstall when nothing is installed — should not error
+	if err := UninstallGlobal(); err != nil {
+		t.Fatalf("UninstallGlobal should be safe when not installed: %v", err)
+	}
+}
+
+func TestIsInstalled_NotInstalled(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	installed, err := IsInstalled()
+	if err != nil {
+		t.Fatalf("IsInstalled failed: %v", err)
+	}
+	if installed {
+		t.Error("expected IsInstalled=false when not installed")
+	}
+}
+
+func TestIsInstalled_AfterInstall(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	if err := InstallGlobal(); err != nil {
+		t.Fatalf("InstallGlobal failed: %v", err)
+	}
+
+	installed, err := IsInstalled()
+	if err != nil {
+		t.Fatalf("IsInstalled failed: %v", err)
+	}
+	if !installed {
+		t.Error("expected IsInstalled=true after InstallGlobal")
+	}
+}
