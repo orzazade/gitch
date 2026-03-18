@@ -30,13 +30,13 @@ func Test_validateHookMode_Invalid(t *testing.T) {
 
 func TestGetHookMode_Default(t *testing.T) {
 	id := Identity{Name: "test", Email: "t@t.com"}
-	if got := id.GetHookMode(); got != HookModeWarn {
-		t.Errorf("GetHookMode() = %q, want %q", got, HookModeWarn)
+	if got := id.GetHookMode(); got != hookModeWarn {
+		t.Errorf("GetHookMode() = %q, want %q", got, hookModeWarn)
 	}
 }
 
 func TestGetHookMode_Explicit(t *testing.T) {
-	for _, mode := range []string{HookModeAllow, HookModeWarn, HookModeBlock} {
+	for _, mode := range []string{hookModeAllow, hookModeWarn, hookModeBlock} {
 		id := Identity{Name: "test", Email: "t@t.com", HookMode: mode}
 		if got := id.GetHookMode(); got != mode {
 			t.Errorf("GetHookMode() = %q, want %q", got, mode)

@@ -11,11 +11,11 @@ import (
 // maxNameLength is the maximum allowed length for an identity name
 const maxNameLength = 50
 
-// HookMode constants define how the pre-commit hook behaves for an identity
+// hookMode constants define how the pre-commit hook behaves for an identity.
 const (
-	HookModeAllow = "allow" // Always allow commits (no warning)
-	HookModeWarn  = "warn"  // Warn but allow commit (default)
-	HookModeBlock = "block" // Block commits until identity matches
+	hookModeAllow = "allow" // Always allow commits (no warning)
+	hookModeWarn  = "warn"  // Warn but allow commit (default)
+	hookModeBlock = "block" // Block commits until identity matches
 )
 
 // Identity represents a git identity with name and email
@@ -31,7 +31,7 @@ type Identity struct {
 // validateHookMode validates that the hook mode is a valid value
 func validateHookMode(mode string) error {
 	switch mode {
-	case HookModeAllow, HookModeWarn, HookModeBlock, "":
+	case hookModeAllow, hookModeWarn, hookModeBlock, "":
 		return nil
 	default:
 		return fmt.Errorf("invalid hook mode %q: must be one of: allow, warn, block", mode)
@@ -41,7 +41,7 @@ func validateHookMode(mode string) error {
 // GetHookMode returns the hook mode for the identity, defaulting to warn if not set
 func (i *Identity) GetHookMode() string {
 	if i.HookMode == "" {
-		return HookModeWarn
+		return hookModeWarn
 	}
 	return i.HookMode
 }
