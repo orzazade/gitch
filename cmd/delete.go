@@ -11,9 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	deleteYes bool
-)
+var deleteYes bool
 
 var deleteCmd = &cobra.Command{
 	Use:     "delete <identity-name>",

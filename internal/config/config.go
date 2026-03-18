@@ -238,13 +238,12 @@ func (c *Config) FindOverlappingRules(newRule rules.Rule) []rules.Rule {
 			continue
 		}
 
-		if newRule.Type == rules.DirectoryRule {
-			// For directory rules, check for prefix overlap
+		switch newRule.Type {
+		case rules.DirectoryRule:
 			if isDirectoryOverlap(existing.Pattern, newRule.Pattern) {
 				overlapping = append(overlapping, existing)
 			}
-		} else if newRule.Type == rules.RemoteRule {
-			// For remote rules, check for host/org overlap
+		case rules.RemoteRule:
 			if isRemoteOverlap(existing.Pattern, newRule.Pattern) {
 				overlapping = append(overlapping, existing)
 			}
