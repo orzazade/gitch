@@ -162,7 +162,7 @@ func ensureHookPathWritable(path string) error {
 }
 
 func writeManagedHook(path string) error {
-	if err := os.WriteFile(path, []byte(PreCommitScript), 0755); err != nil {
+	if err := os.WriteFile(path, []byte(preCommitScript), 0755); err != nil {
 		return fmt.Errorf("failed to write pre-commit hook: %w", err)
 	}
 	return nil

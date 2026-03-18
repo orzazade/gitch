@@ -9,7 +9,7 @@ import (
 func TestIsManagedHook_ManagedFile(t *testing.T) {
 	tmp := t.TempDir()
 	path := filepath.Join(tmp, "pre-commit")
-	if err := os.WriteFile(path, []byte(PreCommitScript), 0755); err != nil {
+	if err := os.WriteFile(path, []byte(preCommitScript), 0755); err != nil {
 		t.Fatalf("write failed: %v", err)
 	}
 
@@ -60,8 +60,8 @@ func TestWriteManagedHook_CreatesExecutableFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read written hook: %v", err)
 	}
-	if string(data) != PreCommitScript {
-		t.Error("written content does not match PreCommitScript")
+	if string(data) != preCommitScript {
+		t.Error("written content does not match preCommitScript")
 	}
 
 	info, err := os.Stat(path)
