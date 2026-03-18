@@ -137,10 +137,10 @@ func parseUID(uid string) (name, email string) {
 	uid = decodeUID(uid)
 
 	// Extract email from angle brackets
-	if start := strings.Index(uid, "<"); start != -1 {
-		if end := strings.Index(uid, ">"); end > start {
-			email = uid[start+1 : end]
-			name = strings.TrimSpace(uid[:start])
+	if before, after, ok := strings.Cut(uid, "<"); ok {
+		if emailPart, _, ok := strings.Cut(after, ">"); ok {
+			email = emailPart
+			name = strings.TrimSpace(before)
 		}
 	}
 
