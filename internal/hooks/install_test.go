@@ -111,6 +111,49 @@ func TestIsInstalledLocal_Installed(t *testing.T) {
 	}
 }
 
+func TestInstallGlobal_Success(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	if err := InstallGlobal(); err != nil {
+		t.Fatalf("InstallGlobal failed: %v", err)
+	}
+
+	// Verify core.hooksPath was set
+	hooksPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	if err != nil {
+		t.Fatalf("failed to get core.hooksPath: %v", err)
+	}
+	if hooksPath == "" {
+		t.Fatal("core.hooksPath should be set after InstallGlobal")
+	}
+
+	// Verify hook file exists
+	hookFile := filepath.Join(hooksPath, "pre-commit")
+	data, err := os.ReadFile(hookFile)
+	if err != nil {
+		t.Fatalf("failed to read hook file: %v", err)
+	}
+	if !strings.Contains(string(data), managedHookMarker) {
+		t.Error("global hook should contain managed marker")
+	}
+}
+
+func TestInstallGlobal_Idempotent(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Install twice — second call should succeed (our own hooks path)
+	if err := InstallGlobal(); err != nil {
+		t.Fatalf("first InstallGlobal failed: %v", err)
+	}
+	if err := InstallGlobal(); err != nil {
+		t.Fatalf("second InstallGlobal should be idempotent: %v", err)
+	}
+}
+
 func TestInstallGlobal_RefusesOverwriteExistingHooksPath(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	defer env.Cleanup(t)
