@@ -85,13 +85,13 @@ func suggestFromExistingRules(cfg *config.Config, remote *suggestParsedRemote) *
 			continue
 		}
 
-		parts := strings.SplitN(strings.ToLower(rule.Pattern), "/", 3)
-		if len(parts) < 2 {
+		ruleHost, rest, ok := strings.Cut(strings.ToLower(rule.Pattern), "/")
+		if !ok {
 			continue
 		}
 
-		ruleHost := parts[0]
-		ruleOrg := strings.TrimSuffix(parts[1], "/*")
+		ruleOrg, _, _ := strings.Cut(rest, "/")
+		ruleOrg = strings.TrimSuffix(ruleOrg, "/*")
 
 		if !strings.EqualFold(ruleHost, remote.Host) {
 			continue
