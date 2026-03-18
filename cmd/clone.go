@@ -108,14 +108,14 @@ func runClone(cmd *cobra.Command, args []string) error {
 	if matchedRule == nil {
 		fmt.Println(ui.DimStyle.Render("No matching identity rule for this repository."))
 		fmt.Println(ui.DimStyle.Render("Use 'gitch use <identity>' to set one, or add a rule with 'gitch rule add'."))
-		return maybeInstallHook(cloneDir)
+		return maybeInstallHook()
 	}
 
 	// Apply the matched identity
 	identity, err := cfg.GetIdentity(matchedRule.Identity)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: matched rule references unknown identity %q\n", matchedRule.Identity)
-		return maybeInstallHook(cloneDir)
+		return maybeInstallHook()
 	}
 
 	result, err := profile.Apply(identity, "local")
@@ -127,11 +127,12 @@ func runClone(cmd *cobra.Command, args []string) error {
 	printSwitchSuccess(identity)
 	fmt.Printf("Matched rule: %s %q\n", matchedRule.Type, matchedRule.Pattern)
 
-	return maybeInstallHook(cloneDir)
+	return maybeInstallHook()
 }
 
 // maybeInstallHook installs the pre-commit hook if --hook was passed.
-func maybeInstallHook(dir string) error {
+// Operates on the current working directory.
+func maybeInstallHook() error {
 	if !cloneHook {
 		return nil
 	}
