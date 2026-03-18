@@ -544,22 +544,3 @@ func TestValidatePattern(t *testing.T) {
 		})
 	}
 }
-
-func TestRuleHelpers(t *testing.T) {
-	dirRule := Rule{Type: DirectoryRule}
-	remoteRule := Rule{Type: RemoteRule}
-
-	if !dirRule.IsDirectory() {
-		t.Error("DirectoryRule.IsDirectory() should return true")
-	}
-	if dirRule.IsRemote() {
-		t.Error("DirectoryRule.IsRemote() should return false")
-	}
-
-	if remoteRule.IsDirectory() {
-		t.Error("RemoteRule.IsDirectory() should return false")
-	}
-	if !remoteRule.IsRemote() {
-		t.Error("RemoteRule.IsRemote() should return true")
-	}
-}

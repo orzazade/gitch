@@ -27,16 +27,6 @@ type Rule struct {
 	Identity string   `yaml:"identity"`
 }
 
-// IsDirectory returns true if this is a directory-based rule
-func (r Rule) IsDirectory() bool {
-	return r.Type == DirectoryRule
-}
-
-// IsRemote returns true if this is a remote-based rule
-func (r Rule) IsRemote() bool {
-	return r.Type == RemoteRule
-}
-
 // ValidatePattern validates the rule pattern
 // For directory rules, it expands tilde and validates with doublestar
 // For remote rules, it validates the pattern format
