@@ -7,7 +7,7 @@ import (
 	"github.com/orzazade/gitch/internal/rules"
 )
 
-func TestTestRulesForPath_BestMatchWins(t *testing.T) {
+func Test_testRulesForPath_BestMatchWins(t *testing.T) {
 	cfg := &config.Config{
 		Identities: []config.Identity{
 			{Name: "work", Email: "work@example.com"},
@@ -21,7 +21,7 @@ func TestTestRulesForPath_BestMatchWins(t *testing.T) {
 		},
 	}
 
-	result := TestRulesForPath(cfg, "/home/user/work/company/project", "")
+	result := testRulesForPath(cfg, "/home/user/work/company/project", "")
 
 	if len(result.Matches) != 2 {
 		t.Fatalf("expected 2 matching rules, got %d", len(result.Matches))
@@ -40,7 +40,7 @@ func TestTestRulesForPath_BestMatchWins(t *testing.T) {
 	}
 }
 
-func TestTestRulesForPath_NoMatchingRules(t *testing.T) {
+func Test_testRulesForPath_NoMatchingRules(t *testing.T) {
 	cfg := &config.Config{
 		Identities: []config.Identity{
 			{Name: "work", Email: "work@example.com"},
@@ -50,7 +50,7 @@ func TestTestRulesForPath_NoMatchingRules(t *testing.T) {
 		},
 	}
 
-	result := TestRulesForPath(cfg, "/opt/random/path", "")
+	result := testRulesForPath(cfg, "/opt/random/path", "")
 
 	if len(result.Matches) != 0 {
 		t.Fatalf("expected 0 matching rules, got %d", len(result.Matches))
@@ -61,7 +61,7 @@ func TestTestRulesForPath_NoMatchingRules(t *testing.T) {
 	}
 }
 
-func TestTestRulesForPath_RemoteRuleMatches(t *testing.T) {
+func Test_testRulesForPath_RemoteRuleMatches(t *testing.T) {
 	cfg := &config.Config{
 		Identities: []config.Identity{
 			{Name: "oss", Email: "oss@example.com"},
@@ -71,7 +71,7 @@ func TestTestRulesForPath_RemoteRuleMatches(t *testing.T) {
 		},
 	}
 
-	result := TestRulesForPath(cfg, "/tmp", "git@github.com:myorg/some-repo.git")
+	result := testRulesForPath(cfg, "/tmp", "git@github.com:myorg/some-repo.git")
 
 	if len(result.Matches) != 1 {
 		t.Fatalf("expected 1 matching rule, got %d", len(result.Matches))
@@ -82,7 +82,7 @@ func TestTestRulesForPath_RemoteRuleMatches(t *testing.T) {
 	}
 }
 
-func TestTestRulesForPath_MixedRulesSpecificityOrder(t *testing.T) {
+func Test_testRulesForPath_MixedRulesSpecificityOrder(t *testing.T) {
 	cfg := &config.Config{
 		Identities: []config.Identity{
 			{Name: "dir-work", Email: "dir@example.com"},
@@ -95,7 +95,7 @@ func TestTestRulesForPath_MixedRulesSpecificityOrder(t *testing.T) {
 	}
 
 	// Exact remote (score 80) should beat directory wildcard
-	result := TestRulesForPath(cfg, "/home/user/work/project", "git@github.com:company/specific-repo.git")
+	result := testRulesForPath(cfg, "/home/user/work/project", "git@github.com:company/specific-repo.git")
 
 	if len(result.Matches) != 2 {
 		t.Fatalf("expected 2 matching rules, got %d", len(result.Matches))

@@ -32,24 +32,24 @@ func init() {
 	ruleCmd.AddCommand(ruleTestCmd)
 }
 
-// RuleTestResult holds the result of testing rules against a path.
-type RuleTestResult struct {
+// ruleTestResult holds the result of testing rules against a path.
+type ruleTestResult struct {
 	Path      string
 	RemoteURL string
-	Matches   []RuleTestMatch
-	Best      *RuleTestMatch
+	Matches   []ruleTestMatch
+	Best      *ruleTestMatch
 }
 
-// RuleTestMatch holds a single matching rule and its specificity score.
-type RuleTestMatch struct {
+// ruleTestMatch holds a single matching rule and its specificity score.
+type ruleTestMatch struct {
 	Rule        rules.Rule
 	Specificity int
 	IsBest      bool
 }
 
-// TestRulesForPath finds all matching rules for the given path and remote URL.
-func TestRulesForPath(cfg *config.Config, path, remoteURL string) *RuleTestResult {
-	result := &RuleTestResult{
+// testRulesForPath finds all matching rules for the given path and remote URL.
+func testRulesForPath(cfg *config.Config, path, remoteURL string) *ruleTestResult {
+	result := &ruleTestResult{
 		Path:      path,
 		RemoteURL: remoteURL,
 	}
@@ -62,7 +62,7 @@ func TestRulesForPath(cfg *config.Config, path, remoteURL string) *RuleTestResul
 			continue
 		}
 		score := rule.Specificity()
-		match := RuleTestMatch{
+		match := ruleTestMatch{
 			Rule:        rule,
 			Specificity: score,
 		}
@@ -111,7 +111,7 @@ func runRuleTest(cmd *cobra.Command, args []string) error {
 	// Try to get remote URL (ignore errors — not every directory is a git repo)
 	remoteURL, _ := rules.GetGitRemoteURL()
 
-	result := TestRulesForPath(cfg, targetPath, remoteURL)
+	result := testRulesForPath(cfg, targetPath, remoteURL)
 
 	// Display results
 	fmt.Printf("Testing path: %s\n", targetPath)
