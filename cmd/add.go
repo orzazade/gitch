@@ -121,78 +121,11 @@ func runAdd(cmd *cobra.Command, args []string) error {
 
 	// Handle SSH key generation
 	if addGenerateSSH {
-		keyPath := sshpkg.DefaultSSHKeyPath(addName)
-		if keyPath == "" {
-			return errors.New("failed to determine SSH key path")
-		}
-
-		// Check if key already exists
-		if _, err := os.Stat(keyPath); err == nil {
-			if !addForce {
-				return fmt.Errorf("SSH key already exists at %s; use --force to overwrite", keyPath)
-			}
-		}
-
-		// Determine key type
-		var keyType sshpkg.KeyType
-		isAzureDevOps := gitpkg.IsAzureDevOps()
-
-		if addKeyType != "" {
-			// User explicitly specified key type
-			var err error
-			keyType, err = sshpkg.ParseKeyType(addKeyType)
-			if err != nil {
-				return fmt.Errorf("invalid --key-type: %w", err)
-			}
-
-			// Warn if using Ed25519 with Azure DevOps
-			if keyType == sshpkg.KeyTypeEd25519 && isAzureDevOps {
-				fmt.Println(ui.WarningStyle.Render("Warning: Ed25519 keys may not work with Azure DevOps. Consider using --key-type rsa"))
-				fmt.Println()
-			}
-		} else {
-			// Auto-detect based on remote
-			if isAzureDevOps {
-				keyType = sshpkg.KeyTypeRSA
-				fmt.Println(ui.DimStyle.Render("Using RSA key (Azure DevOps detected)"))
-				fmt.Println()
-			} else {
-				keyType = sshpkg.KeyTypeEd25519
-			}
-		}
-
-		// Prompt for passphrase
-		passphrase, err := ui.ReadPassphraseWithConfirm()
+		keyPath, err := generateSSHKeyForIdentity(addName, addEmail, addKeyType, addForce)
 		if err != nil {
-			return fmt.Errorf("failed to read passphrase: %w", err)
+			return err
 		}
-
-		// Generate keypair with specified type
-		privateKey, publicKey, err := sshpkg.GenerateKeyPairWithType(keyType, addEmail, passphrase)
-		if err != nil {
-			return fmt.Errorf("failed to generate SSH keypair: %w", err)
-		}
-
-		// Write key files
-		if err := sshpkg.WriteKeyFiles(keyPath, privateKey, publicKey); err != nil {
-			return fmt.Errorf("failed to write SSH key files: %w", err)
-		}
-
-		// Get fingerprint for display
-		fingerprint, err := sshpkg.GetFingerprint(publicKey)
-		if err != nil {
-			return fmt.Errorf("failed to get key fingerprint: %w", err)
-		}
-
 		identity.SSHKeyPath = keyPath
-
-		fmt.Println(ui.SuccessStyle.Render("Generated " + keyType.Label() + " SSH key:"))
-		fmt.Printf("  Path: %s\n", keyPath)
-		fmt.Printf("  Fingerprint: %s\n", fingerprint)
-		fmt.Println()
-		fmt.Println("Public key (add to GitHub/GitLab):")
-		fmt.Print(string(publicKey))
-		fmt.Println()
 	}
 
 	// Handle GPG key linking (existing key)
@@ -272,4 +205,80 @@ func runAdd(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// generateSSHKeyForIdentity handles SSH key generation with type detection and
+// user prompts. Returns the path to the generated key.
+func generateSSHKeyForIdentity(name, email, keyTypeStr string, force bool) (string, error) {
+	keyPath := sshpkg.DefaultSSHKeyPath(name)
+	if keyPath == "" {
+		return "", errors.New("failed to determine SSH key path")
+	}
+
+	// Check if key already exists
+	if _, err := os.Stat(keyPath); err == nil {
+		if !force {
+			return "", fmt.Errorf("SSH key already exists at %s; use --force to overwrite", keyPath)
+		}
+	}
+
+	// Determine key type
+	var keyType sshpkg.KeyType
+	isAzureDevOps := gitpkg.IsAzureDevOps()
+
+	if keyTypeStr != "" {
+		var err error
+		keyType, err = sshpkg.ParseKeyType(keyTypeStr)
+		if err != nil {
+			return "", fmt.Errorf("invalid --key-type: %w", err)
+		}
+
+		// Warn if using Ed25519 with Azure DevOps
+		if keyType == sshpkg.KeyTypeEd25519 && isAzureDevOps {
+			fmt.Println(ui.WarningStyle.Render("Warning: Ed25519 keys may not work with Azure DevOps. Consider using --key-type rsa"))
+			fmt.Println()
+		}
+	} else {
+		// Auto-detect based on remote
+		if isAzureDevOps {
+			keyType = sshpkg.KeyTypeRSA
+			fmt.Println(ui.DimStyle.Render("Using RSA key (Azure DevOps detected)"))
+			fmt.Println()
+		} else {
+			keyType = sshpkg.KeyTypeEd25519
+		}
+	}
+
+	// Prompt for passphrase
+	passphrase, err := ui.ReadPassphraseWithConfirm()
+	if err != nil {
+		return "", fmt.Errorf("failed to read passphrase: %w", err)
+	}
+
+	// Generate keypair with specified type
+	privateKey, publicKey, err := sshpkg.GenerateKeyPairWithType(keyType, email, passphrase)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate SSH keypair: %w", err)
+	}
+
+	// Write key files
+	if err := sshpkg.WriteKeyFiles(keyPath, privateKey, publicKey); err != nil {
+		return "", fmt.Errorf("failed to write SSH key files: %w", err)
+	}
+
+	// Get fingerprint for display
+	fingerprint, err := sshpkg.GetFingerprint(publicKey)
+	if err != nil {
+		return "", fmt.Errorf("failed to get key fingerprint: %w", err)
+	}
+
+	fmt.Println(ui.SuccessStyle.Render("Generated " + keyType.Label() + " SSH key:"))
+	fmt.Printf("  Path: %s\n", keyPath)
+	fmt.Printf("  Fingerprint: %s\n", fingerprint)
+	fmt.Println()
+	fmt.Println("Public key (add to GitHub/GitLab):")
+	fmt.Print(string(publicKey))
+	fmt.Println()
+
+	return keyPath, nil
 }
