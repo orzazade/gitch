@@ -37,15 +37,13 @@ func GenerateKey(name, email string, passphrase []byte) (*KeyInfo, error) {
 
 	// If passphrase provided, encrypt the private key
 	if len(passphrase) > 0 {
-		err = entity.PrivateKey.Encrypt(passphrase)
-		if err != nil {
+		if err := entity.PrivateKey.Encrypt(passphrase); err != nil {
 			return nil, fmt.Errorf("failed to encrypt private key: %w", err)
 		}
 		// Also encrypt subkeys
 		for _, subkey := range entity.Subkeys {
 			if subkey.PrivateKey != nil {
-				err = subkey.PrivateKey.Encrypt(passphrase)
-				if err != nil {
+				if err := subkey.PrivateKey.Encrypt(passphrase); err != nil {
 					return nil, fmt.Errorf("failed to encrypt subkey: %w", err)
 				}
 			}
@@ -59,15 +57,13 @@ func GenerateKey(name, email string, passphrase []byte) (*KeyInfo, error) {
 		return nil, fmt.Errorf("failed to create armor encoder: %w", err)
 	}
 
-	err = entity.SerializePrivate(privateArmor, config)
-	if err != nil {
+	if err := entity.SerializePrivate(privateArmor, config); err != nil {
 		return nil, fmt.Errorf("failed to serialize private key: %w", err)
 	}
 	privateArmor.Close()
 
 	// Import the key into system gpg
-	err = importKeyToGPG(privateKeyBuf.Bytes())
-	if err != nil {
+	if err := importKeyToGPG(privateKeyBuf.Bytes()); err != nil {
 		return nil, fmt.Errorf("failed to import key to gpg: %w", err)
 	}
 
