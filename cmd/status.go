@@ -194,11 +194,7 @@ func showVerboseRuleInfo(cfg *config.Config, currentEmail string) {
 		expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
 		if err == nil {
 			match, matchErr := profile.Matches(expectedIdentity)
-			if matchErr == nil && !match {
-				fmt.Println()
-				fmt.Println(ui.WarningStyle.Render("Warning: Current identity does not match rule!"))
-				fmt.Printf("  Expected: %s (%s)\n", expectedIdentity.GitAuthorName(), expectedIdentity.Email)
-			} else if matchErr != nil && !strings.EqualFold(currentEmail, expectedIdentity.Email) {
+			if (matchErr == nil && !match) || (matchErr != nil && !strings.EqualFold(currentEmail, expectedIdentity.Email)) {
 				fmt.Println()
 				fmt.Println(ui.WarningStyle.Render("Warning: Current identity does not match rule!"))
 				fmt.Printf("  Expected: %s (%s)\n", expectedIdentity.GitAuthorName(), expectedIdentity.Email)
