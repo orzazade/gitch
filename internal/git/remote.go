@@ -6,10 +6,10 @@ import (
 	giturls "github.com/whilp/git-urls"
 )
 
-// IsAzureDevOpsRemote checks if the given remote URL is an Azure DevOps repository.
+// isAzureDevOpsRemote checks if the given remote URL is an Azure DevOps repository.
 // Returns true for both modern (dev.azure.com) and legacy (visualstudio.com) URLs.
 // Supports HTTPS, SSH, and SCP-style URL formats.
-func IsAzureDevOpsRemote(remoteURL string) bool {
+func isAzureDevOpsRemote(remoteURL string) bool {
 	if remoteURL == "" {
 		return false
 	}
@@ -43,5 +43,5 @@ func GetCurrentRemoteType() (bool, error) {
 		return false, nil
 	}
 
-	return IsAzureDevOpsRemote(url), nil
+	return isAzureDevOpsRemote(url), nil
 }

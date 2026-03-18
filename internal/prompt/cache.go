@@ -9,9 +9,9 @@ import (
 	"github.com/adrg/xdg"
 )
 
-// CachePath returns the XDG cache file path for the current identity
+// cachePath returns the XDG cache file path for the current identity
 // The cache file stores the name of the active identity for shell prompt display
-func CachePath() (string, error) {
+func cachePath() (string, error) {
 	return xdg.CacheFile("gitch/current-identity")
 }
 
@@ -19,7 +19,7 @@ func CachePath() (string, error) {
 // Uses atomic write (temp file + rename) to prevent corruption
 // Empty string clears the cache (writes empty file)
 func UpdateCache(identityName string) error {
-	cachePath, err := CachePath()
+	cachePath, err := cachePath()
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func UpdateCache(identityName string) error {
 // ClearCache removes the cache file
 // Silently succeeds if the file doesn't exist
 func ClearCache() error {
-	cachePath, err := CachePath()
+	cachePath, err := cachePath()
 	if err != nil {
 		return err
 	}
@@ -60,10 +60,10 @@ func ClearCache() error {
 	return err
 }
 
-// ReadCache reads the current identity from the cache file
+// readCache reads the current identity from the cache file
 // Returns empty string (no error) if file doesn't exist
-func ReadCache() (string, error) {
-	cachePath, err := CachePath()
+func readCache() (string, error) {
+	cachePath, err := cachePath()
 	if err != nil {
 		return "", err
 	}

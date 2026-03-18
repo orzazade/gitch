@@ -17,14 +17,14 @@ func HooksDir() (string, error) {
 	return xdg.ConfigFile("gitch/hooks")
 }
 
-// LocalHookPath returns the current repository's pre-commit hook path.
-func LocalHookPath() (string, error) {
+// localHookPath returns the current repository's pre-commit hook path.
+func localHookPath() (string, error) {
 	return git.GitPath(filepath.Join("hooks", "pre-commit"))
 }
 
 // InstallLocal installs the pre-commit hook in the current repository.
 func InstallLocal() error {
-	preCommitPath, err := LocalHookPath()
+	preCommitPath, err := localHookPath()
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func InstallLocal() error {
 
 // UninstallLocal removes the gitch pre-commit hook from the current repository.
 func UninstallLocal() error {
-	preCommitPath, err := LocalHookPath()
+	preCommitPath, err := localHookPath()
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func UninstallLocal() error {
 
 // IsInstalledLocal checks whether the current repository has the gitch hook installed.
 func IsInstalledLocal() (bool, error) {
-	preCommitPath, err := LocalHookPath()
+	preCommitPath, err := localHookPath()
 	if err != nil {
 		return false, err
 	}

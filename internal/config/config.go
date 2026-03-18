@@ -210,7 +210,7 @@ func (c *Config) UpdateIdentity(name string, updates IdentityUpdates) (*Identity
 		id.GPGKeyID = *updates.GPGKeyID
 	}
 	if updates.HookMode != nil {
-		if err := ValidateHookMode(*updates.HookMode); err != nil {
+		if err := validateHookMode(*updates.HookMode); err != nil {
 			return nil, err
 		}
 		id.HookMode = *updates.HookMode

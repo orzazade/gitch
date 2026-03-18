@@ -5,7 +5,7 @@ import "fmt"
 // BashInit returns shell integration code for bash prompt.
 // The output should be evaled: eval "$(gitch init bash)"
 func BashInit() string {
-	cachePath, _ := CachePath()
+	cachePath, _ := cachePath()
 	return fmt.Sprintf(`# gitch shell integration for bash
 # Add to ~/.bashrc: eval "$(gitch init bash)"
 

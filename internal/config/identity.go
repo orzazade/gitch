@@ -28,8 +28,8 @@ type Identity struct {
 	HookMode   string `yaml:"hook_mode,omitempty"`
 }
 
-// ValidateHookMode validates that the hook mode is a valid value
-func ValidateHookMode(mode string) error {
+// validateHookMode validates that the hook mode is a valid value
+func validateHookMode(mode string) error {
 	switch mode {
 	case HookModeAllow, HookModeWarn, HookModeBlock, "":
 		return nil

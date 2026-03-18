@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestIsAzureDevOpsRemote(t *testing.T) {
+func Test_isAzureDevOpsRemote(t *testing.T) {
 	tests := []struct {
 		name     string
 		url      string
@@ -139,9 +139,9 @@ func TestIsAzureDevOpsRemote(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := IsAzureDevOpsRemote(tt.url)
+			result := isAzureDevOpsRemote(tt.url)
 			if result != tt.expected {
-				t.Errorf("IsAzureDevOpsRemote(%q) = %v, want %v", tt.url, result, tt.expected)
+				t.Errorf("isAzureDevOpsRemote(%q) = %v, want %v", tt.url, result, tt.expected)
 			}
 		})
 	}

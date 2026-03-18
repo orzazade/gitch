@@ -5,7 +5,7 @@ import "fmt"
 // FishInit returns shell integration code for fish prompt.
 // The output should be sourced: gitch init fish | source
 func FishInit() string {
-	cachePath, _ := CachePath()
+	cachePath, _ := cachePath()
 	return fmt.Sprintf(`# gitch shell integration for fish
 # Add to ~/.config/fish/config.fish: gitch init fish | source
 

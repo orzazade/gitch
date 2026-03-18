@@ -18,7 +18,7 @@ func TestInstallLocal_WritesManagedHook(t *testing.T) {
 		t.Fatalf("InstallLocal failed: %v", err)
 	}
 
-	hookPath, err := LocalHookPath()
+	hookPath, err := localHookPath()
 	if err != nil {
 		t.Fatalf("failed to get local hook path: %v", err)
 	}
@@ -36,7 +36,7 @@ func TestInstallLocal_RefusesOverwriteNonManagedHook(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	env.Chdir(t)
 
-	hookPath, err := LocalHookPath()
+	hookPath, err := localHookPath()
 	if err != nil {
 		t.Fatalf("failed to get local hook path: %v", err)
 	}
@@ -67,7 +67,7 @@ func TestUninstallLocal_RemovesManagedHook(t *testing.T) {
 	}
 
 	// Verify hook is gone
-	hookPath, err := LocalHookPath()
+	hookPath, err := localHookPath()
 	if err != nil {
 		t.Fatalf("failed to get local hook path: %v", err)
 	}

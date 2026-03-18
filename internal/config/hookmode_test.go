@@ -7,23 +7,23 @@ import (
 	"github.com/orzazade/gitch/internal/rules"
 )
 
-func TestValidateHookMode_Valid(t *testing.T) {
+func Test_validateHookMode_Valid(t *testing.T) {
 	for _, mode := range []string{"allow", "warn", "block", ""} {
-		if err := ValidateHookMode(mode); err != nil {
-			t.Errorf("ValidateHookMode(%q) returned error: %v", mode, err)
+		if err := validateHookMode(mode); err != nil {
+			t.Errorf("validateHookMode(%q) returned error: %v", mode, err)
 		}
 	}
 }
 
-func TestValidateHookMode_Invalid(t *testing.T) {
+func Test_validateHookMode_Invalid(t *testing.T) {
 	for _, mode := range []string{"invalid", "WARN", "Block", "none", "yes"} {
-		err := ValidateHookMode(mode)
+		err := validateHookMode(mode)
 		if err == nil {
-			t.Errorf("ValidateHookMode(%q) should return error", mode)
+			t.Errorf("validateHookMode(%q) should return error", mode)
 			continue
 		}
 		if !strings.Contains(err.Error(), "invalid hook mode") {
-			t.Errorf("ValidateHookMode(%q) error = %v, want 'invalid hook mode'", mode, err)
+			t.Errorf("validateHookMode(%q) error = %v, want 'invalid hook mode'", mode, err)
 		}
 	}
 }

@@ -21,13 +21,13 @@ func TestUpdateCache(t *testing.T) {
 	}
 
 	// Verify file exists
-	cachePath, _ := CachePath()
+	cachePath, _ := cachePath()
 	if _, err := os.Stat(cachePath); os.IsNotExist(err) {
 		t.Fatal("Cache file was not created")
 	}
 
 	// Read back and verify content
-	content, err := ReadCache()
+	content, err := readCache()
 	if err != nil {
 		t.Fatalf("ReadCache failed: %v", err)
 	}
@@ -53,20 +53,20 @@ func TestClearCache(t *testing.T) {
 	}
 
 	// Verify file is gone
-	cachePath, _ := CachePath()
+	cachePath, _ := cachePath()
 	if _, err := os.Stat(cachePath); !os.IsNotExist(err) {
 		t.Error("Cache file should not exist after ClearCache")
 	}
 }
 
-// TestReadCacheMissing verifies ReadCache returns empty string for non-existent file
-func TestReadCacheMissing(t *testing.T) {
+// Test_readCacheMissing verifies ReadCache returns empty string for non-existent file
+func Test_readCacheMissing(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Don't create any file - just read
-	content, err := ReadCache()
+	content, err := readCache()
 	if err != nil {
 		t.Fatalf("ReadCache should not error for missing file: %v", err)
 	}
@@ -99,14 +99,14 @@ func TestAtomicWrite(t *testing.T) {
 	}
 
 	// Verify .tmp file doesn't exist
-	cachePath, _ := CachePath()
+	cachePath, _ := cachePath()
 	tmpPath := cachePath + ".tmp"
 	if _, err := os.Stat(tmpPath); !os.IsNotExist(err) {
 		t.Error(".tmp file should be cleaned up after successful write")
 	}
 
 	// Verify main file exists with correct content
-	content, err := ReadCache()
+	content, err := readCache()
 	if err != nil {
 		t.Fatalf("ReadCache failed: %v", err)
 	}
@@ -132,7 +132,7 @@ func TestUpdateCacheEmpty(t *testing.T) {
 	}
 
 	// Read should return empty
-	content, err := ReadCache()
+	content, err := readCache()
 	if err != nil {
 		t.Fatalf("ReadCache failed: %v", err)
 	}
@@ -141,14 +141,14 @@ func TestUpdateCacheEmpty(t *testing.T) {
 	}
 }
 
-// TestReadCacheTrimsWhitespace verifies whitespace is trimmed from content
-func TestReadCacheTrimsWhitespace(t *testing.T) {
+// Test_readCacheTrimsWhitespace verifies whitespace is trimmed from content
+func Test_readCacheTrimsWhitespace(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	t.Setenv("XDG_CACHE_HOME", tmpDir)
 
 	// Write with whitespace directly to file (simulating external modification)
-	cachePath, _ := CachePath()
+	cachePath, _ := cachePath()
 	cacheDir := filepath.Dir(cachePath)
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		t.Fatalf("Setup failed: %v", err)
@@ -158,7 +158,7 @@ func TestReadCacheTrimsWhitespace(t *testing.T) {
 	}
 
 	// Read should return trimmed content
-	content, err := ReadCache()
+	content, err := readCache()
 	if err != nil {
 		t.Fatalf("ReadCache failed: %v", err)
 	}

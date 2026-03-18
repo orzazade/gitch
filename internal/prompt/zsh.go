@@ -5,7 +5,7 @@ import "fmt"
 // ZshInit returns shell integration code for zsh prompt.
 // The output should be evaled: eval "$(gitch init zsh)"
 func ZshInit() string {
-	cachePath, _ := CachePath()
+	cachePath, _ := cachePath()
 	return fmt.Sprintf(`# gitch shell integration for zsh
 # Add to ~/.zshrc: eval "$(gitch init zsh)"
 
