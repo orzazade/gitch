@@ -100,7 +100,7 @@ func UninstallGlobal() error {
 
 	hooksDir, err := HooksDir()
 	if err != nil {
-		return nil
+		return fmt.Errorf("failed to determine hooks directory: %w", err)
 	}
 
 	if filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
