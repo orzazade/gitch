@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/orzazade/gitch/internal/config"
-	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
 	"github.com/orzazade/gitch/internal/ui"
@@ -32,7 +31,6 @@ Examples:
 // autoSwitchResult contains the result of an auto-switch attempt
 type autoSwitchResult struct {
 	Switched      bool
-	FromIdentity  string
 	ToIdentity    string
 	MatchedRule   *rules.Rule
 	SkippedReason string
@@ -105,12 +103,6 @@ func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 		}, nil
 	}
 
-	// 4. Get current git identity
-	currentName, currentEmail, err := git.GetCurrentIdentity()
-	if err != nil {
-		return nil, err
-	}
-
 	scope := defaultApplyScope()
 
 	// 5. Check if already using the full expected profile
@@ -133,19 +125,8 @@ func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 	}
 
 	return &autoSwitchResult{
-		Switched:     true,
-		FromIdentity: formatCurrentIdentity(currentName, currentEmail),
-		ToIdentity:   expectedIdentity.Name,
-		MatchedRule:  matchedRule,
+		Switched:    true,
+		ToIdentity:  expectedIdentity.Name,
+		MatchedRule: matchedRule,
 	}, nil
-}
-
-func formatCurrentIdentity(name, email string) string {
-	if name == "" {
-		return email
-	}
-	if email == "" {
-		return name
-	}
-	return fmt.Sprintf("%s <%s>", name, email)
 }
