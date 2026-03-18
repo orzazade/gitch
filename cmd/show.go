@@ -97,7 +97,7 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 
 	// Find associated rules
-	var associatedRules []showRule
+	associatedRules := []showRule{}
 	for _, r := range cfg.Rules {
 		if strings.EqualFold(r.Identity, identity.Name) {
 			associatedRules = append(associatedRules, showRule{
@@ -125,7 +125,7 @@ func runShow(cmd *cobra.Command, args []string) error {
 	}
 
 	if showJSON {
-		return printShowJSON(output)
+		return printJSON(output)
 	}
 	printShowHuman(output)
 	return nil
@@ -164,13 +164,6 @@ func gatherGPGInfo(keyID string) *showGPGKey {
 		info.Valid = gpg.ValidateKeyID(keyID) == nil
 	}
 	return info
-}
-
-func printShowJSON(output showOutput) error {
-	if output.Rules == nil {
-		output.Rules = []showRule{}
-	}
-	return printJSON(output)
 }
 
 func printShowHuman(output showOutput) {
