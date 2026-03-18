@@ -74,9 +74,11 @@ func Apply(identity *config.Identity, scope git.Scope) (*ApplyResult, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve SSH key path: %w", err)
 		}
-		if sshCmd, err := sshpkg.GitSSHCommand(keyPath); err != nil {
+		sshCmd, err := sshpkg.GitSSHCommand(keyPath)
+		if err != nil {
 			return nil, fmt.Errorf("failed to build SSH command: %w", err)
-		} else if err := git.SetConfigScoped("core.sshCommand", sshCmd, scope); err != nil {
+		}
+		if err := git.SetConfigScoped("core.sshCommand", sshCmd, scope); err != nil {
 			return nil, fmt.Errorf("failed to configure SSH command: %w", err)
 		}
 		if _, err := os.Stat(keyPath); err != nil {
