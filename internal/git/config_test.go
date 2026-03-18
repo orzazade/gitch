@@ -206,9 +206,7 @@ func TestGetCurrentIdentity_EffectivePrefersLocal(t *testing.T) {
 	env := setupTestEnv(t)
 	defer env.cleanup(t)
 
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
-	os.Chdir(env.dir)
+	t.Chdir(env.dir)
 
 	if err := SetConfigScoped("user.name", "Global User", ScopeGlobal); err != nil {
 		t.Fatalf("failed to set global name: %v", err)
@@ -290,9 +288,7 @@ func TestGetConfig_LocalScope(t *testing.T) {
 	defer env.cleanup(t)
 
 	// Change to temp directory for local config operations
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
-	os.Chdir(env.dir)
+	t.Chdir(env.dir)
 
 	// Set local config (not global)
 	if err := SetConfigScoped("user.name", "Local User", ScopeLocal); err != nil {
@@ -324,9 +320,7 @@ func TestGitPath_HooksDir(t *testing.T) {
 	env := setupTestEnv(t)
 	defer env.cleanup(t)
 
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir)
-	os.Chdir(env.dir)
+	t.Chdir(env.dir)
 
 	path, err := GitPath("hooks/pre-commit")
 	if err != nil {
