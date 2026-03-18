@@ -144,6 +144,15 @@ func TestGetLocalOnlyHashes_NoUpstream(t *testing.T) {
 	}
 }
 
+func TestGetCommits_NotAGitRepo(t *testing.T) {
+	t.Chdir(t.TempDir())
+
+	_, err := GetCommits(0)
+	if err == nil {
+		t.Fatal("expected error when not in a git repo")
+	}
+}
+
 func TestGetCommits_EmptyRepo(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
