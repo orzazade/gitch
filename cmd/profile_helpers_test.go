@@ -46,6 +46,44 @@ func TestResolveApplyScope_NeitherFlag(t *testing.T) {
 	}
 }
 
+func TestShortHash(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"abcdef1234567890", "abcdef12"},
+		{"abcdef12", "abcdef12"},
+		{"abc", "abc"},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		if got := shortHash(tt.input); got != tt.want {
+			t.Errorf("shortHash(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestTruncateSubject(t *testing.T) {
+	tests := []struct {
+		subject string
+		maxLen  int
+		want    string
+	}{
+		{"short", 10, "short"},
+		{"exactly ten", 11, "exactly ten"},
+		{"this is a longer subject line", 20, "this is a longer ..."},
+		{"", 10, ""},
+		// Multi-byte UTF-8: should truncate by rune count, not byte count
+		{"日本語のコミットメッセージです", 10, "日本語のコミッ..."},
+		{"café résumé", 8, "café ..."},
+	}
+	for _, tt := range tests {
+		if got := truncateSubject(tt.subject, tt.maxLen); got != tt.want {
+			t.Errorf("truncateSubject(%q, %d) = %q, want %q", tt.subject, tt.maxLen, got, tt.want)
+		}
+	}
+}
+
 func TestResolveCurrentProfileState_ExactMatch(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	env.Chdir(t)
