@@ -68,6 +68,30 @@ func TestValidate_MatchingIdentity(t *testing.T) {
 	}
 }
 
+func TestValidate_UnknownRuleIdentity(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	defer env.Cleanup(t)
+	env.Chdir(t)
+
+	// Rule references an identity that doesn't exist
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", GitName: "Jane", Email: "jane@work.com"},
+		},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: env.Dir, Identity: "nonexistent"},
+		},
+	}
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("failed to save config: %v", err)
+	}
+
+	_, err := Validate()
+	if err == nil {
+		t.Fatal("expected error when rule references unknown identity")
+	}
+}
+
 func TestValidate_MismatchedIdentity(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	defer env.Cleanup(t)
