@@ -48,7 +48,11 @@ func identityCompletionFunc(cmd *cobra.Command, args []string, toComplete string
 	if len(args) != 0 {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
+	return completeIdentityNames()
+}
 
+// completeIdentityNames returns all identity names formatted for shell completion.
+func completeIdentityNames() ([]string, cobra.ShellCompDirective) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
@@ -57,7 +61,6 @@ func identityCompletionFunc(cmd *cobra.Command, args []string, toComplete string
 	identities := cfg.ListIdentities()
 	completions := make([]string, 0, len(identities))
 	for _, id := range identities {
-		// Format: "name\temail" - tab separates name from description
 		completions = append(completions, id.Name+"\t"+id.Email)
 	}
 

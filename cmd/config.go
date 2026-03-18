@@ -46,17 +46,7 @@ func init() {
 func configHookModeCompletionFunc(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	switch len(args) {
 	case 0:
-		// First arg: identity names
-		cfg, err := config.Load()
-		if err != nil {
-			return nil, cobra.ShellCompDirectiveError
-		}
-		identities := cfg.ListIdentities()
-		completions := make([]string, 0, len(identities))
-		for _, id := range identities {
-			completions = append(completions, id.Name+"\t"+id.Email)
-		}
-		return completions, cobra.ShellCompDirectiveNoFileComp
+		return completeIdentityNames()
 	case 1:
 		// Second arg: mode values
 		return []string{
