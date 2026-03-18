@@ -139,7 +139,31 @@ func runUse(cmd *cobra.Command, args []string) error {
 
 	printSwitchSuccess(identity)
 	printScopeInfo(scope)
+	if msg := ruleMismatchWarning(identity, cfg); msg != "" {
+		fmt.Println(ui.WarningStyle.Render(msg))
+	}
 	return nil
+}
+
+// ruleMismatchWarning returns a warning string if the active identity conflicts
+// with the best-matching auto-switch rule for the current directory, or "" if all is fine.
+func ruleMismatchWarning(identity *config.Identity, cfg *config.Config) string {
+	if len(cfg.Rules) == 0 {
+		return ""
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	remoteURL, _ := rules.GetGitRemoteURL()
+	matched := rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
+	if matched == nil || strings.EqualFold(matched.Identity, identity.Name) {
+		return ""
+	}
+	return fmt.Sprintf(
+		"Note: a rule for this directory expects '%s'. The pre-commit hook will catch this mismatch.",
+		matched.Identity,
+	)
 }
 
 // closestIdentityName returns the best-matching identity name for a mistyped input,

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/orzazade/gitch/internal/config"
+	"github.com/orzazade/gitch/internal/rules"
 )
 
 func TestClosestIdentityName(t *testing.T) {
@@ -30,6 +31,40 @@ func TestClosestIdentityName(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("closestIdentityName(%q) = %q, want %q", tt.input, got, tt.want)
 		}
+	}
+}
+
+func TestRuleMismatchWarning(t *testing.T) {
+	work := config.Identity{Name: "work", Email: "work@example.com"}
+	personal := config.Identity{Name: "personal", Email: "personal@example.com"}
+
+	cfgNoRules := &config.Config{Identities: []config.Identity{work}}
+	if got := ruleMismatchWarning(&work, cfgNoRules); got != "" {
+		t.Errorf("expected empty warning with no rules, got %q", got)
+	}
+
+	// Rule matches the identity being applied — no warning
+	cfgMatchingRule := &config.Config{
+		Identities: []config.Identity{work},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: "/nonexistent/path", Identity: "work"},
+		},
+	}
+	if got := ruleMismatchWarning(&work, cfgMatchingRule); got != "" {
+		t.Errorf("expected no warning when rule matches applied identity, got %q", got)
+	}
+
+	// Rule exists but matches a different identity — warning expected only when rule actually matches cwd
+	// (can't fully test without real cwd match, but verify the no-match case)
+	cfgOtherIdentity := &config.Config{
+		Identities: []config.Identity{work, personal},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: "/nonexistent/path/that/never/matches", Identity: "personal"},
+		},
+	}
+	// No match for cwd → no warning
+	if got := ruleMismatchWarning(&work, cfgOtherIdentity); got != "" {
+		t.Errorf("expected no warning when no rule matches cwd, got %q", got)
 	}
 }
 
