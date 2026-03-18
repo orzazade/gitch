@@ -59,9 +59,7 @@ func parseKeyInfo(output string) (*KeyInfo, error) {
 			continue
 		}
 
-		recordType := fields[0]
-
-		switch recordType {
+		switch fields[0] {
 		case "sec":
 			// Secret key record
 			// Field 3: key length
