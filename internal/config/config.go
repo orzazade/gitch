@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/adrg/xdg"
@@ -162,7 +163,7 @@ func (c *Config) DeleteIdentity(name string) error {
 	}
 
 	// Remove the identity
-	c.Identities = append(c.Identities[:idx], c.Identities[idx+1:]...)
+	c.Identities = slices.Delete(c.Identities, idx, idx+1)
 	return nil
 }
 
@@ -262,7 +263,7 @@ func (c *Config) AddRule(rule rules.Rule) error {
 func (c *Config) RemoveRule(pattern string) error {
 	for i, rule := range c.Rules {
 		if rule.Pattern == pattern {
-			c.Rules = append(c.Rules[:i], c.Rules[i+1:]...)
+			c.Rules = slices.Delete(c.Rules, i, i+1)
 			return nil
 		}
 	}

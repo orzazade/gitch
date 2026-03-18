@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -32,7 +32,7 @@ func generateMailmap(mismatches []Result, expectedEmail string) string {
 	for wrongEmail := range uniqueEmails {
 		lines = append(lines, fmt.Sprintf("<%s> <%s>", expectedEmail, wrongEmail))
 	}
-	sort.Strings(lines)
+	slices.Sort(lines)
 
 	return strings.Join(lines, "\n")
 }
