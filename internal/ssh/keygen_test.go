@@ -91,12 +91,7 @@ func TestGenerateKeyPair_EmptyComment(t *testing.T) {
 }
 
 func TestWriteKeyFiles(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "gitch-keygen-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Generate test key
 	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
@@ -149,12 +144,7 @@ func TestWriteKeyFiles(t *testing.T) {
 }
 
 func TestWriteKeyFiles_CreatesDirectory(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "gitch-keygen-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Generate test key
 	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
