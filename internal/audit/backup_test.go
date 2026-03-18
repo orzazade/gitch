@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestCreateMirrorBackup_Success(t *testing.T) {
+func Test_createMirrorBackup_Success(t *testing.T) {
 	// Create a temp git repo with at least one commit
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
@@ -28,8 +28,8 @@ func TestCreateMirrorBackup_Success(t *testing.T) {
 
 	backupDir := filepath.Join(t.TempDir(), "backup.git")
 
-	if err := CreateMirrorBackup(backupDir); err != nil {
-		t.Fatalf("CreateMirrorBackup failed: %v", err)
+	if err := createMirrorBackup(backupDir); err != nil {
+		t.Fatalf("createMirrorBackup failed: %v", err)
 	}
 
 	// Verify backup directory exists and is a git repo
@@ -48,10 +48,10 @@ func TestCreateMirrorBackup_Success(t *testing.T) {
 	}
 }
 
-func TestCreateMirrorBackup_NotInRepo(t *testing.T) {
+func Test_createMirrorBackup_NotInRepo(t *testing.T) {
 	t.Chdir(t.TempDir())
 
-	err := CreateMirrorBackup(filepath.Join(t.TempDir(), "backup.git"))
+	err := createMirrorBackup(filepath.Join(t.TempDir(), "backup.git"))
 	if err == nil {
 		t.Fatal("expected error when not in a git repo")
 	}

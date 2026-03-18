@@ -38,10 +38,10 @@ type Result struct {
 	IsPushed      bool // true = pushed to remote, false = local-only
 }
 
-// GetCommits retrieves commits from git log
+// getCommits retrieves commits from git log
 // If limit > 0, limits the number of commits returned
 // Returns empty slice with nil error for empty repos
-func GetCommits(limit int) ([]Commit, error) {
+func getCommits(limit int) ([]Commit, error) {
 	// Build git log command with custom format
 	// Format: <<<COMMIT>>>hash|||name|||email|||date|||subject
 	formatArg := fmt.Sprintf("--format=%s%%H%s%%an%s%%ae%s%%ai%s%%s",
@@ -121,10 +121,10 @@ func parseCommitLine(line string) (Commit, error) {
 	}, nil
 }
 
-// GetLocalOnlyHashes returns a map of commit hashes that exist locally but not on the upstream
+// getLocalOnlyHashes returns a map of commit hashes that exist locally but not on the upstream
 // Returns nil, nil if no upstream is configured (cannot determine pushed status)
 // Returns empty map if all commits are pushed
-func GetLocalOnlyHashes() (map[string]bool, error) {
+func getLocalOnlyHashes() (map[string]bool, error) {
 	// Get upstream ref
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "@{u}")
 	upstreamOutput, err := cmd.Output()
@@ -220,17 +220,17 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 	if limit == 0 {
 		limit = DefaultScanLimit
 	} else if limit < 0 {
-		limit = 0 // Pass 0 to GetCommits = unlimited (no --max-count flag)
+		limit = 0 // Pass 0 to getCommits = unlimited (no --max-count flag)
 	}
 
 	// Get commits
-	commits, err := GetCommits(limit)
+	commits, err := getCommits(limit)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get commits: %w", err)
 	}
 
 	// Get local-only hashes
-	localHashes, _ := GetLocalOnlyHashes()
+	localHashes, _ := getLocalOnlyHashes()
 	noUpstream := localHashes == nil
 
 	// Process commits

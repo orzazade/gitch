@@ -16,9 +16,9 @@ import (
 // ConfirmPhrase is the exact phrase users must type to confirm destructive operations.
 const ConfirmPhrase = "I UNDERSTAND"
 
-// GenerateMailmap creates mailmap content to remap wrong emails to the expected email.
+// generateMailmap creates mailmap content to remap wrong emails to the expected email.
 // Mailmap format: <correct-email> <wrong-email>
-func GenerateMailmap(mismatches []Result, expectedEmail string) string {
+func generateMailmap(mismatches []Result, expectedEmail string) string {
 	// Collect unique wrong emails
 	uniqueEmails := make(map[string]struct{})
 	for _, r := range mismatches {
@@ -37,10 +37,10 @@ func GenerateMailmap(mismatches []Result, expectedEmail string) string {
 	return strings.Join(lines, "\n")
 }
 
-// RunFilterRepo executes git-filter-repo with the given mailmap file.
+// runFilterRepo executes git-filter-repo with the given mailmap file.
 // Uses --force to override fresh clone check (we have backup).
 // Pipes stdout/stderr for progress visibility.
-func RunFilterRepo(mailmapPath string) error {
+func runFilterRepo(mailmapPath string) error {
 	cmd := exec.Command("git", "filter-repo", "--force", "--mailmap", mailmapPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -52,8 +52,8 @@ func RunFilterRepo(mailmapPath string) error {
 	return nil
 }
 
-// GetRemotes returns a list of remote names configured in the repository.
-func GetRemotes() ([]string, error) {
+// getRemotes returns a list of remote names configured in the repository.
+func getRemotes() ([]string, error) {
 	cmd := exec.Command("git", "remote")
 	output, err := cmd.Output()
 	if err != nil {
@@ -71,11 +71,11 @@ func GetRemotes() ([]string, error) {
 	return remotes, nil
 }
 
-// RemoveRemotes removes all configured remotes from the repository.
+// removeRemotes removes all configured remotes from the repository.
 // This prevents accidental force-push after history rewrite.
 // Ignores "remote does not exist" errors.
-func RemoveRemotes() error {
-	remotes, err := GetRemotes()
+func removeRemotes() error {
+	remotes, err := getRemotes()
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func RemoveRemotes() error {
 // 5. Removes remotes after rewrite to prevent accidental force-push
 func Fix(scanResult *ScanResult) error {
 	// Step 1: Prerequisites check
-	if !IsFilterRepoAvailable() {
+	if !isFilterRepoAvailable() {
 		return errors.New("git-filter-repo not found\n\nInstall with:\n  brew install git-filter-repo\n  # or: pip install git-filter-repo")
 	}
 
@@ -163,12 +163,12 @@ func Fix(scanResult *ScanResult) error {
 	backupPath := filepath.Join(os.TempDir(), fmt.Sprintf("%s-backup-%s", filepath.Base(repoRoot), time.Now().Format("20060102-150405")))
 
 	fmt.Printf("\nCreating backup at: %s\n", backupPath)
-	if err := CreateMirrorBackup(backupPath); err != nil {
+	if err := createMirrorBackup(backupPath); err != nil {
 		return fmt.Errorf("backup failed: %w", err)
 	}
 
 	// Step 7: Generate and write mailmap
-	mailmapContent := GenerateMailmap(toFix, scanResult.ExpectedEmail)
+	mailmapContent := generateMailmap(toFix, scanResult.ExpectedEmail)
 	mailmapPath := filepath.Join(os.TempDir(), "gitch-mailmap")
 	if err := os.WriteFile(mailmapPath, []byte(mailmapContent), 0644); err != nil {
 		return fmt.Errorf("failed to write mailmap: %w", err)
@@ -177,16 +177,16 @@ func Fix(scanResult *ScanResult) error {
 
 	// Step 8: Run git-filter-repo (AUDIT-04)
 	fmt.Println("\nRewriting history...")
-	if err := RunFilterRepo(mailmapPath); err != nil {
+	if err := runFilterRepo(mailmapPath); err != nil {
 		return fmt.Errorf("%w\n\nYour backup is at: %s", err, backupPath)
 	}
 
 	// Step 9: Remove remotes (AUDIT-06)
-	remotesBefore, remotesErr := GetRemotes()
+	remotesBefore, remotesErr := getRemotes()
 	if remotesErr != nil {
 		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("\nWarning: failed to list remotes: %v", remotesErr)))
 	}
-	if err := RemoveRemotes(); err != nil {
+	if err := removeRemotes(); err != nil {
 		// Non-fatal: warn but continue
 		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("\nWarning: failed to remove remotes: %v", err)))
 	}

@@ -4,8 +4,8 @@ import (
 	"testing"
 )
 
-func TestIsFilterRepoAvailable(t *testing.T) {
+func Test_isFilterRepoAvailable(t *testing.T) {
 	// Just verify it doesn't panic and returns a valid bool
-	result := IsFilterRepoAvailable()
-	t.Logf("IsFilterRepoAvailable() = %v", result)
+	result := isFilterRepoAvailable()
+	t.Logf("isFilterRepoAvailable() = %v", result)
 }

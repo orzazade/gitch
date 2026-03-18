@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestGenerateMailmap_SingleMismatch(t *testing.T) {
+func Test_generateMailmap_SingleMismatch(t *testing.T) {
 	mismatches := []Result{
 		{
 			Commit:        Commit{AuthorEmail: "wrong@example.com"},
@@ -16,20 +16,20 @@ func TestGenerateMailmap_SingleMismatch(t *testing.T) {
 		},
 	}
 
-	result := GenerateMailmap(mismatches, "correct@example.com")
+	result := generateMailmap(mismatches, "correct@example.com")
 	expected := "<correct@example.com> <wrong@example.com>"
 	if result != expected {
 		t.Errorf("expected %q, got %q", expected, result)
 	}
 }
 
-func TestGenerateMailmap_MultipleDifferentEmails(t *testing.T) {
+func Test_generateMailmap_MultipleDifferentEmails(t *testing.T) {
 	mismatches := []Result{
 		{Commit: Commit{AuthorEmail: "wrong1@example.com"}, IsMismatched: true},
 		{Commit: Commit{AuthorEmail: "wrong2@example.com"}, IsMismatched: true},
 	}
 
-	result := GenerateMailmap(mismatches, "correct@example.com")
+	result := generateMailmap(mismatches, "correct@example.com")
 	lines := strings.Split(result, "\n")
 	sort.Strings(lines)
 
@@ -46,27 +46,27 @@ func TestGenerateMailmap_MultipleDifferentEmails(t *testing.T) {
 	}
 }
 
-func TestGenerateMailmap_DeduplicatesSameEmail(t *testing.T) {
+func Test_generateMailmap_DeduplicatesSameEmail(t *testing.T) {
 	mismatches := []Result{
 		{Commit: Commit{AuthorEmail: "wrong@example.com"}, IsMismatched: true},
 		{Commit: Commit{AuthorEmail: "wrong@example.com"}, IsMismatched: true},
 		{Commit: Commit{AuthorEmail: "wrong@example.com"}, IsMismatched: true},
 	}
 
-	result := GenerateMailmap(mismatches, "correct@example.com")
+	result := generateMailmap(mismatches, "correct@example.com")
 	lines := strings.Split(result, "\n")
 	if len(lines) != 1 {
 		t.Errorf("expected 1 unique line, got %d: %q", len(lines), result)
 	}
 }
 
-func TestGenerateMailmap_SkipsNonMismatched(t *testing.T) {
+func Test_generateMailmap_SkipsNonMismatched(t *testing.T) {
 	mismatches := []Result{
 		{Commit: Commit{AuthorEmail: "correct@example.com"}, IsMismatched: false},
 		{Commit: Commit{AuthorEmail: "wrong@example.com"}, IsMismatched: true},
 	}
 
-	result := GenerateMailmap(mismatches, "correct@example.com")
+	result := generateMailmap(mismatches, "correct@example.com")
 	if strings.Contains(result, "correct@example.com> <correct@example.com>") {
 		t.Error("should not include non-mismatched email in mailmap")
 	}
@@ -75,20 +75,20 @@ func TestGenerateMailmap_SkipsNonMismatched(t *testing.T) {
 	}
 }
 
-func TestGenerateMailmap_EmptyInput(t *testing.T) {
-	result := GenerateMailmap([]Result{}, "correct@example.com")
+func Test_generateMailmap_EmptyInput(t *testing.T) {
+	result := generateMailmap([]Result{}, "correct@example.com")
 	if result != "" {
 		t.Errorf("expected empty string for no mismatches, got %q", result)
 	}
 }
 
-func TestGenerateMailmap_AllNonMismatched(t *testing.T) {
+func Test_generateMailmap_AllNonMismatched(t *testing.T) {
 	mismatches := []Result{
 		{Commit: Commit{AuthorEmail: "a@example.com"}, IsMismatched: false},
 		{Commit: Commit{AuthorEmail: "b@example.com"}, IsMismatched: false},
 	}
 
-	result := GenerateMailmap(mismatches, "correct@example.com")
+	result := generateMailmap(mismatches, "correct@example.com")
 	if result != "" {
 		t.Errorf("expected empty string when no commits are mismatched, got %q", result)
 	}
@@ -107,7 +107,7 @@ func initTempGitRepo(t *testing.T) string {
 	return tmpDir
 }
 
-func TestGetRemotes_InRepoWithOrigin(t *testing.T) {
+func Test_getRemotes_InRepoWithOrigin(t *testing.T) {
 	tmpDir := initTempGitRepo(t)
 
 	cmd := exec.Command("git", "-C", tmpDir, "remote", "add", "origin", "https://example.com/repo.git")
@@ -115,9 +115,9 @@ func TestGetRemotes_InRepoWithOrigin(t *testing.T) {
 		t.Fatalf("git remote add failed: %v", err)
 	}
 
-	remotes, err := GetRemotes()
+	remotes, err := getRemotes()
 	if err != nil {
-		t.Fatalf("GetRemotes failed: %v", err)
+		t.Fatalf("getRemotes failed: %v", err)
 	}
 
 	if len(remotes) != 1 || remotes[0] != "origin" {
@@ -125,12 +125,12 @@ func TestGetRemotes_InRepoWithOrigin(t *testing.T) {
 	}
 }
 
-func TestGetRemotes_NoRemotes(t *testing.T) {
+func Test_getRemotes_NoRemotes(t *testing.T) {
 	initTempGitRepo(t)
 
-	remotes, err := GetRemotes()
+	remotes, err := getRemotes()
 	if err != nil {
-		t.Fatalf("GetRemotes failed: %v", err)
+		t.Fatalf("getRemotes failed: %v", err)
 	}
 
 	if len(remotes) != 0 {
@@ -138,7 +138,7 @@ func TestGetRemotes_NoRemotes(t *testing.T) {
 	}
 }
 
-func TestRemoveRemotes_RemovesAll(t *testing.T) {
+func Test_removeRemotes_RemovesAll(t *testing.T) {
 	tmpDir := initTempGitRepo(t)
 
 	for _, name := range []string{"origin", "upstream"} {
@@ -148,13 +148,13 @@ func TestRemoveRemotes_RemovesAll(t *testing.T) {
 		}
 	}
 
-	if err := RemoveRemotes(); err != nil {
-		t.Fatalf("RemoveRemotes failed: %v", err)
+	if err := removeRemotes(); err != nil {
+		t.Fatalf("removeRemotes failed: %v", err)
 	}
 
-	remotes, err := GetRemotes()
+	remotes, err := getRemotes()
 	if err != nil {
-		t.Fatalf("GetRemotes after removal failed: %v", err)
+		t.Fatalf("getRemotes after removal failed: %v", err)
 	}
 
 	if len(remotes) != 0 {
@@ -162,10 +162,10 @@ func TestRemoveRemotes_RemovesAll(t *testing.T) {
 	}
 }
 
-func TestRemoveRemotes_NoRemotes(t *testing.T) {
+func Test_removeRemotes_NoRemotes(t *testing.T) {
 	initTempGitRepo(t)
 
-	if err := RemoveRemotes(); err != nil {
-		t.Fatalf("RemoveRemotes with no remotes should not error: %v", err)
+	if err := removeRemotes(); err != nil {
+		t.Fatalf("removeRemotes with no remotes should not error: %v", err)
 	}
 }

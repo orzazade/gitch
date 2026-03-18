@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestGetCommits_WithCommits(t *testing.T) {
+func Test_getCommits_WithCommits(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
 
@@ -24,9 +24,9 @@ func TestGetCommits_WithCommits(t *testing.T) {
 		}
 	}
 
-	commits, err := GetCommits(0)
+	commits, err := getCommits(0)
 	if err != nil {
-		t.Fatalf("GetCommits failed: %v", err)
+		t.Fatalf("getCommits failed: %v", err)
 	}
 
 	if len(commits) != 2 {
@@ -40,7 +40,7 @@ func TestGetCommits_WithCommits(t *testing.T) {
 	}
 }
 
-func TestGetCommits_WithLimit(t *testing.T) {
+func Test_getCommits_WithLimit(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
 
@@ -60,9 +60,9 @@ func TestGetCommits_WithLimit(t *testing.T) {
 		}
 	}
 
-	commits, err := GetCommits(2)
+	commits, err := getCommits(2)
 	if err != nil {
-		t.Fatalf("GetCommits failed: %v", err)
+		t.Fatalf("getCommits failed: %v", err)
 	}
 
 	if len(commits) != 2 {
@@ -70,7 +70,7 @@ func TestGetCommits_WithLimit(t *testing.T) {
 	}
 }
 
-func TestGetLocalOnlyHashes_WithUpstream(t *testing.T) {
+func Test_getLocalOnlyHashes_WithUpstream(t *testing.T) {
 	// Create a "remote" repo
 	remoteDir := t.TempDir()
 	for _, args := range [][]string{
@@ -103,9 +103,9 @@ func TestGetLocalOnlyHashes_WithUpstream(t *testing.T) {
 		}
 	}
 
-	hashes, err := GetLocalOnlyHashes()
+	hashes, err := getLocalOnlyHashes()
 	if err != nil {
-		t.Fatalf("GetLocalOnlyHashes failed: %v", err)
+		t.Fatalf("getLocalOnlyHashes failed: %v", err)
 	}
 	if hashes == nil {
 		t.Fatal("expected non-nil map with upstream configured")
@@ -116,7 +116,7 @@ func TestGetLocalOnlyHashes_WithUpstream(t *testing.T) {
 	}
 }
 
-func TestGetLocalOnlyHashes_NoUpstream(t *testing.T) {
+func Test_getLocalOnlyHashes_NoUpstream(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
 
@@ -135,25 +135,25 @@ func TestGetLocalOnlyHashes_NoUpstream(t *testing.T) {
 	}
 
 	// No upstream configured — should return nil map, nil error
-	hashes, err := GetLocalOnlyHashes()
+	hashes, err := getLocalOnlyHashes()
 	if err != nil {
-		t.Fatalf("GetLocalOnlyHashes failed: %v", err)
+		t.Fatalf("getLocalOnlyHashes failed: %v", err)
 	}
 	if hashes != nil {
 		t.Errorf("expected nil map when no upstream, got %v", hashes)
 	}
 }
 
-func TestGetCommits_NotAGitRepo(t *testing.T) {
+func Test_getCommits_NotAGitRepo(t *testing.T) {
 	t.Chdir(t.TempDir())
 
-	_, err := GetCommits(0)
+	_, err := getCommits(0)
 	if err == nil {
 		t.Fatal("expected error when not in a git repo")
 	}
 }
 
-func TestGetCommits_EmptyRepo(t *testing.T) {
+func Test_getCommits_EmptyRepo(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
 
@@ -163,9 +163,9 @@ func TestGetCommits_EmptyRepo(t *testing.T) {
 		t.Fatalf("git init failed: %v", err)
 	}
 
-	commits, err := GetCommits(0)
+	commits, err := getCommits(0)
 	if err != nil {
-		t.Fatalf("GetCommits should handle empty repo: %v", err)
+		t.Fatalf("getCommits should handle empty repo: %v", err)
 	}
 
 	if len(commits) != 0 {

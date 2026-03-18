@@ -7,11 +7,11 @@ import (
 	"strings"
 )
 
-// CreateMirrorBackup creates a full mirror backup of the current git repository.
+// createMirrorBackup creates a full mirror backup of the current git repository.
 // The destPath should be an absolute path where the mirror will be created.
 // Uses --no-local to avoid hardlink issues that could cause data loss.
 // Returns error if not in a git repository or if backup fails.
-func CreateMirrorBackup(destPath string) error {
+func createMirrorBackup(destPath string) error {
 	// Get git repo root
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	output, err := cmd.Output()
