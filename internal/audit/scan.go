@@ -67,14 +67,15 @@ func getCommits(limit int) ([]Commit, error) {
 		return nil, fmt.Errorf("failed to run git log: %w", err)
 	}
 
-	return parseCommits(string(output))
+	return parseCommits(string(output)), nil
 }
 
-// parseCommits parses the git log output into Commit structs
-func parseCommits(output string) ([]Commit, error) {
+// parseCommits parses the git log output into Commit structs.
+// Malformed commit lines are silently skipped.
+func parseCommits(output string) []Commit {
 	output = strings.TrimSpace(output)
 	if output == "" {
-		return []Commit{}, nil
+		return []Commit{}
 	}
 
 	// Split by commit delimiter
@@ -95,7 +96,7 @@ func parseCommits(output string) ([]Commit, error) {
 		commits = append(commits, commit)
 	}
 
-	return commits, nil
+	return commits
 }
 
 // parseCommitLine parses a single commit line into a Commit struct

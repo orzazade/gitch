@@ -117,10 +117,7 @@ func TestParseCommits_Multiple(t *testing.T) {
 <<<COMMIT>>>def5678|||Jane Doe|||jane@example.com|||2024-01-16 11:45:00 -0500|||Second commit
 <<<COMMIT>>>ghi9012|||Bob Smith|||bob@example.com|||2024-01-17 09:00:00 -0500|||Third commit`
 
-	commits, err := parseCommits(output)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	commits := parseCommits(output)
 
 	if len(commits) != 3 {
 		t.Fatalf("expected 3 commits, got %d", len(commits))
@@ -156,10 +153,7 @@ func TestParseCommits_Empty(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			commits, err := parseCommits(tc.input)
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
+			commits := parseCommits(tc.input)
 			if len(commits) != 0 {
 				t.Errorf("expected 0 commits, got %d", len(commits))
 			}
@@ -171,10 +165,7 @@ func TestParseCommits_Empty(t *testing.T) {
 func TestParseCommits_SingleCommit(t *testing.T) {
 	output := "<<<COMMIT>>>abc1234|||John Doe|||john@example.com|||2024-01-15 10:30:00 -0500|||Only commit"
 
-	commits, err := parseCommits(output)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	commits := parseCommits(output)
 
 	if len(commits) != 1 {
 		t.Fatalf("expected 1 commit, got %d", len(commits))
@@ -191,10 +182,7 @@ func TestParseCommits_SkipsMalformed(t *testing.T) {
 <<<COMMIT>>>malformed_line_missing_fields
 <<<COMMIT>>>def5678|||Jane Doe|||jane@example.com|||2024-01-16 11:45:00 -0500|||Another good commit`
 
-	commits, err := parseCommits(output)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	commits := parseCommits(output)
 
 	// Should have 2 commits (malformed one skipped)
 	if len(commits) != 2 {
@@ -358,10 +346,7 @@ func TestParseCommits_WithNewlines(t *testing.T) {
 
 `
 
-	commits, err := parseCommits(output)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+	commits := parseCommits(output)
 
 	if len(commits) != 2 {
 		t.Fatalf("expected 2 commits, got %d", len(commits))
