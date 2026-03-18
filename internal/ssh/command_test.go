@@ -40,6 +40,24 @@ func TestGitSSHCommand_ContainsKeyPath(t *testing.T) {
 	}
 }
 
+func TestGitSSHCommand_EmptyPath(t *testing.T) {
+	_, err := GitSSHCommand("")
+	if err == nil {
+		t.Error("expected error for empty key path")
+	}
+}
+
+func TestGitSSHCommand_ExpandsTilde(t *testing.T) {
+	cmd, err := GitSSHCommand("~/.ssh/test_key")
+	if err != nil {
+		t.Fatalf("GitSSHCommand failed: %v", err)
+	}
+	// Should not contain ~ after expansion
+	if strings.Contains(cmd, "~") {
+		t.Errorf("expected tilde to be expanded, got: %q", cmd)
+	}
+}
+
 func TestGitSSHCommand_QuotesPath(t *testing.T) {
 	cmd, err := GitSSHCommand("/home/user/.ssh/my key")
 	if err != nil {
