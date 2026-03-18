@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -23,7 +24,9 @@ Exits with code 1 if any issues are found, so it can be used in scripts:
 
 Examples:
   gitch doctor`,
-	RunE: runDoctor,
+	RunE:          runDoctor,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func init() {
@@ -42,14 +45,18 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 	if err != nil {
 		checks = append(checks, doctorCheck{false, "cannot load gitch config", "check ~/.config/gitch/config.yaml for syntax errors"})
-		exitDoctorWithCode(checks)
+		if printDoctorResults(checks) > 0 {
+			return errors.New("doctor found issues")
+		}
 		return nil
 	}
 
 	n := len(cfg.Identities)
 	if n == 0 {
 		checks = append(checks, doctorCheck{false, "no identities configured", "run: gitch add"})
-		exitDoctorWithCode(checks)
+		if printDoctorResults(checks) > 0 {
+			return errors.New("doctor found issues")
+		}
 		return nil
 	}
 	checks = append(checks, doctorCheck{true, fmt.Sprintf("%d %s configured", n, nounPlural(n, "identity", "identities")), ""})
@@ -116,15 +123,10 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	exitDoctorWithCode(checks)
-	return nil
-}
-
-// exitDoctorWithCode prints results and exits with code 1 if any issues were found.
-func exitDoctorWithCode(checks []doctorCheck) {
 	if printDoctorResults(checks) > 0 {
-		os.Exit(1)
+		return errors.New("doctor found issues")
 	}
+	return nil
 }
 
 func printDoctorResults(checks []doctorCheck) int {
