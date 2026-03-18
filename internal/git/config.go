@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// ErrGitNotFound indicates git binary was not found on the system.
-var ErrGitNotFound = errors.New("git: executable not found in PATH")
+// errGitNotFound indicates git binary was not found on the system.
+var errGitNotFound = errors.New("git: executable not found in PATH")
 
 // Scope controls which git configuration scope is read or written.
 type Scope string
@@ -47,7 +47,7 @@ func GetConfigScoped(key string, scope Scope) (string, error) {
 	output, err := cmd.Output()
 	if err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
-			return "", ErrGitNotFound
+			return "", errGitNotFound
 		}
 
 		var exitErr *exec.ExitError
@@ -73,7 +73,7 @@ func SetConfigScoped(key, value string, scope Scope) error {
 	cmd := exec.Command("git", args...)
 	if err := cmd.Run(); err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
-			return ErrGitNotFound
+			return errGitNotFound
 		}
 		return fmt.Errorf("failed to set git config %s: %w", key, err)
 	}
@@ -93,7 +93,7 @@ func UnsetConfigScoped(key string, scope Scope) error {
 	cmd := exec.Command("git", args...)
 	if err := cmd.Run(); err != nil {
 		if errors.Is(err, exec.ErrNotFound) {
-			return ErrGitNotFound
+			return errGitNotFound
 		}
 
 		var exitErr *exec.ExitError

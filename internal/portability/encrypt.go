@@ -14,8 +14,8 @@ import (
 var (
 	// errEmptyPassphrase is returned when an empty passphrase is provided.
 	errEmptyPassphrase = errors.New("passphrase cannot be empty")
-	// ErrDecryptionFailed is returned when decryption fails due to wrong passphrase or corrupted data.
-	ErrDecryptionFailed = errors.New("decryption failed: wrong passphrase or corrupted data")
+	// errDecryptionFailed is returned when decryption fails due to wrong passphrase or corrupted data.
+	errDecryptionFailed = errors.New("decryption failed: wrong passphrase or corrupted data")
 )
 
 // EncryptWithPassphrase encrypts plaintext using age with a passphrase.
@@ -73,7 +73,7 @@ func DecryptWithPassphrase(ciphertext, passphrase []byte) ([]byte, error) {
 
 	r, err := age.Decrypt(armorReader, identity)
 	if err != nil {
-		return nil, ErrDecryptionFailed
+		return nil, errDecryptionFailed
 	}
 
 	plaintext, err := io.ReadAll(r)

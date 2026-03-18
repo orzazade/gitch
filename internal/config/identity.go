@@ -8,8 +8,8 @@ import (
 	"strings"
 )
 
-// MaxNameLength is the maximum allowed length for an identity name
-const MaxNameLength = 50
+// maxNameLength is the maximum allowed length for an identity name
+const maxNameLength = 50
 
 // HookMode constants define how the pre-commit hook behaves for an identity
 const (
@@ -59,8 +59,8 @@ func ValidateName(name string) error {
 		return errors.New("identity name cannot be empty")
 	}
 
-	if len(name) > MaxNameLength {
-		return fmt.Errorf("identity name cannot exceed %d characters", MaxNameLength)
+	if len(name) > maxNameLength {
+		return fmt.Errorf("identity name cannot exceed %d characters", maxNameLength)
 	}
 
 	if !nameRegex.MatchString(name) {

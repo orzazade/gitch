@@ -44,8 +44,8 @@ func TestDecrypt_WrongPassphrase(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for wrong passphrase")
 	}
-	if !errors.Is(err, ErrDecryptionFailed) {
-		t.Errorf("expected ErrDecryptionFailed, got: %v", err)
+	if !errors.Is(err, errDecryptionFailed) {
+		t.Errorf("expected errDecryptionFailed, got: %v", err)
 	}
 }
 
