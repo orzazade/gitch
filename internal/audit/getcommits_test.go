@@ -70,6 +70,34 @@ func TestGetCommits_WithLimit(t *testing.T) {
 	}
 }
 
+func TestGetLocalOnlyHashes_NoUpstream(t *testing.T) {
+	repoDir := t.TempDir()
+	t.Chdir(repoDir)
+
+	cmds := [][]string{
+		{"git", "init"},
+		{"git", "config", "user.email", "test@test.com"},
+		{"git", "config", "user.name", "Test"},
+		{"git", "commit", "--allow-empty", "-m", "commit"},
+	}
+	for _, args := range cmds {
+		cmd := exec.Command(args[0], args[1:]...)
+		cmd.Dir = repoDir
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("%v failed: %v\n%s", args, err, out)
+		}
+	}
+
+	// No upstream configured — should return nil map, nil error
+	hashes, err := GetLocalOnlyHashes()
+	if err != nil {
+		t.Fatalf("GetLocalOnlyHashes failed: %v", err)
+	}
+	if hashes != nil {
+		t.Errorf("expected nil map when no upstream, got %v", hashes)
+	}
+}
+
 func TestGetCommits_EmptyRepo(t *testing.T) {
 	repoDir := t.TempDir()
 	t.Chdir(repoDir)
