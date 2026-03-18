@@ -67,13 +67,13 @@ func IdentityToHosts(identity config.Identity) []HostConfig {
 
 	return []HostConfig{
 		{
-			Alias:        fmt.Sprintf("github-%s", identity.Name),
+			Alias:        "github-" + identity.Name,
 			HostName:     "github.com",
 			User:         "git",
 			IdentityFile: expandedPath,
 		},
 		{
-			Alias:        fmt.Sprintf("gitlab-%s", identity.Name),
+			Alias:        "gitlab-" + identity.Name,
 			HostName:     "gitlab.com",
 			User:         "git",
 			IdentityFile: expandedPath,

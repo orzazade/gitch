@@ -44,5 +44,5 @@ func DefaultSSHKeyPath(identityName string) string {
 		// Return empty on error - caller should handle
 		return ""
 	}
-	return filepath.Join(home, ".ssh", fmt.Sprintf("gitch_%s_ed25519", identityName))
+	return filepath.Join(home, ".ssh", "gitch_"+identityName+"_ed25519")
 }
