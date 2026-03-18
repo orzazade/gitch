@@ -99,13 +99,9 @@ func (c *Config) Save() error {
 // findIdentityIndex finds the index of an identity by name (case-insensitive)
 // Returns -1 if not found
 func (c *Config) findIdentityIndex(name string) int {
-	nameLower := strings.ToLower(name)
-	for i, identity := range c.Identities {
-		if strings.ToLower(identity.Name) == nameLower {
-			return i
-		}
-	}
-	return -1
+	return slices.IndexFunc(c.Identities, func(id Identity) bool {
+		return strings.EqualFold(id.Name, name)
+	})
 }
 
 // errIdentityNotFound returns a formatted error for a missing identity.
