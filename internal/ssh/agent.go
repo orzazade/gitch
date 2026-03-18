@@ -84,7 +84,7 @@ func IsKeyLoadedInAgent(keyPath string) bool {
 	if err != nil {
 		return false
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	keys, err := agent.NewClient(conn).List()
 	if err != nil {
@@ -113,7 +113,7 @@ func AddKeyToAgentWithPassphrase(keyPath string, passphrase []byte) error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to ssh-agent: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	// Read key file
 	keyData, err := os.ReadFile(keyPath)

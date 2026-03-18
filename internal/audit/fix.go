@@ -173,7 +173,7 @@ func Fix(scanResult *ScanResult) error {
 	if err := os.WriteFile(mailmapPath, []byte(mailmapContent), 0644); err != nil {
 		return fmt.Errorf("failed to write mailmap: %w", err)
 	}
-	defer os.Remove(mailmapPath) //nolint:errcheck // best-effort cleanup of temp file
+	defer func() { _ = os.Remove(mailmapPath) }() // best-effort cleanup
 
 	// Step 8: Run git-filter-repo (AUDIT-04)
 	fmt.Println("\nRewriting history...")

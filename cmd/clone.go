@@ -101,7 +101,7 @@ func runClone(cmd *cobra.Command, args []string) error {
 	if err := os.Chdir(cloneDir); err != nil {
 		return fmt.Errorf("failed to enter cloned repository: %w", err)
 	}
-	defer os.Chdir(origDir) //nolint:errcheck
+	defer func() { _ = os.Chdir(origDir) }()
 
 	// Find matching rule (check both remote and directory rules)
 	matchedRule := rules.FindBestMatch(cfg.Rules, cloneDir, repoURL)
