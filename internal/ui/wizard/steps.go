@@ -24,14 +24,11 @@ var sshOptions = []string{
 	"Skip SSH setup",
 }
 
-// sshChoiceGenerate is the index for generating a new SSH key
-const sshChoiceGenerate = 0
-
-// sshChoiceUseExisting is the index for using an existing SSH key
-const sshChoiceUseExisting = 1
-
-// sshChoiceSkip is the index for skipping SSH setup
-const sshChoiceSkip = 2
+const (
+	sshChoiceGenerate    = 0
+	sshChoiceUseExisting = 1
+	sshChoiceSkip        = 2
+)
 
 // gpgOptions are the choices for GPG key handling
 var gpgOptions = []string{
@@ -40,14 +37,11 @@ var gpgOptions = []string{
 	"Skip GPG setup (can add later)",
 }
 
-// gpgChoiceGenerate is the index for generating a new GPG key
-const gpgChoiceGenerate = 0
-
-// gpgChoiceUseExisting is the index for using an existing GPG key
-const gpgChoiceUseExisting = 1
-
-// gpgChoiceSkip is the index for skipping GPG setup
-const gpgChoiceSkip = 2
+const (
+	gpgChoiceGenerate    = 0
+	gpgChoiceUseExisting = 1
+	gpgChoiceSkip        = 2
+)
 
 // sshKeyTypeOptions are the choices for SSH key type
 var sshKeyTypeOptions = []string{
@@ -55,11 +49,10 @@ var sshKeyTypeOptions = []string{
 	"RSA 4096-bit (Azure DevOps compatible)",
 }
 
-// sshKeyTypeEd25519 is the index for Ed25519 key type
-const sshKeyTypeEd25519 = 0
-
-// sshKeyTypeRSA is the index for RSA key type
-const sshKeyTypeRSA = 1
+const (
+	sshKeyTypeEd25519 = 0
+	sshKeyTypeRSA     = 1
+)
 
 // getTotalSteps returns the total number of steps based on SSH and GPG choices.
 func getTotalSteps(sshChoice, gpgChoice int, sshPassphraseEmpty, gpgPassphraseEmpty bool) int {
