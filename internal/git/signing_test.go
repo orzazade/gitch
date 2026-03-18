@@ -1,16 +1,13 @@
 package git
 
 import (
-	"os"
 	"testing"
 )
 
 func TestApplySigningConfigScoped_SetsKeys(t *testing.T) {
 	env := setupTestEnv(t)
 	defer env.cleanup(t)
-	if err := os.Chdir(env.dir); err != nil {
-		t.Fatalf("failed to chdir: %v", err)
-	}
+	t.Chdir(env.dir)
 
 	keyID := "ABCD1234"
 	if err := ApplySigningConfigScoped(keyID, ScopeLocal); err != nil {
@@ -37,9 +34,7 @@ func TestApplySigningConfigScoped_SetsKeys(t *testing.T) {
 func TestClearSigningConfigScoped_RemovesKeys(t *testing.T) {
 	env := setupTestEnv(t)
 	defer env.cleanup(t)
-	if err := os.Chdir(env.dir); err != nil {
-		t.Fatalf("failed to chdir: %v", err)
-	}
+	t.Chdir(env.dir)
 
 	if err := ApplySigningConfigScoped("ABCD1234", ScopeLocal); err != nil {
 		t.Fatalf("ApplySigningConfigScoped failed: %v", err)
@@ -60,9 +55,7 @@ func TestClearSigningConfigScoped_RemovesKeys(t *testing.T) {
 func TestClearSigningConfigScoped_Idempotent(t *testing.T) {
 	env := setupTestEnv(t)
 	defer env.cleanup(t)
-	if err := os.Chdir(env.dir); err != nil {
-		t.Fatalf("failed to chdir: %v", err)
-	}
+	t.Chdir(env.dir)
 
 	// Clear when nothing is set — should not error
 	if err := ClearSigningConfigScoped(ScopeLocal); err != nil {
@@ -73,9 +66,7 @@ func TestClearSigningConfigScoped_Idempotent(t *testing.T) {
 func TestIsGitRepository_InRepo(t *testing.T) {
 	env := setupTestEnv(t)
 	defer env.cleanup(t)
-	if err := os.Chdir(env.dir); err != nil {
-		t.Fatalf("failed to chdir: %v", err)
-	}
+	t.Chdir(env.dir)
 
 	if !IsGitRepository() {
 		t.Error("expected IsGitRepository() = true inside git repo")
