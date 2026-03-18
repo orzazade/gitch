@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/hooks"
@@ -174,7 +173,7 @@ func runHookValidate(cmd *cobra.Command, args []string) error {
 
 	if !result.Match {
 		fmt.Println(result.FormatMismatch())
-		os.Exit(1)
+		return errors.New("identity mismatch")
 	}
 	return nil
 }
