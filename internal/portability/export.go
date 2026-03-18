@@ -19,7 +19,7 @@ var ErrNoIdentities = errors.New("no identities to export")
 // Returns the export structure with all identities and rules.
 func BuildExportConfig(cfg *config.Config) *ExportConfig {
 	return &ExportConfig{
-		Version:    CurrentExportVersion,
+		Version:    currentExportVersion,
 		ExportedAt: time.Now().UTC(),
 		Default:    cfg.Default,
 		Identities: cfg.Identities,
@@ -102,7 +102,7 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 
 	// Build encrypted export config
 	export := &ExportConfig{
-		Version:    CurrentExportVersion,
+		Version:    currentExportVersion,
 		ExportedAt: time.Now().UTC(),
 		Encryption: &EncryptionInfo{
 			Method:  "age-scrypt",

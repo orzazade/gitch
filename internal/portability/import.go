@@ -40,8 +40,8 @@ type ImportResult struct {
 	Skipped           []string
 }
 
-// ErrVersionTooNew is returned when the export file version is newer than supported.
-var ErrVersionTooNew = errors.New("export file version is newer than supported")
+// errVersionTooNew is returned when the export file version is newer than supported.
+var errVersionTooNew = errors.New("export file version is newer than supported")
 
 // ImportFromFile reads and parses a YAML export file.
 // The path supports ~ expansion for home directory.
@@ -66,9 +66,9 @@ func ImportFromFile(path string) (*ExportConfig, error) {
 	}
 
 	// Validate version
-	if export.Version > CurrentExportVersion {
+	if export.Version > currentExportVersion {
 		return nil, fmt.Errorf("%w: file version %d, supported up to %d",
-			ErrVersionTooNew, export.Version, CurrentExportVersion)
+			errVersionTooNew, export.Version, currentExportVersion)
 	}
 
 	// Convert EncryptedIdentities to Identities for config merge

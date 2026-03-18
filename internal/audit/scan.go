@@ -18,8 +18,8 @@ const (
 	commitDelim = "<<<COMMIT>>>"
 )
 
-// DefaultScanLimit is the number of commits scanned when no explicit limit is set.
-const DefaultScanLimit = 1000
+// defaultScanLimit is the number of commits scanned when no explicit limit is set.
+const defaultScanLimit = 1000
 
 // Commit represents a single git commit with metadata
 type Commit struct {
@@ -218,7 +218,7 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 	// - limit < 0: scan all commits (unlimited)
 	limit := opts.Limit
 	if limit == 0 {
-		limit = DefaultScanLimit
+		limit = defaultScanLimit
 	} else if limit < 0 {
 		limit = 0 // Pass 0 to getCommits = unlimited (no --max-count flag)
 	}

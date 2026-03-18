@@ -30,8 +30,8 @@ func TestBuildExportConfig(t *testing.T) {
 
 	export := BuildExportConfig(cfg)
 
-	if export.Version != CurrentExportVersion {
-		t.Errorf("expected version %d, got %d", CurrentExportVersion, export.Version)
+	if export.Version != currentExportVersion {
+		t.Errorf("expected version %d, got %d", currentExportVersion, export.Version)
 	}
 	if export.Default != "work" {
 		t.Errorf("expected default 'work', got %q", export.Default)
@@ -84,13 +84,13 @@ func TestExportToFile(t *testing.T) {
 	if !strings.Contains(content, "# Exported:") {
 		t.Error("expected exported timestamp in header")
 	}
-	if !strings.Contains(content, fmt.Sprintf("# Version: %d", CurrentExportVersion)) {
-		t.Errorf("expected version %d in header", CurrentExportVersion)
+	if !strings.Contains(content, fmt.Sprintf("# Version: %d", currentExportVersion)) {
+		t.Errorf("expected version %d in header", currentExportVersion)
 	}
 
 	// Verify YAML content
-	if !strings.Contains(content, fmt.Sprintf("version: %d", CurrentExportVersion)) {
-		t.Errorf("expected 'version: %d' in YAML", CurrentExportVersion)
+	if !strings.Contains(content, fmt.Sprintf("version: %d", currentExportVersion)) {
+		t.Errorf("expected 'version: %d' in YAML", currentExportVersion)
 	}
 	if !strings.Contains(content, "default: work") {
 		t.Error("expected 'default: work' in YAML")

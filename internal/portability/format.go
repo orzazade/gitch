@@ -8,9 +8,9 @@ import (
 	"github.com/orzazade/gitch/internal/rules"
 )
 
-// CurrentExportVersion is the current version of the export format.
+// currentExportVersion is the current version of the export format.
 // Increment this when making breaking changes to the export format.
-const CurrentExportVersion = 2
+const currentExportVersion = 2
 
 // EncryptionInfo describes the encryption method used for SSH keys.
 type EncryptionInfo struct {
