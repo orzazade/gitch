@@ -32,7 +32,6 @@ Examples:
 type autoSwitchResult struct {
 	Switched      bool
 	ToIdentity    string
-	MatchedRule   *rules.Rule
 	SkippedReason string
 }
 
@@ -98,7 +97,7 @@ func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 	if err != nil {
 		return &autoSwitchResult{
 			Switched:      false,
-			MatchedRule:   matchedRule,
+	
 			SkippedReason: fmt.Sprintf("identity '%s' not found", matchedRule.Identity),
 		}, nil
 	}
@@ -114,7 +113,7 @@ func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 		return &autoSwitchResult{
 			Switched:      false,
 			ToIdentity:    expectedIdentity.Name,
-			MatchedRule:   matchedRule,
+	
 			SkippedReason: "already using correct identity",
 		}, nil
 	}
@@ -127,6 +126,6 @@ func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 	return &autoSwitchResult{
 		Switched:    true,
 		ToIdentity:  expectedIdentity.Name,
-		MatchedRule: matchedRule,
+
 	}, nil
 }
