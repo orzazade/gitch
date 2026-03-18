@@ -21,21 +21,6 @@ func ValidateSSHKey(pemData []byte) error {
 	return err
 }
 
-// ValidateEd25519Key validates that the given PEM data is an Ed25519 private key.
-// Returns nil if the key is a valid Ed25519 key (encrypted or not).
-// Returns an error if the key is not Ed25519 or cannot be parsed.
-// Deprecated: Use ValidateSSHKey for broader key type support.
-func ValidateEd25519Key(pemData []byte) error {
-	kt, err := GetKeyType(pemData)
-	if err != nil {
-		return fmt.Errorf("key is not Ed25519: %w", err)
-	}
-	if kt != KeyTypeEd25519 {
-		return fmt.Errorf("key is not Ed25519: found %s", kt)
-	}
-	return nil
-}
-
 // GetKeyType parses the PEM data and returns the key type.
 // Supports both encrypted and unencrypted keys.
 // Returns an error if the key cannot be parsed or is not a supported type.

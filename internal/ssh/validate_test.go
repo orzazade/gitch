@@ -4,8 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/rsa"
-	"encoding/pem"
+"encoding/pem"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,85 +12,6 @@ import (
 
 	"golang.org/x/crypto/ssh"
 )
-
-func TestValidateEd25519Key_Valid(t *testing.T) {
-	// Generate a valid Ed25519 key
-	privKey, _, err := GenerateKeyPair("test@gitch", nil)
-	if err != nil {
-		t.Fatalf("Failed to generate key: %v", err)
-	}
-
-	err = ValidateEd25519Key(privKey)
-	if err != nil {
-		t.Errorf("ValidateEd25519Key should accept valid Ed25519 key: %v", err)
-	}
-}
-
-func TestValidateEd25519Key_ValidEncrypted(t *testing.T) {
-	// Generate an encrypted Ed25519 key
-	privKey, _, err := GenerateKeyPair("test@gitch", []byte("passphrase"))
-	if err != nil {
-		t.Fatalf("Failed to generate key: %v", err)
-	}
-
-	err = ValidateEd25519Key(privKey)
-	if err != nil {
-		t.Errorf("ValidateEd25519Key should accept encrypted Ed25519 key: %v", err)
-	}
-}
-
-func TestValidateEd25519Key_RejectsRSA(t *testing.T) {
-	// Generate an RSA key
-	rsaKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatalf("Failed to generate RSA key: %v", err)
-	}
-
-	// Marshal to OpenSSH format
-	pemBlock, err := ssh.MarshalPrivateKey(rsaKey, "test")
-	if err != nil {
-		t.Fatalf("Failed to marshal RSA key: %v", err)
-	}
-	pemData := pem.EncodeToMemory(pemBlock)
-
-	err = ValidateEd25519Key(pemData)
-	if err == nil {
-		t.Error("ValidateEd25519Key should reject RSA key")
-	}
-	if !strings.Contains(err.Error(), "not Ed25519") {
-		t.Errorf("Error should mention 'not Ed25519', got: %v", err)
-	}
-}
-
-func TestValidateEd25519Key_RejectsECDSA(t *testing.T) {
-	// Generate an ECDSA key
-	ecdsaKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		t.Fatalf("Failed to generate ECDSA key: %v", err)
-	}
-
-	// Marshal to OpenSSH format
-	pemBlock, err := ssh.MarshalPrivateKey(ecdsaKey, "test")
-	if err != nil {
-		t.Fatalf("Failed to marshal ECDSA key: %v", err)
-	}
-	pemData := pem.EncodeToMemory(pemBlock)
-
-	err = ValidateEd25519Key(pemData)
-	if err == nil {
-		t.Error("ValidateEd25519Key should reject ECDSA key")
-	}
-	if !strings.Contains(err.Error(), "not Ed25519") {
-		t.Errorf("Error should mention 'not Ed25519', got: %v", err)
-	}
-}
-
-func TestValidateEd25519Key_InvalidData(t *testing.T) {
-	err := ValidateEd25519Key([]byte("not a valid key"))
-	if err == nil {
-		t.Error("ValidateEd25519Key should reject invalid data")
-	}
-}
 
 func TestIsEncrypted_Encrypted(t *testing.T) {
 	// Generate an encrypted key
