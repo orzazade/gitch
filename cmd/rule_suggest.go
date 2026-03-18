@@ -113,7 +113,7 @@ func suggestFromExistingRules(cfg *config.Config, remote *suggestParsedRemote) *
 				Identity: c.identity,
 				Pattern:  buildSuggestPattern(remote),
 				RuleType: rules.RemoteRule,
-				Reason:   fmt.Sprintf("you already use '%s' for %s/%s repos", c.identity, remote.Host, remote.Org),
+				Reason:   "you already use '" + c.identity + "' for " + remote.Host + "/" + remote.Org + " repos",
 			}
 		}
 	}
@@ -125,7 +125,7 @@ func suggestFromExistingRules(cfg *config.Config, remote *suggestParsedRemote) *
 			Identity: c.identity,
 			Pattern:  buildSuggestPattern(remote),
 			RuleType: rules.RemoteRule,
-			Reason:   fmt.Sprintf("you use '%s' for other repos on %s", c.identity, remote.Host),
+			Reason:   "you use '" + c.identity + "' for other repos on " + remote.Host,
 		}
 	}
 
@@ -149,7 +149,7 @@ func suggestFromCurrentEmail(cfg *config.Config, remote *suggestParsedRemote, cu
 		Identity: cfg.Identities[idx].Name,
 		Pattern:  buildSuggestPattern(remote),
 		RuleType: rules.RemoteRule,
-		Reason:   fmt.Sprintf("current git email (%s) matches identity '%s'", currentEmail, cfg.Identities[idx].Name),
+		Reason:   "current git email (" + currentEmail + ") matches identity '" + cfg.Identities[idx].Name + "'",
 	}
 }
 

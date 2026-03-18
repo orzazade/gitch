@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"text/tabwriter"
 
 	"github.com/orzazade/gitch/internal/audit"
@@ -164,11 +165,11 @@ func printSummary(result *audit.ScanResult) {
 	}
 
 	if localMismatches > 0 {
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("  %d local-only (safe to fix with 'gitch audit --fix')", localMismatches)))
+		fmt.Println(ui.WarningStyle.Render("  " + strconv.Itoa(localMismatches) + " local-only (safe to fix with 'gitch audit --fix')"))
 	}
 
 	if pushedMismatches > 0 {
-		fmt.Println(ui.ErrorStyle.Render(fmt.Sprintf("  %d already pushed (requires force-push to fix)", pushedMismatches)))
+		fmt.Println(ui.ErrorStyle.Render("  " + strconv.Itoa(pushedMismatches) + " already pushed (requires force-push to fix)"))
 	}
 
 	if result.NoUpstream {

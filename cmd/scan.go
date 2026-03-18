@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -233,7 +234,7 @@ func printScanResults(results []repoResult) {
 		}
 	}
 
-	fmt.Println(ui.DimStyle.Render(fmt.Sprintf("gitch scan — %d %s found", len(results), nounPlural(len(results), "repo", "repos"))))
+	fmt.Println(ui.DimStyle.Render("gitch scan — " + strconv.Itoa(len(results)) + " " + nounPlural(len(results), "repo", "repos") + " found"))
 	fmt.Println()
 
 	for _, r := range results {
@@ -284,13 +285,11 @@ func printScanResults(results []repoResult) {
 
 	// Summary
 	if issues == 0 {
-		fmt.Println(ui.SuccessStyle.Render(fmt.Sprintf("All %d %s properly configured.", len(results), nounPlural(len(results), "repo", "repos"))))
+		fmt.Println(ui.SuccessStyle.Render("All " + strconv.Itoa(len(results)) + " " + nounPlural(len(results), "repo", "repos") + " properly configured."))
 	} else {
-		fmt.Println(ui.WarningStyle.Render(fmt.Sprintf("%d of %d %s %s issues.",
-			issues, len(results),
-			nounPlural(len(results), "repo", "repos"),
-			nounPlural(issues, "has", "have"),
-		)))
+		fmt.Println(ui.WarningStyle.Render(strconv.Itoa(issues) + " of " + strconv.Itoa(len(results)) + " " +
+			nounPlural(len(results), "repo", "repos") + " " +
+			nounPlural(issues, "has", "have") + " issues."))
 		fmt.Println(ui.DimStyle.Render("Run 'gitch doctor' inside a repo for details, or 'gitch use <name>' to fix."))
 	}
 }
