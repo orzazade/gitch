@@ -1,7 +1,6 @@
 package audit
 
 import (
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -289,29 +288,8 @@ func TestIsGitRepo_InRepo(t *testing.T) {
 
 // TestIsGitRepo_NotInRepo tests IsGitRepo returns false outside a git repo
 func TestIsGitRepo_NotInRepo(t *testing.T) {
-	// Save current directory
-	originalDir, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("failed to get current directory: %v", err)
-	}
-	defer os.Chdir(originalDir) //nolint:errcheck
-
-	// Change to a directory that's definitely not a git repo
-	tmpDir := os.TempDir()
-	if err := os.Chdir(tmpDir); err != nil {
-		t.Fatalf("failed to change to temp directory: %v", err)
-	}
-
-	// Create a subdir in temp that's definitely not a git repo
-	testDir, err := os.MkdirTemp(tmpDir, "not-a-git-repo-*")
-	if err != nil {
-		t.Fatalf("failed to create temp directory: %v", err)
-	}
-	defer os.RemoveAll(testDir)
-
-	if err := os.Chdir(testDir); err != nil {
-		t.Fatalf("failed to change to test directory: %v", err)
-	}
+	// t.TempDir creates an isolated directory; t.Chdir auto-restores cwd
+	t.Chdir(t.TempDir())
 
 	// IsGitRepo should return false in a non-git directory
 	if IsGitRepo() {
