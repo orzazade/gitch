@@ -32,16 +32,13 @@ func isAzureDevOpsRemote(remoteURL string) bool {
 
 // GetCurrentRemoteType detects if the current git repository's origin remote
 // is an Azure DevOps repository.
-// Returns (true, nil) if Azure DevOps is detected.
-// Returns (false, nil) if not Azure DevOps or no origin remote exists.
-// Returns (false, error) only if the git command fails for other reasons.
-func GetCurrentRemoteType() (bool, error) {
+// Returns true if Azure DevOps is detected, false otherwise (including
+// when not in a git repo or no origin remote exists).
+func GetCurrentRemoteType() bool {
 	url, err := GetConfigScoped("remote.origin.url", ScopeEffective)
 	if err != nil {
-		// If the config read fails, return false without error
-		// This handles: not in a git repo, no origin remote, etc.
-		return false, nil
+		return false
 	}
 
-	return isAzureDevOpsRemote(url), nil
+	return isAzureDevOpsRemote(url)
 }
