@@ -109,9 +109,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 			Subject: c.Subject,
 		}
 
-		if len(entry.Subject) > 50 {
-			entry.Subject = entry.Subject[:47] + "..."
-		}
+		entry.Subject = truncateSubject(entry.Subject, 50)
 
 		// Match email to identity
 		if id, ok := identityByEmail[strings.ToLower(c.AuthorEmail)]; ok {

@@ -81,6 +81,14 @@ func resolveApplyScope(forceLocal, forceGlobal bool) (gitpkg.Scope, error) {
 	return defaultApplyScope(), nil
 }
 
+// truncateSubject shortens a commit subject to maxLen characters, appending "..." if truncated.
+func truncateSubject(subject string, maxLen int) string {
+	if len(subject) <= maxLen {
+		return subject
+	}
+	return subject[:maxLen-3] + "..."
+}
+
 func resolveCurrentProfileState(cfg *config.Config) (*currentProfileState, error) {
 	currentName, currentEmail, err := gitpkg.GetCurrentIdentity()
 	if err != nil {

@@ -81,10 +81,7 @@ func runVerify(cmd *cobra.Command, args []string) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "HASH\tAUTHOR\tDATE\tSUBJECT")
 	for _, r := range result.Mismatches {
-		subject := r.Commit.Subject
-		if len(subject) > 50 {
-			subject = subject[:47] + "..."
-		}
+		subject := truncateSubject(r.Commit.Subject, 50)
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
 			r.Commit.Hash[:8],
 			ui.ErrorStyle.Render(r.Commit.AuthorEmail),

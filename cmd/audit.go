@@ -113,10 +113,7 @@ func printAuditResults(result *audit.ScanResult) error {
 
 	for _, r := range result.Results {
 		status := formatStatus(r)
-		subject := r.Commit.Subject
-		if len(subject) > 50 {
-			subject = subject[:47] + "..."
-		}
+		subject := truncateSubject(r.Commit.Subject, 50)
 
 		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
 			status,
