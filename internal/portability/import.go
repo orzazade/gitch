@@ -110,19 +110,14 @@ func DetectConflicts(cfg *config.Config, export *ExportConfig) []Conflict {
 
 	// Check rule conflicts
 	for _, incoming := range export.Rules {
-		for _, existing := range cfg.Rules {
-			if existing.Pattern == incoming.Pattern {
-				// Same pattern, check if it's different
-				if !rulesEqual(&existing, &incoming) {
-					conflicts = append(conflicts, Conflict{
-						Type:     RuleConflict,
-						Key:      incoming.Pattern,
-						Existing: existing,
-						Incoming: incoming,
-					})
-				}
-				break
-			}
+		idx := slices.IndexFunc(cfg.Rules, func(r rules.Rule) bool { return r.Pattern == incoming.Pattern })
+		if idx != -1 && !rulesEqual(&cfg.Rules[idx], &incoming) {
+			conflicts = append(conflicts, Conflict{
+				Type:     RuleConflict,
+				Key:      incoming.Pattern,
+				Existing: cfg.Rules[idx],
+				Incoming: incoming,
+			})
 		}
 	}
 
