@@ -43,8 +43,8 @@ type ExportConfig struct {
 	Rules               []rules.Rule        `yaml:"rules,omitempty"`
 }
 
-// toencryptedIdentity converts a config.Identity to encryptedIdentity.
-func toencryptedIdentity(id config.Identity) encryptedIdentity {
+// toEncryptedIdentity converts a config.Identity to encryptedIdentity.
+func toEncryptedIdentity(id config.Identity) encryptedIdentity {
 	return encryptedIdentity{
 		Name:       id.Name,
 		GitName:    id.GitName,

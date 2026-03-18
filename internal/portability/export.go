@@ -115,7 +115,7 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 
 	// Process each identity
 	for _, id := range cfg.Identities {
-		encId := toencryptedIdentity(id)
+		encId := toEncryptedIdentity(id)
 
 		// If identity has SSH key, read and encrypt it
 		if id.SSHKeyPath != "" {
