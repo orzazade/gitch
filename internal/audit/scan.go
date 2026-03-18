@@ -180,38 +180,50 @@ type ScanResult struct {
 	NoUpstream     bool // true if we couldn't determine pushed status
 }
 
-// Scan performs an identity audit on the git history
-// It compares commit author emails against the expected identity for this repo
-func Scan(opts ScanOptions) (*ScanResult, error) {
-	// Load config
+// matchedIdentity holds the resolved rule and identity for the current repository.
+type matchedIdentity struct {
+	rule     *rules.Rule
+	identity *config.Identity
+}
+
+// resolveExpectedIdentity loads config, determines the current repo's matching
+// rule, and resolves the expected identity. Returns (nil, nil) when no rule matches.
+func resolveExpectedIdentity() (*matchedIdentity, error) {
 	cfg, err := config.Load()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get working directory: %w", err)
 	}
 
-	// Get remote URL (may be empty)
 	remoteURL, _ := rules.GetGitRemoteURL()
-
-	// Find best matching rule
 	matchedRule := rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
-
-	// If no rule matches, return empty result (nothing to audit against)
 	if matchedRule == nil {
+		return nil, nil
+	}
+
+	identity, err := cfg.GetIdentity(matchedRule.Identity)
+	if err != nil {
+		return nil, fmt.Errorf("rule references unknown identity %q: %w", matchedRule.Identity, err)
+	}
+
+	return &matchedIdentity{rule: matchedRule, identity: identity}, nil
+}
+
+// Scan performs an identity audit on the git history
+// It compares commit author emails against the expected identity for this repo
+func Scan(opts ScanOptions) (*ScanResult, error) {
+	resolved, err := resolveExpectedIdentity()
+	if err != nil {
+		return nil, err
+	}
+	if resolved == nil {
 		return &ScanResult{
 			Results: []Result{},
 		}, nil
-	}
-
-	// Get expected identity
-	expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
-	if err != nil {
-		return nil, fmt.Errorf("rule references unknown identity %q: %w", matchedRule.Identity, err)
 	}
 
 	// Handle limit:
@@ -251,7 +263,7 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 		}
 
 		// Check for mismatch (case-insensitive email comparison)
-		isMismatched := !strings.EqualFold(commit.AuthorEmail, expectedIdentity.Email)
+		isMismatched := !strings.EqualFold(commit.AuthorEmail, resolved.identity.Email)
 		if isMismatched {
 			mismatchCount++
 		}
@@ -260,7 +272,7 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 		if isMismatched || opts.ShowAll {
 			results = append(results, Result{
 				Commit:        commit,
-				ExpectedEmail: expectedIdentity.Email,
+				ExpectedEmail: resolved.identity.Email,
 				IsMismatched:  isMismatched,
 				IsPushed:      isPushed,
 			})
@@ -269,8 +281,8 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 
 	return &ScanResult{
 		Results:        results,
-		ExpectedEmail:  expectedIdentity.Email,
-		MatchedRule:    matchedRule,
+		ExpectedEmail:  resolved.identity.Email,
+		MatchedRule:    resolved.rule,
 		TotalScanned:   len(commits),
 		MismatchCount:  mismatchCount,
 		LocalOnlyCount: localOnlyCount,

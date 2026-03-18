@@ -2,10 +2,8 @@ package audit
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/rules"
 )
 
@@ -26,40 +24,27 @@ type VerifyResult struct {
 // VerifyUnpushed checks that all unpushed commits match the expected identity
 // for this repository. Returns nil VerifyResult with nil error if no rule matches.
 func VerifyUnpushed() (*VerifyResult, error) {
-	cfg, err := config.Load()
+	resolved, err := resolveExpectedIdentity()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
+		return nil, err
 	}
-
-	cwd, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get working directory: %w", err)
-	}
-
-	remoteURL, _ := rules.GetGitRemoteURL()
-	matchedRule := rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
-	if matchedRule == nil {
+	if resolved == nil {
 		return nil, nil
-	}
-
-	expectedIdentity, err := cfg.GetIdentity(matchedRule.Identity)
-	if err != nil {
-		return nil, fmt.Errorf("rule references unknown identity %q: %w", matchedRule.Identity, err)
 	}
 
 	localHashes := getLocalOnlyHashes()
 	if localHashes == nil {
 		return &VerifyResult{
-			ExpectedEmail: expectedIdentity.Email,
-			MatchedRule:   matchedRule,
+			ExpectedEmail: resolved.identity.Email,
+			MatchedRule:   resolved.rule,
 			NoUpstream:    true,
 		}, nil
 	}
 
 	if len(localHashes) == 0 {
 		return &VerifyResult{
-			ExpectedEmail: expectedIdentity.Email,
-			MatchedRule:   matchedRule,
+			ExpectedEmail: resolved.identity.Email,
+			MatchedRule:   resolved.rule,
 		}, nil
 	}
 
@@ -76,10 +61,10 @@ func VerifyUnpushed() (*VerifyResult, error) {
 			continue
 		}
 		total++
-		if !strings.EqualFold(commit.AuthorEmail, expectedIdentity.Email) {
+		if !strings.EqualFold(commit.AuthorEmail, resolved.identity.Email) {
 			mismatches = append(mismatches, Result{
 				Commit:        commit,
-				ExpectedEmail: expectedIdentity.Email,
+				ExpectedEmail: resolved.identity.Email,
 				IsMismatched:  true,
 				IsPushed:      false,
 			})
@@ -89,7 +74,7 @@ func VerifyUnpushed() (*VerifyResult, error) {
 	return &VerifyResult{
 		Mismatches:    mismatches,
 		Total:         total,
-		ExpectedEmail: expectedIdentity.Email,
-		MatchedRule:   matchedRule,
+		ExpectedEmail: resolved.identity.Email,
+		MatchedRule:   resolved.rule,
 	}, nil
 }
