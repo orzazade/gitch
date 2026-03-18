@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -175,7 +176,7 @@ func parseRemoteForSuggest(rawURL string) (*suggestParsedRemote, error) {
 	// Delegate to rules package's GetGitRemoteURL for fetching; here we just parse.
 	url := strings.TrimSpace(rawURL)
 	if url == "" {
-		return nil, fmt.Errorf("empty remote URL")
+		return nil, errors.New("empty remote URL")
 	}
 
 	// Handle SSH format: git@host:org/repo.git
@@ -221,7 +222,7 @@ func parseRemoteForSuggest(rawURL string) (*suggestParsedRemote, error) {
 
 func runRuleSuggest(cmd *cobra.Command, args []string) error {
 	if !gitpkg.IsGitRepository() {
-		return fmt.Errorf("not a git repository; run this command from inside a repo")
+		return errors.New("not a git repository; run this command from inside a repo")
 	}
 
 	cfg, err := config.Load()
