@@ -1,10 +1,28 @@
 package prompt
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
+
+// readCache is a test helper that reads the current identity from the cache file.
+func readCache() (string, error) {
+	p, err := cachePath()
+	if err != nil {
+		return "", err
+	}
+	data, err := os.ReadFile(p)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return "", nil
+		}
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
+}
 
 // TestUpdateCache verifies that UpdateCache writes to file and can be read back
 func TestUpdateCache(t *testing.T) {

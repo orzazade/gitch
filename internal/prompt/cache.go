@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/adrg/xdg"
 )
@@ -60,22 +59,3 @@ func ClearCache() error {
 	return err
 }
 
-// readCache reads the current identity from the cache file
-// Returns empty string (no error) if file doesn't exist
-func readCache() (string, error) {
-	cachePath, err := cachePath()
-	if err != nil {
-		return "", err
-	}
-
-	data, err := os.ReadFile(cachePath)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			// File doesn't exist - return empty string, not error
-			return "", nil
-		}
-		return "", err
-	}
-
-	return strings.TrimSpace(string(data)), nil
-}
