@@ -11,6 +11,29 @@ import (
 	"github.com/orzazade/gitch/internal/testutil"
 )
 
+func TestFormatCurrentIdentity(t *testing.T) {
+	tests := []struct {
+		name     string
+		gitName  string
+		email    string
+		expected string
+	}{
+		{"both set", "Jane Doe", "jane@example.com", "Jane Doe <jane@example.com>"},
+		{"name only", "Jane Doe", "", "Jane Doe"},
+		{"email only", "", "jane@example.com", "jane@example.com"},
+		{"neither set", "", "", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatCurrentIdentity(tt.gitName, tt.email)
+			if got != tt.expected {
+				t.Errorf("formatCurrentIdentity(%q, %q) = %q, want %q", tt.gitName, tt.email, got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestTryAutoSwitch_UsesLocalScopeInsideRepo(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	defer env.Cleanup(t)
