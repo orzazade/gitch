@@ -166,7 +166,7 @@ func UpdateSSHConfig(newBlock string) error {
 	// Rename temp to actual config (atomic operation)
 	if err := os.Rename(tempPath, configPath); err != nil {
 		// Clean up temp file on rename failure
-		os.Remove(tempPath)
+		_ = os.Remove(tempPath) // best-effort cleanup
 		return fmt.Errorf("failed to update SSH config: %w", err)
 	}
 

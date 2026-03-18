@@ -101,7 +101,7 @@ func WriteKeyFiles(privateKeyPath string, privateKey, publicKey []byte) error {
 	// Write public key with readable permissions (0644)
 	if err := os.WriteFile(privateKeyPath+".pub", publicKey, 0644); err != nil {
 		// Clean up private key if public key write fails
-		os.Remove(privateKeyPath)
+		_ = os.Remove(privateKeyPath) // best-effort cleanup
 		return fmt.Errorf("failed to write public key: %w", err)
 	}
 
