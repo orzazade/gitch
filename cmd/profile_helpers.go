@@ -100,12 +100,13 @@ func shortHash(hash string) string {
 	return hash
 }
 
-// truncateSubject shortens a commit subject to maxLen characters, appending "..." if truncated.
+// truncateSubject shortens a commit subject to maxLen runes, appending "..." if truncated.
 func truncateSubject(subject string, maxLen int) string {
-	if len(subject) <= maxLen {
+	runes := []rune(subject)
+	if len(runes) <= maxLen {
 		return subject
 	}
-	return subject[:maxLen-3] + "..."
+	return string(runes[:maxLen-3]) + "..."
 }
 
 func resolveCurrentProfileState(cfg *config.Config) (*currentProfileState, error) {
