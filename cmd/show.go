@@ -230,13 +230,12 @@ func printShowHuman(output showOutput) {
 	}
 
 	// Rules
+	fmt.Println(ui.DimStyle.Render("  Rules"))
 	if len(output.Rules) > 0 {
-		fmt.Println(ui.DimStyle.Render("  Rules"))
 		for _, r := range output.Rules {
 			fmt.Printf("    %s  %s\n", ui.DimStyle.Render(r.Type), r.Pattern)
 		}
 	} else {
-		fmt.Println(ui.DimStyle.Render("  Rules"))
 		fmt.Println("    " + ui.DimStyle.Render("none"))
 	}
 }
