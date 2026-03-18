@@ -4,8 +4,7 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
-"encoding/pem"
-	"os"
+	"encoding/pem"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -45,12 +44,7 @@ func TestIsEncrypted_InvalidData(t *testing.T) {
 }
 
 func TestValidateKeyPath_ValidKey(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "gitch-validate-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Generate and write a valid key
 	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
@@ -82,12 +76,7 @@ func TestValidateKeyPath_NonExistent(t *testing.T) {
 }
 
 func TestValidateKeyPath_RejectsPubFile(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "gitch-validate-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Generate and write a key
 	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
@@ -112,15 +101,10 @@ func TestValidateKeyPath_RejectsPubFile(t *testing.T) {
 }
 
 func TestValidateKeyPath_RejectsDirectory(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "gitch-validate-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Try to validate the directory itself
-	err = ValidateKeyPath(tmpDir)
+	err := ValidateKeyPath(tmpDir)
 	if err == nil {
 		t.Error("ValidateKeyPath should reject directories")
 	}
@@ -130,12 +114,7 @@ func TestValidateKeyPath_RejectsDirectory(t *testing.T) {
 }
 
 func TestValidateKeyPath_AcceptsRSAKey(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "gitch-validate-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Generate an RSA key using our function
 	privKey, pubKey, err := GenerateKeyPairWithType(KeyTypeRSA, "test@gitch", nil)
@@ -341,12 +320,7 @@ func TestGetKeyType_InvalidData(t *testing.T) {
 }
 
 func TestValidateKeyPath_AcceptsEncryptedRSAKey(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "gitch-validate-test")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := t.TempDir()
 
 	// Generate an encrypted RSA key
 	privKey, pubKey, err := GenerateKeyPairWithType(KeyTypeRSA, "test@gitch", []byte("passphrase"))
