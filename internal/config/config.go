@@ -349,21 +349,21 @@ func isDirectoryOverlap(pattern1, pattern2 string) bool {
 // isRemoteOverlap checks if two remote patterns might overlap
 func isRemoteOverlap(pattern1, pattern2 string) bool {
 	// Split patterns into host and path
-	parts1 := strings.SplitN(pattern1, "/", 2)
-	parts2 := strings.SplitN(pattern2, "/", 2)
+	host1, path1, hasPath1 := strings.Cut(pattern1, "/")
+	host2, path2, hasPath2 := strings.Cut(pattern2, "/")
 
 	// If different hosts, no overlap
-	if parts1[0] != parts2[0] {
+	if host1 != host2 {
 		return false
 	}
 
 	// Same host - check path overlap
-	if len(parts1) < 2 || len(parts2) < 2 {
+	if !hasPath1 || !hasPath2 {
 		return true // One pattern is just the host, overlaps with all on that host
 	}
 
-	path1 := strings.TrimSuffix(parts1[1], "/*")
-	path2 := strings.TrimSuffix(parts2[1], "/*")
+	path1 = strings.TrimSuffix(path1, "/*")
+	path2 = strings.TrimSuffix(path2, "/*")
 
 	// Check if one path is a prefix of the other
 	return strings.HasPrefix(path1, path2) || strings.HasPrefix(path2, path1)

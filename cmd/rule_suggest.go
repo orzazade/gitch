@@ -181,17 +181,14 @@ func parseRemoteForSuggest(rawURL string) (*suggestParsedRemote, error) {
 	// Handle SSH format: git@host:org/repo.git
 	if strings.Contains(url, "@") && strings.Contains(url, ":") && !strings.Contains(url, "://") {
 		// SCP-style: git@github.com:org/repo.git
-		atIdx := strings.Index(url, "@")
-		colonIdx := strings.Index(url[atIdx:], ":") + atIdx
-		host := strings.ToLower(url[atIdx+1 : colonIdx])
-		path := strings.TrimSuffix(url[colonIdx+1:], ".git")
-		parts := strings.SplitN(path, "/", 2)
-		result := &suggestParsedRemote{Host: host}
-		if len(parts) >= 1 {
-			result.Org = parts[0]
-		}
-		if len(parts) >= 2 {
-			result.Repo = parts[1]
+		_, afterAt, _ := strings.Cut(url, "@")
+		hostPart, pathPart, _ := strings.Cut(afterAt, ":")
+		host := strings.ToLower(hostPart)
+		path := strings.TrimSuffix(pathPart, ".git")
+		org, repo, hasRepo := strings.Cut(path, "/")
+		result := &suggestParsedRemote{Host: host, Org: org}
+		if hasRepo {
+			result.Repo = repo
 		}
 		return result, nil
 	}
