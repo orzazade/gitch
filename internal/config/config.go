@@ -244,10 +244,8 @@ func (c *Config) AddRule(rule rules.Rule) error {
 	}
 
 	// Check for exact duplicate (same pattern)
-	for _, existing := range c.Rules {
-		if existing.Pattern == rule.Pattern {
-			return fmt.Errorf("rule with pattern %q already exists", rule.Pattern)
-		}
+	if slices.ContainsFunc(c.Rules, func(r rules.Rule) bool { return r.Pattern == rule.Pattern }) {
+		return fmt.Errorf("rule with pattern %q already exists", rule.Pattern)
 	}
 
 	c.Rules = append(c.Rules, rule)
@@ -257,13 +255,12 @@ func (c *Config) AddRule(rule rules.Rule) error {
 // RemoveRule removes a rule by pattern (exact match)
 // Returns an error if the rule is not found
 func (c *Config) RemoveRule(pattern string) error {
-	for i, rule := range c.Rules {
-		if rule.Pattern == pattern {
-			c.Rules = slices.Delete(c.Rules, i, i+1)
-			return nil
-		}
+	idx := slices.IndexFunc(c.Rules, func(r rules.Rule) bool { return r.Pattern == pattern })
+	if idx == -1 {
+		return fmt.Errorf("rule with pattern %q not found", pattern)
 	}
-	return fmt.Errorf("rule with pattern %q not found", pattern)
+	c.Rules = slices.Delete(c.Rules, idx, idx+1)
+	return nil
 }
 
 // RenameIdentity renames an identity and updates all references (rules, default).
