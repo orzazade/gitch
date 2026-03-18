@@ -6,19 +6,19 @@ import "github.com/charmbracelet/lipgloss"
 // Colors
 var (
 	ActiveColor   = lipgloss.Color("10") // Green
-	InactiveColor = lipgloss.Color("8")  // Gray
-	NameColor     = lipgloss.Color("15") // White
-	EmailColor    = lipgloss.Color("7")  // Light gray
-	WarningColor  = lipgloss.Color("11") // Yellow
-	ErrorColor    = lipgloss.Color("9")  // Red
-	SuccessColor  = lipgloss.Color("10") // Green
+	inactiveColor = lipgloss.Color("8")  // Gray
+	nameColor     = lipgloss.Color("15") // White
+	emailColor    = lipgloss.Color("7")  // Light gray
+	warningColor  = lipgloss.Color("11") // Yellow
+	errorColor    = lipgloss.Color("9")  // Red
+	successColor  = lipgloss.Color("10") // Green
 )
 
 // Card styles
 var (
 	CardStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(InactiveColor).
+			BorderForeground(inactiveColor).
 			Padding(0, 1).
 			MarginBottom(1)
 
@@ -31,11 +31,11 @@ var (
 
 // Text styles
 var (
-	NameStyle      = lipgloss.NewStyle().Foreground(NameColor).Bold(true)
-	EmailStyle     = lipgloss.NewStyle().Foreground(EmailColor)
+	NameStyle      = lipgloss.NewStyle().Foreground(nameColor).Bold(true)
+	EmailStyle     = lipgloss.NewStyle().Foreground(emailColor)
 	CheckmarkStyle = lipgloss.NewStyle().Foreground(ActiveColor).Bold(true)
-	WarningStyle   = lipgloss.NewStyle().Foreground(WarningColor)
-	ErrorStyle     = lipgloss.NewStyle().Foreground(ErrorColor)
-	SuccessStyle   = lipgloss.NewStyle().Foreground(SuccessColor)
-	DimStyle       = lipgloss.NewStyle().Foreground(InactiveColor)
+	WarningStyle   = lipgloss.NewStyle().Foreground(warningColor)
+	ErrorStyle     = lipgloss.NewStyle().Foreground(errorColor)
+	SuccessStyle   = lipgloss.NewStyle().Foreground(successColor)
+	DimStyle       = lipgloss.NewStyle().Foreground(inactiveColor)
 )
