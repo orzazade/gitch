@@ -1,7 +1,6 @@
 package audit
 
 import (
-	"os"
 	"os/exec"
 	"sort"
 	"strings"
@@ -95,30 +94,26 @@ func TestGenerateMailmap_AllNonMismatched(t *testing.T) {
 	}
 }
 
-func TestGetRemotes_InRepoWithOrigin(t *testing.T) {
-	// Create a temporary git repo with a remote
-	tmpDir, err := os.MkdirTemp("", "gitch-test-remotes-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// Init repo
+// initTempGitRepo creates a temp git repo and changes into it.
+// Uses t.TempDir() for automatic cleanup and t.Chdir() for automatic cwd restore.
+func initTempGitRepo(t *testing.T) string {
+	t.Helper()
+	tmpDir := t.TempDir()
 	cmd := exec.Command("git", "init", tmpDir)
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("git init failed: %v", err)
 	}
+	t.Chdir(tmpDir)
+	return tmpDir
+}
 
-	// Add a remote
-	cmd = exec.Command("git", "-C", tmpDir, "remote", "add", "origin", "https://example.com/repo.git")
+func TestGetRemotes_InRepoWithOrigin(t *testing.T) {
+	tmpDir := initTempGitRepo(t)
+
+	cmd := exec.Command("git", "-C", tmpDir, "remote", "add", "origin", "https://example.com/repo.git")
 	if err := cmd.Run(); err != nil {
 		t.Fatalf("git remote add failed: %v", err)
 	}
-
-	// Save and restore cwd
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir) //nolint:errcheck
-	os.Chdir(tmpDir)        //nolint:errcheck
 
 	remotes, err := GetRemotes()
 	if err != nil {
@@ -131,20 +126,7 @@ func TestGetRemotes_InRepoWithOrigin(t *testing.T) {
 }
 
 func TestGetRemotes_NoRemotes(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "gitch-test-no-remotes-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	cmd := exec.Command("git", "init", tmpDir)
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("git init failed: %v", err)
-	}
-
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir) //nolint:errcheck
-	os.Chdir(tmpDir)        //nolint:errcheck
+	initTempGitRepo(t)
 
 	remotes, err := GetRemotes()
 	if err != nil {
@@ -157,28 +139,14 @@ func TestGetRemotes_NoRemotes(t *testing.T) {
 }
 
 func TestRemoveRemotes_RemovesAll(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "gitch-test-rm-remotes-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	tmpDir := initTempGitRepo(t)
 
-	cmd := exec.Command("git", "init", tmpDir)
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("git init failed: %v", err)
-	}
-
-	// Add two remotes
 	for _, name := range []string{"origin", "upstream"} {
-		cmd = exec.Command("git", "-C", tmpDir, "remote", "add", name, "https://example.com/"+name+".git")
+		cmd := exec.Command("git", "-C", tmpDir, "remote", "add", name, "https://example.com/"+name+".git")
 		if err := cmd.Run(); err != nil {
 			t.Fatalf("git remote add %s failed: %v", name, err)
 		}
 	}
-
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir) //nolint:errcheck
-	os.Chdir(tmpDir)        //nolint:errcheck
 
 	if err := RemoveRemotes(); err != nil {
 		t.Fatalf("RemoveRemotes failed: %v", err)
@@ -195,22 +163,8 @@ func TestRemoveRemotes_RemovesAll(t *testing.T) {
 }
 
 func TestRemoveRemotes_NoRemotes(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "gitch-test-rm-empty-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
+	initTempGitRepo(t)
 
-	cmd := exec.Command("git", "init", tmpDir)
-	if err := cmd.Run(); err != nil {
-		t.Fatalf("git init failed: %v", err)
-	}
-
-	origDir, _ := os.Getwd()
-	defer os.Chdir(origDir) //nolint:errcheck
-	os.Chdir(tmpDir)        //nolint:errcheck
-
-	// Should not error when there are no remotes
 	if err := RemoveRemotes(); err != nil {
 		t.Fatalf("RemoveRemotes with no remotes should not error: %v", err)
 	}
