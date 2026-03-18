@@ -3,11 +3,9 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/portability"
-	"github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -47,20 +45,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	// Check if config has identities
-	if len(cfg.Identities) == 0 {
-		fmt.Println(ui.WarningStyle.Render("Warning: No identities to export"))
-		return errors.New("no identities configured")
-	}
-
 	outputPath := args[0]
-
-	// Check if file already exists and warn
-	if expandedPath, err := ssh.ExpandPath(outputPath); err == nil {
-		if _, statErr := os.Stat(expandedPath); statErr == nil {
-			fmt.Fprintf(os.Stderr, "Warning: Overwriting existing file: %s\n", outputPath)
-		}
-	}
 
 	var keysEncrypted int
 	if exportEncrypt {
@@ -85,11 +70,17 @@ func runExport(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := portability.ExportToFileEncrypted(cfg, outputPath, passphrase); err != nil {
+			if errors.Is(err, portability.ErrNoIdentities) {
+				return errors.New("no identities configured — add one with: gitch add")
+			}
 			return fmt.Errorf("failed to export: %w", err)
 		}
 		fmt.Println(ui.SuccessStyle.Render("Encrypted export complete!"))
 	} else {
 		if err := portability.ExportToFile(cfg, outputPath); err != nil {
+			if errors.Is(err, portability.ErrNoIdentities) {
+				return errors.New("no identities configured — add one with: gitch add")
+			}
 			return fmt.Errorf("failed to export: %w", err)
 		}
 		fmt.Println(ui.SuccessStyle.Render("Export complete!"))
