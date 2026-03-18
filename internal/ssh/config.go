@@ -122,23 +122,18 @@ func UpdateSSHConfig(newBlock string) error {
 		return fmt.Errorf("failed to create .ssh directory: %w", err)
 	}
 
-	// Read existing content
-	existingContent := ""
+	// Read existing content (nil data is fine when file doesn't exist)
 	data, err := os.ReadFile(configPath)
-	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("failed to read SSH config: %w", err)
-		}
-		// File doesn't exist - that's ok
-	} else {
-		existingContent = string(data)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("failed to read SSH config: %w", err)
+	}
+	existingContent := string(data)
 
-		// Create backup if file has content
-		if len(existingContent) > 0 {
-			backupPath := configPath + ".gitch.backup"
-			if err := os.WriteFile(backupPath, data, 0600); err != nil {
-				return fmt.Errorf("failed to create backup: %w", err)
-			}
+	// Create backup if file has content
+	if len(data) > 0 {
+		backupPath := configPath + ".gitch.backup"
+		if err := os.WriteFile(backupPath, data, 0600); err != nil {
+			return fmt.Errorf("failed to create backup: %w", err)
 		}
 	}
 
