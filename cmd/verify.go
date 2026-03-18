@@ -28,8 +28,10 @@ Exit code 1 means at least one commit has a mismatched identity.
 Examples:
   gitch verify                   # Check unpushed commits
   gitch verify && git push       # Push only if identity is correct`,
-	Args: cobra.NoArgs,
-	RunE: runVerify,
+	Args:          cobra.NoArgs,
+	RunE:          runVerify,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func init() {

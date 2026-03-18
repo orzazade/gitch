@@ -63,10 +63,12 @@ Examples:
 
 // hookValidateCmd is called by the pre-commit script
 var hookValidateCmd = &cobra.Command{
-	Use:    "validate",
-	Short:  "Validate current identity (used by pre-commit hook)",
-	Hidden: true,
-	RunE:   runHookValidate,
+	Use:           "validate",
+	Short:         "Validate current identity (used by pre-commit hook)",
+	Hidden:        true,
+	RunE:          runHookValidate,
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 // hookSwitchCmd is called by the pre-commit script
