@@ -93,17 +93,25 @@ func IsInstalledLocalPrePush() (bool, error) {
 	return isManagedHook(prePushPath)
 }
 
+// resolveGlobalHookPaths returns the current core.hooksPath and the gitch-managed hooks directory.
+func resolveGlobalHookPaths() (currentPath, hooksDir string, err error) {
+	currentPath, err = git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to read core.hooksPath: %w", err)
+	}
+	hooksDir, err = HooksDir()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to determine hooks directory: %w", err)
+	}
+	return currentPath, hooksDir, nil
+}
+
 // InstallGlobal installs the pre-commit hook globally via core.hooksPath.
 // It refuses to overwrite an existing non-gitch global hooksPath.
 func InstallGlobal() error {
-	currentPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	currentPath, hooksDir, err := resolveGlobalHookPaths()
 	if err != nil {
-		return fmt.Errorf("failed to read core.hooksPath: %w", err)
-	}
-
-	hooksDir, err := HooksDir()
-	if err != nil {
-		return fmt.Errorf("failed to determine hooks directory: %w", err)
+		return err
 	}
 
 	if currentPath != "" && filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
@@ -139,14 +147,9 @@ func InstallGlobal() error {
 
 // UninstallGlobal removes the gitch global hook if gitch owns core.hooksPath.
 func UninstallGlobal() error {
-	currentPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	currentPath, hooksDir, err := resolveGlobalHookPaths()
 	if err != nil {
-		return fmt.Errorf("failed to read core.hooksPath: %w", err)
-	}
-
-	hooksDir, err := HooksDir()
-	if err != nil {
-		return fmt.Errorf("failed to determine hooks directory: %w", err)
+		return err
 	}
 
 	if filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
@@ -165,21 +168,12 @@ func UninstallGlobal() error {
 
 // IsInstalled checks if gitch hooks are globally installed.
 func IsInstalled() (bool, error) {
-	currentPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	currentPath, hooksDir, err := resolveGlobalHookPaths()
 	if err != nil {
 		return false, err
 	}
 
-	if currentPath == "" {
-		return false, nil
-	}
-
-	hooksDir, err := HooksDir()
-	if err != nil {
-		return false, err
-	}
-
-	if filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
+	if currentPath == "" || filepath.Clean(currentPath) != filepath.Clean(hooksDir) {
 		return false, nil
 	}
 
