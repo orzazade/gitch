@@ -117,6 +117,8 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		case managedIdentity != nil:
 			output.Name = managedIdentity.Name
 			output.GitName = managedIdentity.GitAuthorName()
+			output.SSHKeyPath = managedIdentity.SSHKeyPath
+			output.GPGKeyID = managedIdentity.GPGKeyID
 		case emailMatchedIdentity != nil:
 			output.Name = emailMatchedIdentity.Name
 			output.GitName = name
@@ -125,14 +127,6 @@ func runStatus(cmd *cobra.Command, args []string) error {
 		case name != "":
 			output.Name = name
 			output.GitName = name
-		}
-		if managedIdentity != nil {
-			if managedIdentity.SSHKeyPath != "" {
-				output.SSHKeyPath = managedIdentity.SSHKeyPath
-			}
-			if managedIdentity.GPGKeyID != "" {
-				output.GPGKeyID = managedIdentity.GPGKeyID
-			}
 		}
 		jsonBytes, err := json.MarshalIndent(output, "", "  ")
 		if err != nil {
