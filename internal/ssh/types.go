@@ -38,11 +38,11 @@ func ParseKeyType(s string) (KeyType, error) {
 	case "rsa":
 		return KeyTypeRSA, nil
 	default:
-		return "", fmt.Errorf("invalid key type %q: must be one of %v", s, ValidKeyTypes())
+		return "", fmt.Errorf("invalid key type %q: must be one of %v", s, validKeyTypes())
 	}
 }
 
-// ValidKeyTypes returns a slice of valid key types for help text and validation.
-func ValidKeyTypes() []string {
+// validKeyTypes returns a slice of valid key types for help text and validation.
+func validKeyTypes() []string {
 	return []string{string(KeyTypeEd25519), string(KeyTypeRSA)}
 }

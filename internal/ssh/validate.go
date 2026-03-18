@@ -12,19 +12,19 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// ValidateSSHKey validates that the given PEM data is a supported SSH private key.
+// validateSSHKey validates that the given PEM data is a supported SSH private key.
 // Supported types: Ed25519 and RSA.
 // Returns nil if the key is valid (encrypted or not).
 // Returns an error if the key is not a supported type or cannot be parsed.
-func ValidateSSHKey(pemData []byte) error {
-	_, err := GetKeyType(pemData)
+func validateSSHKey(pemData []byte) error {
+	_, err := getKeyType(pemData)
 	return err
 }
 
-// GetKeyType parses the PEM data and returns the key type.
+// getKeyType parses the PEM data and returns the key type.
 // Supports both encrypted and unencrypted keys.
 // Returns an error if the key cannot be parsed or is not a supported type.
-func GetKeyType(pemData []byte) (KeyType, error) {
+func getKeyType(pemData []byte) (KeyType, error) {
 	// Try to parse the private key
 	key, err := ssh.ParseRawPrivateKey(pemData)
 	if err != nil {
@@ -91,5 +91,5 @@ func ValidateKeyPath(path string) error {
 		return fmt.Errorf("failed to read key file: %w", err)
 	}
 
-	return ValidateSSHKey(data)
+	return validateSSHKey(data)
 }

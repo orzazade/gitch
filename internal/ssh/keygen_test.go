@@ -11,10 +11,10 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func TestGenerateKeyPair_NoPassphrase(t *testing.T) {
-	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
+func Test_generateKeyPair_NoPassphrase(t *testing.T) {
+	privKey, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+		t.Fatalf("generateKeyPair failed: %v", err)
 	}
 
 	// Verify private key format
@@ -39,11 +39,11 @@ func TestGenerateKeyPair_NoPassphrase(t *testing.T) {
 	}
 }
 
-func TestGenerateKeyPair_WithPassphrase(t *testing.T) {
+func Test_generateKeyPair_WithPassphrase(t *testing.T) {
 	passphrase := []byte("test-passphrase-123")
-	privKey, pubKey, err := GenerateKeyPair("encrypted@gitch", passphrase)
+	privKey, pubKey, err := generateKeyPair("encrypted@gitch", passphrase)
 	if err != nil {
-		t.Fatalf("GenerateKeyPair with passphrase failed: %v", err)
+		t.Fatalf("generateKeyPair with passphrase failed: %v", err)
 	}
 
 	// Verify private key format
@@ -74,10 +74,10 @@ func TestGenerateKeyPair_WithPassphrase(t *testing.T) {
 	}
 }
 
-func TestGenerateKeyPair_EmptyComment(t *testing.T) {
-	privKey, pubKey, err := GenerateKeyPair("", nil)
+func Test_generateKeyPair_EmptyComment(t *testing.T) {
+	privKey, pubKey, err := generateKeyPair("", nil)
 	if err != nil {
-		t.Fatalf("GenerateKeyPair with empty comment failed: %v", err)
+		t.Fatalf("generateKeyPair with empty comment failed: %v", err)
 	}
 
 	// Verify keys are still valid
@@ -94,9 +94,9 @@ func TestWriteKeyFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Generate test key
-	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
+	privKey, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+		t.Fatalf("generateKeyPair failed: %v", err)
 	}
 
 	// Write key files
@@ -147,9 +147,9 @@ func TestWriteKeyFiles_CreatesDirectory(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Generate test key
-	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
+	privKey, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+		t.Fatalf("generateKeyPair failed: %v", err)
 	}
 
 	// Write to nested directory that doesn't exist
@@ -171,9 +171,9 @@ func TestWriteKeyFiles_CreatesDirectory(t *testing.T) {
 
 func TestGetFingerprint(t *testing.T) {
 	// Generate test key
-	_, pubKey, err := GenerateKeyPair("test@gitch", nil)
+	_, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+		t.Fatalf("generateKeyPair failed: %v", err)
 	}
 
 	// Get fingerprint
@@ -257,10 +257,10 @@ func TestKeyType_String(t *testing.T) {
 	}
 }
 
-func TestValidKeyTypes(t *testing.T) {
-	types := ValidKeyTypes()
+func Test_validKeyTypes(t *testing.T) {
+	types := validKeyTypes()
 	if len(types) != 2 {
-		t.Errorf("ValidKeyTypes() returned %d types, want 2", len(types))
+		t.Errorf("validKeyTypes() returned %d types, want 2", len(types))
 	}
 	// Check both types are present
 	hasEd25519, hasRSA := false, false
@@ -273,10 +273,10 @@ func TestValidKeyTypes(t *testing.T) {
 		}
 	}
 	if !hasEd25519 {
-		t.Error("ValidKeyTypes() missing ed25519")
+		t.Error("validKeyTypes() missing ed25519")
 	}
 	if !hasRSA {
-		t.Error("ValidKeyTypes() missing rsa")
+		t.Error("validKeyTypes() missing rsa")
 	}
 }
 
@@ -387,16 +387,16 @@ func TestGenerateKeyPairWithType_InvalidType(t *testing.T) {
 	}
 }
 
-func TestGenerateKeyPair_BackwardCompatibility(t *testing.T) {
+func Test_generateKeyPair_BackwardCompatibility(t *testing.T) {
 	// GenerateKeyPair should still produce Ed25519 keys
-	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
+	privKey, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
-		t.Fatalf("GenerateKeyPair failed: %v", err)
+		t.Fatalf("generateKeyPair failed: %v", err)
 	}
 
 	// Must be Ed25519
 	if !bytes.HasPrefix(pubKey, []byte("ssh-ed25519 ")) {
-		t.Errorf("GenerateKeyPair should produce Ed25519 key, got: %s", string(pubKey[:30]))
+		t.Errorf("generateKeyPair should produce Ed25519 key, got: %s", string(pubKey[:30]))
 	}
 
 	// Verify the key works

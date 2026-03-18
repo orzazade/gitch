@@ -16,7 +16,7 @@ func TestValidateKeyPath_ValidKey(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Generate and write a valid key
-	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
+	privKey, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
 		t.Fatalf("Failed to generate key: %v", err)
 	}
@@ -48,7 +48,7 @@ func TestValidateKeyPath_RejectsPubFile(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	// Generate and write a key
-	privKey, pubKey, err := GenerateKeyPair("test@gitch", nil)
+	privKey, pubKey, err := generateKeyPair("test@gitch", nil)
 	if err != nil {
 		t.Fatalf("Failed to generate key: %v", err)
 	}
@@ -120,55 +120,55 @@ func TestValidateKeyPath_ExpandsTilde(t *testing.T) {
 
 // Tests for ValidateSSHKey
 
-func TestValidateSSHKey_AcceptsEd25519(t *testing.T) {
+func Test_validateSSHKey_AcceptsEd25519(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeEd25519, "test@gitch", nil)
 	if err != nil {
 		t.Fatalf("Failed to generate Ed25519 key: %v", err)
 	}
 
-	err = ValidateSSHKey(privKey)
+	err = validateSSHKey(privKey)
 	if err != nil {
-		t.Errorf("ValidateSSHKey should accept Ed25519 key: %v", err)
+		t.Errorf("validateSSHKey should accept Ed25519 key: %v", err)
 	}
 }
 
-func TestValidateSSHKey_AcceptsRSA(t *testing.T) {
+func Test_validateSSHKey_AcceptsRSA(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeRSA, "test@gitch", nil)
 	if err != nil {
 		t.Fatalf("Failed to generate RSA key: %v", err)
 	}
 
-	err = ValidateSSHKey(privKey)
+	err = validateSSHKey(privKey)
 	if err != nil {
-		t.Errorf("ValidateSSHKey should accept RSA key: %v", err)
+		t.Errorf("validateSSHKey should accept RSA key: %v", err)
 	}
 }
 
-func TestValidateSSHKey_AcceptsEncryptedEd25519(t *testing.T) {
+func Test_validateSSHKey_AcceptsEncryptedEd25519(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeEd25519, "test@gitch", []byte("passphrase"))
 	if err != nil {
 		t.Fatalf("Failed to generate encrypted Ed25519 key: %v", err)
 	}
 
-	err = ValidateSSHKey(privKey)
+	err = validateSSHKey(privKey)
 	if err != nil {
-		t.Errorf("ValidateSSHKey should accept encrypted Ed25519 key: %v", err)
+		t.Errorf("validateSSHKey should accept encrypted Ed25519 key: %v", err)
 	}
 }
 
-func TestValidateSSHKey_AcceptsEncryptedRSA(t *testing.T) {
+func Test_validateSSHKey_AcceptsEncryptedRSA(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeRSA, "test@gitch", []byte("passphrase"))
 	if err != nil {
 		t.Fatalf("Failed to generate encrypted RSA key: %v", err)
 	}
 
-	err = ValidateSSHKey(privKey)
+	err = validateSSHKey(privKey)
 	if err != nil {
-		t.Errorf("ValidateSSHKey should accept encrypted RSA key: %v", err)
+		t.Errorf("validateSSHKey should accept encrypted RSA key: %v", err)
 	}
 }
 
-func TestValidateSSHKey_RejectsECDSA(t *testing.T) {
+func Test_validateSSHKey_RejectsECDSA(t *testing.T) {
 	// Generate an ECDSA key (unsupported)
 	ecdsaKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -181,85 +181,85 @@ func TestValidateSSHKey_RejectsECDSA(t *testing.T) {
 	}
 	pemData := pem.EncodeToMemory(pemBlock)
 
-	err = ValidateSSHKey(pemData)
+	err = validateSSHKey(pemData)
 	if err == nil {
-		t.Error("ValidateSSHKey should reject ECDSA key")
+		t.Error("validateSSHKey should reject ECDSA key")
 	}
 	if !strings.Contains(err.Error(), "unsupported") {
 		t.Errorf("Error should mention 'unsupported', got: %v", err)
 	}
 }
 
-func TestValidateSSHKey_RejectsInvalidData(t *testing.T) {
-	err := ValidateSSHKey([]byte("not a valid key"))
+func Test_validateSSHKey_RejectsInvalidData(t *testing.T) {
+	err := validateSSHKey([]byte("not a valid key"))
 	if err == nil {
-		t.Error("ValidateSSHKey should reject invalid data")
+		t.Error("validateSSHKey should reject invalid data")
 	}
 }
 
 // Tests for GetKeyType
 
-func TestGetKeyType_IdentifiesEd25519(t *testing.T) {
+func Test_getKeyType_IdentifiesEd25519(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeEd25519, "test@gitch", nil)
 	if err != nil {
 		t.Fatalf("Failed to generate Ed25519 key: %v", err)
 	}
 
-	kt, err := GetKeyType(privKey)
+	kt, err := getKeyType(privKey)
 	if err != nil {
-		t.Fatalf("GetKeyType failed: %v", err)
+		t.Fatalf("getKeyType failed: %v", err)
 	}
 	if kt != KeyTypeEd25519 {
-		t.Errorf("GetKeyType = %v, want %v", kt, KeyTypeEd25519)
+		t.Errorf("getKeyType = %v, want %v", kt, KeyTypeEd25519)
 	}
 }
 
-func TestGetKeyType_IdentifiesRSA(t *testing.T) {
+func Test_getKeyType_IdentifiesRSA(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeRSA, "test@gitch", nil)
 	if err != nil {
 		t.Fatalf("Failed to generate RSA key: %v", err)
 	}
 
-	kt, err := GetKeyType(privKey)
+	kt, err := getKeyType(privKey)
 	if err != nil {
-		t.Fatalf("GetKeyType failed: %v", err)
+		t.Fatalf("getKeyType failed: %v", err)
 	}
 	if kt != KeyTypeRSA {
-		t.Errorf("GetKeyType = %v, want %v", kt, KeyTypeRSA)
+		t.Errorf("getKeyType = %v, want %v", kt, KeyTypeRSA)
 	}
 }
 
-func TestGetKeyType_IdentifiesEncryptedEd25519(t *testing.T) {
+func Test_getKeyType_IdentifiesEncryptedEd25519(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeEd25519, "test@gitch", []byte("passphrase"))
 	if err != nil {
 		t.Fatalf("Failed to generate encrypted Ed25519 key: %v", err)
 	}
 
-	kt, err := GetKeyType(privKey)
+	kt, err := getKeyType(privKey)
 	if err != nil {
-		t.Fatalf("GetKeyType failed for encrypted key: %v", err)
+		t.Fatalf("getKeyType failed for encrypted key: %v", err)
 	}
 	if kt != KeyTypeEd25519 {
-		t.Errorf("GetKeyType = %v, want %v", kt, KeyTypeEd25519)
+		t.Errorf("getKeyType = %v, want %v", kt, KeyTypeEd25519)
 	}
 }
 
-func TestGetKeyType_IdentifiesEncryptedRSA(t *testing.T) {
+func Test_getKeyType_IdentifiesEncryptedRSA(t *testing.T) {
 	privKey, _, err := GenerateKeyPairWithType(KeyTypeRSA, "test@gitch", []byte("passphrase"))
 	if err != nil {
 		t.Fatalf("Failed to generate encrypted RSA key: %v", err)
 	}
 
-	kt, err := GetKeyType(privKey)
+	kt, err := getKeyType(privKey)
 	if err != nil {
-		t.Fatalf("GetKeyType failed for encrypted key: %v", err)
+		t.Fatalf("getKeyType failed for encrypted key: %v", err)
 	}
 	if kt != KeyTypeRSA {
-		t.Errorf("GetKeyType = %v, want %v", kt, KeyTypeRSA)
+		t.Errorf("getKeyType = %v, want %v", kt, KeyTypeRSA)
 	}
 }
 
-func TestGetKeyType_RejectsUnsupportedType(t *testing.T) {
+func Test_getKeyType_RejectsUnsupportedType(t *testing.T) {
 	// Generate an ECDSA key (unsupported)
 	ecdsaKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -272,19 +272,19 @@ func TestGetKeyType_RejectsUnsupportedType(t *testing.T) {
 	}
 	pemData := pem.EncodeToMemory(pemBlock)
 
-	_, err = GetKeyType(pemData)
+	_, err = getKeyType(pemData)
 	if err == nil {
-		t.Error("GetKeyType should reject unsupported key type")
+		t.Error("getKeyType should reject unsupported key type")
 	}
 	if !strings.Contains(err.Error(), "unsupported") {
 		t.Errorf("Error should mention 'unsupported', got: %v", err)
 	}
 }
 
-func TestGetKeyType_InvalidData(t *testing.T) {
-	_, err := GetKeyType([]byte("not a valid key"))
+func Test_getKeyType_InvalidData(t *testing.T) {
+	_, err := getKeyType([]byte("not a valid key"))
 	if err == nil {
-		t.Error("GetKeyType should reject invalid data")
+		t.Error("getKeyType should reject invalid data")
 	}
 }
 

@@ -12,11 +12,11 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// GenerateKeyPair generates an Ed25519 SSH keypair.
+// generateKeyPair generates an Ed25519 SSH keypair.
 // Returns the private key in PEM format and the public key in authorized_keys format.
 // If passphrase is provided, the private key will be encrypted.
 // This is a convenience wrapper around GenerateKeyPairWithType for backward compatibility.
-func GenerateKeyPair(comment string, passphrase []byte) (privateKeyPEM, publicKey []byte, err error) {
+func generateKeyPair(comment string, passphrase []byte) (privateKeyPEM, publicKey []byte, err error) {
 	return GenerateKeyPairWithType(KeyTypeEd25519, comment, passphrase)
 }
 
