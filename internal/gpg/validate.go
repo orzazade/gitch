@@ -80,9 +80,7 @@ func parseMultipleKeys(output string) ([]KeyInfo, error) {
 			continue
 		}
 
-		recordType := fields[0]
-
-		switch recordType {
+		switch fields[0] {
 		case "sec":
 			// New secret key - save previous if exists
 			if currentKey != nil && currentKey.ID != "" {
