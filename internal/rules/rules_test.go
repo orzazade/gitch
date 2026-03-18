@@ -54,7 +54,7 @@ func TestExpandTilde(t *testing.T) {
 	}
 }
 
-func TestMatchDirectory(t *testing.T) {
+func Test_matchDirectory(t *testing.T) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		t.Fatal(err)
@@ -125,19 +125,19 @@ func TestMatchDirectory(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := MatchDirectory(tt.pattern, tt.cwd)
+			got, err := matchDirectory(tt.pattern, tt.cwd)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("MatchDirectory() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("matchDirectory() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if got != tt.want {
-				t.Errorf("MatchDirectory(%q, %q) = %v, want %v", tt.pattern, tt.cwd, got, tt.want)
+				t.Errorf("matchDirectory(%q, %q) = %v, want %v", tt.pattern, tt.cwd, got, tt.want)
 			}
 		})
 	}
 }
 
-func TestMatchDirectory_NormalizesSymlinkAliases(t *testing.T) {
+func Test_matchDirectory_NormalizesSymlinkAliases(t *testing.T) {
 	baseDir := t.TempDir()
 	realDir := filepath.Join(baseDir, "real", "project")
 	if err := os.MkdirAll(realDir, 0755); err != nil {
@@ -149,16 +149,16 @@ func TestMatchDirectory_NormalizesSymlinkAliases(t *testing.T) {
 		t.Skipf("symlinks are not available in this test environment: %v", err)
 	}
 
-	matched, err := MatchDirectory(symlinkDir, realDir)
+	matched, err := matchDirectory(symlinkDir, realDir)
 	if err != nil {
-		t.Fatalf("MatchDirectory returned error: %v", err)
+		t.Fatalf("matchDirectory returned error: %v", err)
 	}
 	if !matched {
 		t.Fatalf("expected symlinked directory %q to match real path %q", symlinkDir, realDir)
 	}
 }
 
-func TestParseRemote(t *testing.T) {
+func Test_parseRemote(t *testing.T) {
 	tests := []struct {
 		name     string
 		rawURL   string
@@ -213,74 +213,74 @@ func TestParseRemote(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseRemote(tt.rawURL)
+			got, err := parseRemote(tt.rawURL)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("ParseRemote() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("parseRemote() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.wantErr {
 				return
 			}
 			if got.Host != tt.wantHost {
-				t.Errorf("ParseRemote() Host = %q, want %q", got.Host, tt.wantHost)
+				t.Errorf("parseRemote() Host = %q, want %q", got.Host, tt.wantHost)
 			}
 			if got.Org != tt.wantOrg {
-				t.Errorf("ParseRemote() Org = %q, want %q", got.Org, tt.wantOrg)
+				t.Errorf("parseRemote() Org = %q, want %q", got.Org, tt.wantOrg)
 			}
 			if got.Repo != tt.wantRepo {
-				t.Errorf("ParseRemote() Repo = %q, want %q", got.Repo, tt.wantRepo)
+				t.Errorf("parseRemote() Repo = %q, want %q", got.Repo, tt.wantRepo)
 			}
 		})
 	}
 }
 
-func TestMatchRemote(t *testing.T) {
+func Test_matchRemote(t *testing.T) {
 	tests := []struct {
 		name    string
 		pattern string
-		remote  *ParsedRemote
+		remote  *parsedRemote
 		want    bool
 	}{
 		{
 			name:    "wildcard matches any repo",
 			pattern: "github.com/company/*",
-			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
+			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
 			want:    true,
 		},
 		{
 			name:    "wildcard matches different repo",
 			pattern: "github.com/company/*",
-			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
+			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
 			want:    true,
 		},
 		{
 			name:    "wildcard does not match different org",
 			pattern: "github.com/company/*",
-			remote:  &ParsedRemote{Host: "github.com", Org: "other", Repo: "repo"},
+			remote:  &parsedRemote{Host: "github.com", Org: "other", Repo: "repo"},
 			want:    false,
 		},
 		{
 			name:    "exact match",
 			pattern: "github.com/company/specific-repo",
-			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "specific-repo"},
+			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "specific-repo"},
 			want:    true,
 		},
 		{
 			name:    "exact match fails on different repo",
 			pattern: "github.com/company/specific-repo",
-			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
+			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
 			want:    false,
 		},
 		{
 			name:    "org level pattern matches repo",
 			pattern: "github.com/company",
-			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
+			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
 			want:    true,
 		},
 		{
 			name:    "case insensitive host",
 			pattern: "GitHub.com/company/*",
-			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "repo"},
+			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "repo"},
 			want:    true,
 		},
 		{
@@ -292,16 +292,16 @@ func TestMatchRemote(t *testing.T) {
 		{
 			name:    "different host no match",
 			pattern: "github.com/company/*",
-			remote:  &ParsedRemote{Host: "gitlab.com", Org: "company", Repo: "repo"},
+			remote:  &parsedRemote{Host: "gitlab.com", Org: "company", Repo: "repo"},
 			want:    false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := MatchRemote(tt.pattern, tt.remote)
+			got := matchRemote(tt.pattern, tt.remote)
 			if got != tt.want {
-				t.Errorf("MatchRemote(%q, %+v) = %v, want %v", tt.pattern, tt.remote, got, tt.want)
+				t.Errorf("matchRemote(%q, %+v) = %v, want %v", tt.pattern, tt.remote, got, tt.want)
 			}
 		})
 	}

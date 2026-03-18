@@ -7,9 +7,9 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 )
 
-// MatchDirectory checks if the current working directory matches the given pattern
-// Pattern should be a glob pattern, optionally starting with ~ for home directory
-func MatchDirectory(pattern, cwd string) (bool, error) {
+// matchDirectory checks if the current working directory matches the given pattern.
+// Pattern should be a glob pattern, optionally starting with ~ for home directory.
+func matchDirectory(pattern, cwd string) (bool, error) {
 	expandedPattern := normalizeDirectoryPattern(pattern)
 	expandedCwd := normalizeDirectoryPath(cwd)
 
@@ -117,9 +117,9 @@ func hasGlobMeta(part string) bool {
 	return strings.ContainsAny(part, "*?[")
 }
 
-// MatchRemote checks if a parsed remote matches the given pattern
+// matchRemote checks if a parsed remote matches the given pattern.
 // Pattern format: "host/org/*" or "host/org/repo"
-func MatchRemote(pattern string, remote *ParsedRemote) bool {
+func matchRemote(pattern string, remote *parsedRemote) bool {
 	if remote == nil {
 		return false
 	}

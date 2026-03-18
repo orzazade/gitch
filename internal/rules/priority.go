@@ -60,7 +60,7 @@ func remoteSpecificity(pattern string) int {
 func (r Rule) Matches(cwd, remoteURL string) bool {
 	switch r.Type {
 	case DirectoryRule:
-		matched, err := MatchDirectory(r.Pattern, cwd)
+		matched, err := matchDirectory(r.Pattern, cwd)
 		if err != nil {
 			return false
 		}
@@ -69,11 +69,11 @@ func (r Rule) Matches(cwd, remoteURL string) bool {
 		if remoteURL == "" {
 			return false
 		}
-		parsed, err := ParseRemote(remoteURL)
+		parsed, err := parseRemote(remoteURL)
 		if err != nil {
 			return false
 		}
-		return MatchRemote(r.Pattern, parsed)
+		return matchRemote(r.Pattern, parsed)
 	default:
 		return false
 	}

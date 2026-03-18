@@ -8,16 +8,16 @@ import (
 	"github.com/orzazade/gitch/internal/git"
 )
 
-// ParsedRemote represents a parsed git remote URL
-type ParsedRemote struct {
+// parsedRemote represents a parsed git remote URL
+type parsedRemote struct {
 	Host string // e.g., "github.com"
 	Org  string // e.g., "company"
 	Repo string // e.g., "project"
 }
 
-// ParseRemote parses a git remote URL and extracts host, org, and repo
-// Supports SSH (git@host:path), HTTPS, and SCP-style URLs
-func ParseRemote(rawURL string) (*ParsedRemote, error) {
+// parseRemote parses a git remote URL and extracts host, org, and repo.
+// Supports SSH (git@host:path), HTTPS, and SCP-style URLs.
+func parseRemote(rawURL string) (*parsedRemote, error) {
 	u, err := giturls.Parse(rawURL)
 	if err != nil {
 		return nil, err
@@ -26,7 +26,7 @@ func ParseRemote(rawURL string) (*ParsedRemote, error) {
 	// Split path into org and repo
 	parts := strings.Split(strings.TrimSuffix(strings.TrimPrefix(u.Path, "/"), ".git"), "/")
 
-	result := &ParsedRemote{
+	result := &parsedRemote{
 		Host: strings.ToLower(u.Host),
 	}
 
