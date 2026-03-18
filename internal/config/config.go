@@ -216,6 +216,42 @@ func (c *Config) RemoveRule(pattern string) error {
 	return fmt.Errorf("rule with pattern %q not found", pattern)
 }
 
+// RenameIdentity renames an identity and updates all references (rules, default).
+// The lookup is case-insensitive, but the new name is stored as given.
+func (c *Config) RenameIdentity(oldName, newName string) error {
+	idx := c.findIdentityIndex(oldName)
+	if idx == -1 {
+		return errIdentityNotFound(oldName)
+	}
+
+	if err := ValidateName(newName); err != nil {
+		return err
+	}
+
+	// Check that the new name doesn't collide with another identity
+	existingIdx := c.findIdentityIndex(newName)
+	if existingIdx != -1 && existingIdx != idx {
+		return fmt.Errorf("identity with name %q already exists", newName)
+	}
+
+	actualOldName := c.Identities[idx].Name
+	c.Identities[idx].Name = newName
+
+	// Update the default if it pointed to the old name
+	if strings.EqualFold(c.Default, actualOldName) {
+		c.Default = newName
+	}
+
+	// Update any rules that reference the old identity
+	for i := range c.Rules {
+		if strings.EqualFold(c.Rules[i].Identity, actualOldName) {
+			c.Rules[i].Identity = newName
+		}
+	}
+
+	return nil
+}
+
 // ListRules returns all rules
 func (c *Config) ListRules() []rules.Rule {
 	return c.Rules

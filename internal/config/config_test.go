@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/orzazade/gitch/internal/rules"
 )
 
 // testConfig creates a new config with the given identities
@@ -349,6 +351,127 @@ func load_yaml_test(t *testing.T, path string) *Config {
 	}
 
 	return &cfg
+}
+
+func TestRenameIdentity_Success(t *testing.T) {
+	cfg := testConfig(
+		Identity{Name: "work", Email: "work@example.com"},
+		Identity{Name: "personal", Email: "personal@example.com"},
+	)
+
+	err := cfg.RenameIdentity("work", "company")
+	if err != nil {
+		t.Fatalf("RenameIdentity() returned error: %v", err)
+	}
+
+	if cfg.Identities[0].Name != "company" {
+		t.Errorf("Expected name 'company', got %q", cfg.Identities[0].Name)
+	}
+	// Email should be unchanged
+	if cfg.Identities[0].Email != "work@example.com" {
+		t.Errorf("Expected email unchanged, got %q", cfg.Identities[0].Email)
+	}
+}
+
+func TestRenameIdentity_CaseInsensitiveLookup(t *testing.T) {
+	cfg := testConfig(Identity{Name: "Work", Email: "work@example.com"})
+
+	err := cfg.RenameIdentity("WORK", "company")
+	if err != nil {
+		t.Fatalf("RenameIdentity() returned error: %v", err)
+	}
+
+	if cfg.Identities[0].Name != "company" {
+		t.Errorf("Expected name 'company', got %q", cfg.Identities[0].Name)
+	}
+}
+
+func TestRenameIdentity_NotFound(t *testing.T) {
+	cfg := testConfig()
+
+	err := cfg.RenameIdentity("nonexistent", "newname")
+	if err == nil {
+		t.Fatal("RenameIdentity() should return error for nonexistent identity")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("Error should mention 'not found', got: %v", err)
+	}
+}
+
+func TestRenameIdentity_InvalidNewName(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "work@example.com"})
+
+	err := cfg.RenameIdentity("work", "-invalid")
+	if err == nil {
+		t.Fatal("RenameIdentity() should return error for invalid new name")
+	}
+}
+
+func TestRenameIdentity_DuplicateNewName(t *testing.T) {
+	cfg := testConfig(
+		Identity{Name: "work", Email: "work@example.com"},
+		Identity{Name: "personal", Email: "personal@example.com"},
+	)
+
+	err := cfg.RenameIdentity("work", "personal")
+	if err == nil {
+		t.Fatal("RenameIdentity() should return error when new name already exists")
+	}
+	if !strings.Contains(err.Error(), "already exists") {
+		t.Errorf("Error should mention 'already exists', got: %v", err)
+	}
+}
+
+func TestRenameIdentity_SameNameNoOp(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "work@example.com"})
+
+	// Renaming to same name (different case) should succeed
+	err := cfg.RenameIdentity("work", "Work")
+	if err != nil {
+		t.Fatalf("RenameIdentity() returned error for case change: %v", err)
+	}
+	if cfg.Identities[0].Name != "Work" {
+		t.Errorf("Expected name 'Work', got %q", cfg.Identities[0].Name)
+	}
+}
+
+func TestRenameIdentity_UpdatesDefault(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "work@example.com"})
+	cfg.Default = "work"
+
+	err := cfg.RenameIdentity("work", "company")
+	if err != nil {
+		t.Fatalf("RenameIdentity() returned error: %v", err)
+	}
+
+	if cfg.Default != "company" {
+		t.Errorf("Expected default to be updated to 'company', got %q", cfg.Default)
+	}
+}
+
+func TestRenameIdentity_UpdatesRules(t *testing.T) {
+	cfg := testConfig(Identity{Name: "work", Email: "work@example.com"})
+	cfg.Rules = []rules.Rule{
+		{Type: rules.DirectoryRule, Pattern: "~/work/**", Identity: "work"},
+		{Type: rules.RemoteRule, Pattern: "github.com/company/*", Identity: "work"},
+		{Type: rules.DirectoryRule, Pattern: "~/personal/**", Identity: "personal"},
+	}
+
+	err := cfg.RenameIdentity("work", "company")
+	if err != nil {
+		t.Fatalf("RenameIdentity() returned error: %v", err)
+	}
+
+	if cfg.Rules[0].Identity != "company" {
+		t.Errorf("Expected rule[0] identity 'company', got %q", cfg.Rules[0].Identity)
+	}
+	if cfg.Rules[1].Identity != "company" {
+		t.Errorf("Expected rule[1] identity 'company', got %q", cfg.Rules[1].Identity)
+	}
+	// Rule for 'personal' should be unchanged
+	if cfg.Rules[2].Identity != "personal" {
+		t.Errorf("Expected rule[2] identity 'personal' (unchanged), got %q", cfg.Rules[2].Identity)
+	}
 }
 
 func TestLoad_NonexistentFile(t *testing.T) {
