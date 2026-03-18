@@ -21,12 +21,8 @@ func buildIndicators(hasSSHKey, hasGPGKey bool) string {
 	return ""
 }
 
-// RenderIdentityCard renders a single identity as a styled card.
-// If active: uses ActiveCardStyle with checkmark prefix.
-// If not active: uses CardStyle with space prefix.
-// If isDefault: appends "(default)" after the name.
-// If hasSSHKey or hasGPGKey: shows indicators on a third line.
-func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey, hasGPGKey bool) string {
+// renderIdentityCard renders a single identity as a styled card.
+func renderIdentityCard(name, email string, isActive, isDefault, hasSSHKey, hasGPGKey bool) string {
 	var prefix string
 	style := CardStyle
 
@@ -65,7 +61,7 @@ func RenderIdentityList(identities []config.Identity, activeName, defaultName st
 
 	var cards []string
 	for _, identity := range identities {
-		cards = append(cards, RenderIdentityCard(
+		cards = append(cards, renderIdentityCard(
 			identity.Name, identity.Email,
 			strings.EqualFold(identity.Name, activeName),
 			strings.EqualFold(identity.Name, defaultName),
