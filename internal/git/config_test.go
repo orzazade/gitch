@@ -368,3 +368,27 @@ func TestUnsetConfigScoped_RemovesKey(t *testing.T) {
 		t.Errorf("expected empty value after unset, got %q", value)
 	}
 }
+
+func TestGetConfigScoped_InvalidScope(t *testing.T) {
+	_, err := GetConfigScoped("user.name", Scope("invalid"))
+	if err == nil {
+		t.Fatal("expected error for invalid scope")
+	}
+	if !strings.Contains(err.Error(), "unknown git config scope") {
+		t.Errorf("expected 'unknown git config scope' error, got: %v", err)
+	}
+}
+
+func TestSetConfigScoped_InvalidScope(t *testing.T) {
+	err := SetConfigScoped("user.name", "test", Scope("invalid"))
+	if err == nil {
+		t.Fatal("expected error for invalid scope")
+	}
+}
+
+func TestUnsetConfigScoped_InvalidScope(t *testing.T) {
+	err := UnsetConfigScoped("user.name", Scope("invalid"))
+	if err == nil {
+		t.Fatal("expected error for invalid scope")
+	}
+}
