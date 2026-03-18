@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/rules"
@@ -116,7 +117,13 @@ func runUse(cmd *cobra.Command, args []string) error {
 		name := args[0]
 		identity, err = cfg.GetIdentity(name)
 		if err != nil {
-			return fmt.Errorf("identity '%s' not found. Use 'gitch list' to see available identities", name)
+			msg := fmt.Sprintf("identity '%s' not found", name)
+			if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
+				msg += fmt.Sprintf("\n\nDid you mean '%s'?  Run: gitch use %s", suggestion, suggestion)
+			} else {
+				msg += ". Use 'gitch list' to see available identities"
+			}
+			return fmt.Errorf("%s", msg)
 		}
 	}
 
@@ -133,4 +140,55 @@ func runUse(cmd *cobra.Command, args []string) error {
 	printSwitchSuccess(identity)
 	printScopeInfo(scope)
 	return nil
+}
+
+// closestIdentityName returns the best-matching identity name for a mistyped input,
+// or "" if no candidate is close enough (within 2 edits).
+func closestIdentityName(input string, identities []config.Identity) string {
+	input = strings.ToLower(input)
+	best, bestDist := "", 3 // threshold: only suggest if within 2 edits
+	for _, id := range identities {
+		d := levenshtein(input, strings.ToLower(id.Name))
+		if d < bestDist {
+			bestDist, best = d, id.Name
+		}
+	}
+	return best
+}
+
+// levenshtein computes the edit distance between two strings.
+func levenshtein(a, b string) int {
+	ra, rb := []rune(a), []rune(b)
+	la, lb := len(ra), len(rb)
+	row := make([]int, lb+1)
+	for j := range row {
+		row[j] = j
+	}
+	for i := 1; i <= la; i++ {
+		prev := i
+		for j := 1; j <= lb; j++ {
+			cost := 1
+			if ra[i-1] == rb[j-1] {
+				cost = 0
+			}
+			val := min3(row[j]+1, prev+1, row[j-1]+cost)
+			row[j-1] = prev
+			prev = val
+		}
+		row[lb] = prev
+	}
+	return row[lb]
+}
+
+func min3(a, b, c int) int {
+	if a < b {
+		if a < c {
+			return a
+		}
+		return c
+	}
+	if b < c {
+		return b
+	}
+	return c
 }
