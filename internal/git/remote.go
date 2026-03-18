@@ -1,7 +1,6 @@
 package git
 
 import (
-	"os/exec"
 	"strings"
 
 	giturls "github.com/whilp/git-urls"
@@ -37,13 +36,12 @@ func IsAzureDevOpsRemote(remoteURL string) bool {
 // Returns (false, nil) if not Azure DevOps or no origin remote exists.
 // Returns (false, error) only if the git command fails for other reasons.
 func GetCurrentRemoteType() (bool, error) {
-	cmd := exec.Command("git", "config", "--get", "remote.origin.url")
-	output, err := cmd.Output()
+	url, err := GetConfigScoped("remote.origin.url", ScopeEffective)
 	if err != nil {
-		// If the command fails (e.g., no origin remote), return false without error
+		// If the config read fails, return false without error
 		// This handles: not in a git repo, no origin remote, etc.
 		return false, nil
 	}
 
-	return IsAzureDevOpsRemote(strings.TrimSpace(string(output))), nil
+	return IsAzureDevOpsRemote(url), nil
 }
