@@ -2,6 +2,7 @@
 package selector
 
 import (
+	"errors"
 	"slices"
 	"strings"
 
@@ -168,7 +169,10 @@ func Run(identities []config.Identity, activeName, defaultName string) (*config.
 		return nil, err
 	}
 
-	result := finalModel.(Model)
+	result, ok := finalModel.(Model)
+	if !ok {
+		return nil, errors.New("unexpected selector model type")
+	}
 	if result.Cancelled {
 		return nil, nil
 	}

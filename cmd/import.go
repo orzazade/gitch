@@ -182,8 +182,14 @@ func runImport(cmd *cobra.Command, args []string) error {
 func promptConflict(reader *bufio.Reader, c portability.Conflict) (overwrite bool, abort bool, err error) {
 	switch c.Type {
 	case portability.IdentityConflict:
-		existing := c.Existing.(config.Identity)
-		incoming := c.Incoming.(config.Identity)
+		existing, ok := c.Existing.(config.Identity)
+		if !ok {
+			return false, false, errors.New("unexpected conflict type for existing identity")
+		}
+		incoming, ok := c.Incoming.(config.Identity)
+		if !ok {
+			return false, false, errors.New("unexpected conflict type for incoming identity")
+		}
 
 		fmt.Println()
 		fmt.Printf("Identity %q already exists:\n", c.Key)

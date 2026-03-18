@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -38,7 +39,10 @@ func runSetup(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("wizard error: %w", err)
 	}
 
-	result := finalModel.(wizard.Model)
+	result, ok := finalModel.(wizard.Model)
+	if !ok {
+		return errors.New("unexpected wizard model type")
+	}
 
 	// User cancelled
 	if result.Cancelled {
