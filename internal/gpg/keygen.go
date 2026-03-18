@@ -60,7 +60,9 @@ func GenerateKey(name, email string, passphrase []byte) (*KeyInfo, error) {
 	if err := entity.SerializePrivate(privateArmor, config); err != nil {
 		return nil, fmt.Errorf("failed to serialize private key: %w", err)
 	}
-	privateArmor.Close()
+	if err := privateArmor.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize armored key: %w", err)
+	}
 
 	// Import the key into system gpg
 	if err := importKeyToGPG(privateKeyBuf.Bytes()); err != nil {
