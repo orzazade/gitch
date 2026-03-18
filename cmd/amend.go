@@ -201,9 +201,13 @@ func printAmendResult(out amendOutput) error {
 
 	switch out.Action {
 	case "amended":
+		hash := out.CommitHash
+		if len(hash) > 8 {
+			hash = hash[:8]
+		}
 		fmt.Printf("%s Amended commit %s\n",
 			ui.SuccessStyle.Render("OK"),
-			out.CommitHash[:8])
+			hash)
 		fmt.Println("  Before: " + out.OldName + " (" + out.OldEmail + ")")
 		fmt.Println("  After:  " + out.NewName + " (" + out.NewEmail + ")")
 		return nil
