@@ -48,6 +48,20 @@ func writeExportFile(expandedPath, header string, export *ExportConfig) error {
 	return encoder.Close()
 }
 
+// prepareExportPath expands ~ in path and ensures the parent directory exists.
+func prepareExportPath(path string) (string, error) {
+	expandedPath, err := ssh.ExpandPath(path)
+	if err != nil {
+		return "", fmt.Errorf("invalid path: %w", err)
+	}
+
+	if err := os.MkdirAll(filepath.Dir(expandedPath), 0755); err != nil {
+		return "", fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	return expandedPath, nil
+}
+
 // ExportToFile exports the configuration to a YAML file at the specified path.
 // The path supports ~ expansion for home directory.
 // Returns ErrNoIdentities if there are no identities to export.
@@ -56,13 +70,9 @@ func ExportToFile(cfg *config.Config, path string) error {
 		return ErrNoIdentities
 	}
 
-	expandedPath, err := ssh.ExpandPath(path)
+	expandedPath, err := prepareExportPath(path)
 	if err != nil {
-		return fmt.Errorf("invalid path: %w", err)
-	}
-
-	if err := os.MkdirAll(filepath.Dir(expandedPath), 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return err
 	}
 
 	export := BuildExportConfig(cfg)
@@ -81,15 +91,9 @@ func ExportToFileEncrypted(cfg *config.Config, path string, passphrase []byte) e
 		return ErrNoIdentities
 	}
 
-	// Expand path (handle ~)
-	expandedPath, err := ssh.ExpandPath(path)
+	expandedPath, err := prepareExportPath(path)
 	if err != nil {
-		return fmt.Errorf("invalid path: %w", err)
-	}
-
-	// Create parent directory if it doesn't exist
-	if err := os.MkdirAll(filepath.Dir(expandedPath), 0755); err != nil {
-		return fmt.Errorf("failed to create directory: %w", err)
+		return err
 	}
 
 	// Build encrypted export config
