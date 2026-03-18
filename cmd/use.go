@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -123,7 +124,7 @@ func runUse(cmd *cobra.Command, args []string) error {
 			} else {
 				msg += ". Use 'gitch list' to see available identities"
 			}
-			return fmt.Errorf("%s", msg)
+			return errors.New(msg)
 		}
 	}
 
