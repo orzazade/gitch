@@ -46,18 +46,12 @@ func RenderIdentityCard(name, email string, isActive, isDefault, hasSSHKey, hasG
 	// Build email line with same indentation
 	emailLine := "  " + EmailStyle.Render(email)
 
-	// Combine into card content
-	var content strings.Builder
-	content.WriteString(nameLine)
-	content.WriteString("\n")
-	content.WriteString(emailLine)
+	content := nameLine + "\n" + emailLine
 	if indicators := buildIndicators(hasSSHKey, hasGPGKey); indicators != "" {
-		content.WriteString("\n")
-		content.WriteString("  ")
-		content.WriteString(indicators)
+		content += "\n  " + indicators
 	}
 
-	return style.Render(content.String())
+	return style.Render(content)
 }
 
 // RenderIdentityList renders all identities as cards.
