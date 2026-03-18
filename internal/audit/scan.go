@@ -122,21 +122,21 @@ func parseCommitLine(line string) (Commit, error) {
 	}, nil
 }
 
-// getLocalOnlyHashes returns a map of commit hashes that exist locally but not on the upstream
-// Returns nil, nil if no upstream is configured (cannot determine pushed status)
-// Returns empty map if all commits are pushed
-func getLocalOnlyHashes() (map[string]bool, error) {
+// getLocalOnlyHashes returns a map of commit hashes that exist locally but not on the upstream.
+// Returns nil if no upstream is configured (cannot determine pushed status).
+// Returns empty map if all commits are pushed.
+func getLocalOnlyHashes() map[string]bool {
 	// Get upstream ref
 	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "@{u}")
 	upstreamOutput, err := cmd.Output()
 	if err != nil {
 		// No upstream configured - can't determine pushed status
-		return nil, nil
+		return nil
 	}
 
 	upstream := strings.TrimSpace(string(upstreamOutput))
 	if upstream == "" {
-		return nil, nil
+		return nil
 	}
 
 	// Get local-only commits (commits in HEAD but not in upstream)
@@ -145,7 +145,7 @@ func getLocalOnlyHashes() (map[string]bool, error) {
 	output, err := cmd.Output()
 	if err != nil {
 		// If this fails, assume we can't determine status
-		return nil, nil
+		return nil
 	}
 
 	// Build map of local-only hashes
@@ -158,7 +158,7 @@ func getLocalOnlyHashes() (map[string]bool, error) {
 		}
 	}
 
-	return localHashes, nil
+	return localHashes
 }
 
 // ScanOptions configures the Scan function behavior
@@ -231,7 +231,7 @@ func Scan(opts ScanOptions) (*ScanResult, error) {
 	}
 
 	// Get local-only hashes
-	localHashes, _ := getLocalOnlyHashes()
+	localHashes := getLocalOnlyHashes()
 	noUpstream := localHashes == nil
 
 	// Process commits

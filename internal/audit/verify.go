@@ -47,7 +47,7 @@ func VerifyUnpushed() (*VerifyResult, error) {
 		return nil, fmt.Errorf("rule references unknown identity %q: %w", matchedRule.Identity, err)
 	}
 
-	localHashes, _ := getLocalOnlyHashes()
+	localHashes := getLocalOnlyHashes()
 	if localHashes == nil {
 		return &VerifyResult{
 			ExpectedEmail: expectedIdentity.Email,

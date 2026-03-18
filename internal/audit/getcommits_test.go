@@ -103,10 +103,7 @@ func Test_getLocalOnlyHashes_WithUpstream(t *testing.T) {
 		}
 	}
 
-	hashes, err := getLocalOnlyHashes()
-	if err != nil {
-		t.Fatalf("getLocalOnlyHashes failed: %v", err)
-	}
+	hashes := getLocalOnlyHashes()
 	if hashes == nil {
 		t.Fatal("expected non-nil map with upstream configured")
 	}
@@ -134,11 +131,8 @@ func Test_getLocalOnlyHashes_NoUpstream(t *testing.T) {
 		}
 	}
 
-	// No upstream configured — should return nil map, nil error
-	hashes, err := getLocalOnlyHashes()
-	if err != nil {
-		t.Fatalf("getLocalOnlyHashes failed: %v", err)
-	}
+	// No upstream configured — should return nil map
+	hashes := getLocalOnlyHashes()
 	if hashes != nil {
 		t.Errorf("expected nil map when no upstream, got %v", hashes)
 	}
