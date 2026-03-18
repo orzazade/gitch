@@ -22,6 +22,11 @@ func localHookPath() (string, error) {
 	return git.GitPath(filepath.Join("hooks", "pre-commit"))
 }
 
+// localPrePushPath returns the current repository's pre-push hook path.
+func localPrePushPath() (string, error) {
+	return git.GitPath(filepath.Join("hooks", "pre-push"))
+}
+
 // InstallLocal installs the pre-commit hook in the current repository.
 func InstallLocal() error {
 	preCommitPath, err := localHookPath()
@@ -55,6 +60,39 @@ func IsInstalledLocal() (bool, error) {
 	return isManagedHook(preCommitPath)
 }
 
+// InstallLocalPrePush installs the pre-push hook in the current repository.
+func InstallLocalPrePush() error {
+	prePushPath, err := localPrePushPath()
+	if err != nil {
+		return err
+	}
+
+	if err := ensureHookPathWritable(prePushPath); err != nil {
+		return err
+	}
+
+	return writeHook(prePushPath, prePushScript)
+}
+
+// UninstallLocalPrePush removes the gitch pre-push hook from the current repository.
+func UninstallLocalPrePush() error {
+	prePushPath, err := localPrePushPath()
+	if err != nil {
+		return err
+	}
+
+	return removeManagedHook(prePushPath)
+}
+
+// IsInstalledLocalPrePush checks whether the current repository has the gitch pre-push hook.
+func IsInstalledLocalPrePush() (bool, error) {
+	prePushPath, err := localPrePushPath()
+	if err != nil {
+		return false, err
+	}
+	return isManagedHook(prePushPath)
+}
+
 // InstallGlobal installs the pre-commit hook globally via core.hooksPath.
 // It refuses to overwrite an existing non-gitch global hooksPath.
 func InstallGlobal() error {
@@ -81,6 +119,14 @@ func InstallGlobal() error {
 		return err
 	}
 	if err := writeManagedHook(preCommitPath); err != nil {
+		return err
+	}
+
+	prePushPath := filepath.Join(hooksDir, "pre-push")
+	if err := ensureHookPathWritable(prePushPath); err != nil {
+		return err
+	}
+	if err := writeHook(prePushPath, prePushScript); err != nil {
 		return err
 	}
 
@@ -112,6 +158,7 @@ func UninstallGlobal() error {
 	}
 
 	_ = removeManagedHook(filepath.Join(hooksDir, "pre-commit"))
+	_ = removeManagedHook(filepath.Join(hooksDir, "pre-push"))
 	_ = os.Remove(hooksDir)
 	return nil
 }
@@ -162,8 +209,12 @@ func ensureHookPathWritable(path string) error {
 }
 
 func writeManagedHook(path string) error {
-	if err := os.WriteFile(path, []byte(preCommitScript), 0755); err != nil {
-		return fmt.Errorf("failed to write pre-commit hook: %w", err)
+	return writeHook(path, preCommitScript)
+}
+
+func writeHook(path string, script string) error {
+	if err := os.WriteFile(path, []byte(script), 0755); err != nil {
+		return fmt.Errorf("failed to write hook %s: %w", filepath.Base(path), err)
 	}
 	return nil
 }

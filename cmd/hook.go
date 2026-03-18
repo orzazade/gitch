@@ -11,52 +11,56 @@ import (
 )
 
 var hookGlobal bool
+var hookPrePush bool
 
 var hookCmd = &cobra.Command{
 	Use:   "hook",
-	Short: "Manage git pre-commit hooks",
-	Long: `Install and manage pre-commit hooks that validate identity before commits.
+	Short: "Manage git hooks for identity validation",
+	Long: `Install and manage hooks that validate identity before commits and pushes.
 
-The hook will detect identity mismatches and prompt you to switch, continue, or abort.
-Use GITCH_BYPASS=1 environment variable to skip the hook.
+The pre-commit hook detects identity mismatches and prompts you to switch, continue, or abort.
+The pre-push hook runs 'gitch verify' to catch wrong-identity commits before they leave your machine.
+Use GITCH_BYPASS=1 environment variable to skip hooks.
 
 Examples:
 	  gitch hook install
 	  gitch hook install --global
+	  gitch hook install --pre-push
 	  gitch hook uninstall
 	  gitch hook uninstall --global`,
 }
 
 var hookInstallCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Install the gitch pre-commit hook",
-	Long: `Install the gitch pre-commit hook to validate identity before commits.
+	Short: "Install gitch hooks",
+	Long: `Install gitch hooks to validate identity before commits and pushes.
 
-By default, gitch installs the hook in the current repository's .git/hooks directory.
-Use --global to install via core.hooksPath instead. Global install refuses to overwrite
-an existing non-gitch core.hooksPath.
+By default, installs the pre-commit hook in the current repository.
+Use --global to install via core.hooksPath (includes both pre-commit and pre-push).
+Use --pre-push to install the pre-push hook locally.
 
-The hook runs 'gitch hook validate' before each commit.
-
-If the current identity doesn't match the expected identity for the repository,
-the hook will prompt you to [S]witch, [C]ontinue, or [A]bort.
+The pre-commit hook runs 'gitch hook validate' and prompts on mismatch.
+The pre-push hook runs 'gitch verify' to catch wrong-identity commits before push.
 
 Examples:
-  gitch hook install
-  gitch hook install --global`,
+  gitch hook install              # pre-commit hook (local)
+  gitch hook install --pre-push   # pre-push hook (local)
+  gitch hook install --global     # both hooks (global)`,
 	RunE: runHookInstall,
 }
 
 var hookUninstallCmd = &cobra.Command{
 	Use:   "uninstall",
-	Short: "Uninstall the gitch pre-commit hook",
-	Long: `Remove the gitch pre-commit hook.
+	Short: "Uninstall gitch hooks",
+	Long: `Remove gitch hooks.
 
-By default, removes the hook from the current repository.
-Use --global to remove the gitch-managed global hook.
+By default, removes the pre-commit hook from the current repository.
+Use --pre-push to remove the pre-push hook.
+Use --global to remove the gitch-managed global hooks.
 
 Examples:
   gitch hook uninstall
+  gitch hook uninstall --pre-push
   gitch hook uninstall --global`,
 	RunE: runHookUninstall,
 }
@@ -97,7 +101,10 @@ func init() {
 
 	// Flags
 	hookInstallCmd.Flags().BoolVar(&hookGlobal, "global", false, "Install hooks globally via core.hooksPath")
-	hookUninstallCmd.Flags().BoolVar(&hookGlobal, "global", false, "Uninstall the gitch-managed global hook")
+	hookInstallCmd.Flags().BoolVar(&hookPrePush, "pre-push", false, "Install the pre-push hook (local only)")
+	hookInstallCmd.MarkFlagsMutuallyExclusive("global", "pre-push")
+	hookUninstallCmd.Flags().BoolVar(&hookGlobal, "global", false, "Uninstall the gitch-managed global hooks")
+	hookUninstallCmd.Flags().BoolVar(&hookPrePush, "pre-push", false, "Uninstall the pre-push hook (local only)")
 }
 
 func runHookInstall(cmd *cobra.Command, args []string) error {
@@ -115,22 +122,37 @@ func runHookInstall(cmd *cobra.Command, args []string) error {
 		}
 		hooksDir, _ := hooks.HooksDir()
 		fmt.Println(ui.SuccessStyle.Render("Global hooks installed at " + hooksDir))
+		fmt.Println(ui.DimStyle.Render("Git will validate identity before each commit and push."))
+	} else if hookPrePush {
+		installed, err := hooks.IsInstalledLocalPrePush()
+		if err != nil {
+			return fmt.Errorf("failed to check local pre-push hook status: %w", err)
+		}
+		if installed {
+			fmt.Println("Gitch pre-push hook is already installed in this repository.")
+			return nil
+		}
+		if err := hooks.InstallLocalPrePush(); err != nil {
+			return fmt.Errorf("failed to install local pre-push hook: %w", err)
+		}
+		fmt.Println(ui.SuccessStyle.Render("Local pre-push hook installed"))
+		fmt.Println(ui.DimStyle.Render("Git will verify commit identities before each push."))
 	} else {
 		installed, err := hooks.IsInstalledLocal()
 		if err != nil {
 			return fmt.Errorf("failed to check local hook status: %w", err)
 		}
 		if installed {
-			fmt.Println("Gitch hook is already installed in this repository.")
+			fmt.Println("Gitch pre-commit hook is already installed in this repository.")
 			return nil
 		}
 		if err := hooks.InstallLocal(); err != nil {
 			return fmt.Errorf("failed to install local hook: %w", err)
 		}
-		fmt.Println(ui.SuccessStyle.Render("Local repository hook installed"))
+		fmt.Println(ui.SuccessStyle.Render("Local pre-commit hook installed"))
+		fmt.Println(ui.DimStyle.Render("Git will validate identity before each commit."))
 	}
 
-	fmt.Println(ui.DimStyle.Render("Git will now validate identity before each commit."))
 	fmt.Println(ui.DimStyle.Render("Use GITCH_BYPASS=1 to skip validation."))
 	return nil
 }
@@ -152,18 +174,34 @@ func runHookUninstall(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	if hookPrePush {
+		installed, err := hooks.IsInstalledLocalPrePush()
+		if err != nil {
+			return fmt.Errorf("failed to check local pre-push hook status: %w", err)
+		}
+		if !installed {
+			fmt.Println("Gitch pre-push hook is not installed in this repository.")
+			return nil
+		}
+		if err := hooks.UninstallLocalPrePush(); err != nil {
+			return fmt.Errorf("failed to uninstall local pre-push hook: %w", err)
+		}
+		fmt.Println(ui.SuccessStyle.Render("Local pre-push hook removed"))
+		return nil
+	}
+
 	installed, err := hooks.IsInstalledLocal()
 	if err != nil {
 		return fmt.Errorf("failed to check local hook status: %w", err)
 	}
 	if !installed {
-		fmt.Println("Gitch hook is not installed in this repository.")
+		fmt.Println("Gitch pre-commit hook is not installed in this repository.")
 		return nil
 	}
 	if err := hooks.UninstallLocal(); err != nil {
 		return fmt.Errorf("failed to uninstall local hook: %w", err)
 	}
-	fmt.Println(ui.SuccessStyle.Render("Local repository hook removed"))
+	fmt.Println(ui.SuccessStyle.Render("Local pre-commit hook removed"))
 	return nil
 }
 

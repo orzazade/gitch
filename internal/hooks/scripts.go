@@ -47,3 +47,18 @@ else
     esac
 fi
 `
+
+// prePushScript is the bash script installed as pre-push hook.
+// It runs gitch verify to catch wrong-identity commits before they leave the machine.
+const prePushScript = `#!/bin/bash
+# gitch:managed
+# gitch pre-push hook - verifies unpushed commit identities before push
+
+# Check for bypass
+if [ "$GITCH_BYPASS" = "1" ]; then
+    exit 0
+fi
+
+# Run gitch verify
+gitch verify
+`

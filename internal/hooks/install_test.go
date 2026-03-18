@@ -228,3 +228,150 @@ func TestIsInstalled_AfterInstall(t *testing.T) {
 		t.Error("expected IsInstalled=true after InstallGlobal")
 	}
 }
+
+// --- Pre-push hook tests ---
+
+func TestInstallLocalPrePush_WritesManagedHook(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	if err := InstallLocalPrePush(); err != nil {
+		t.Fatalf("InstallLocalPrePush failed: %v", err)
+	}
+
+	hookPath, err := localPrePushPath()
+	if err != nil {
+		t.Fatalf("failed to get local pre-push path: %v", err)
+	}
+
+	data, err := os.ReadFile(hookPath)
+	if err != nil {
+		t.Fatalf("failed to read hook file: %v", err)
+	}
+	if !strings.Contains(string(data), managedHookMarker) {
+		t.Fatalf("expected pre-push hook to contain managed marker, got:\n%s", string(data))
+	}
+	if !strings.Contains(string(data), "gitch verify") {
+		t.Fatal("expected pre-push hook to call 'gitch verify'")
+	}
+}
+
+func TestInstallLocalPrePush_RefusesOverwriteNonManagedHook(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	hookPath, err := localPrePushPath()
+	if err != nil {
+		t.Fatalf("failed to get local pre-push path: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(hookPath), 0755); err != nil {
+		t.Fatalf("failed to create hook dir: %v", err)
+	}
+	if err := os.WriteFile(hookPath, []byte("#!/bin/bash\necho custom\n"), 0755); err != nil {
+		t.Fatalf("failed to seed custom hook: %v", err)
+	}
+
+	if err := InstallLocalPrePush(); err == nil {
+		t.Fatal("expected InstallLocalPrePush to refuse overwriting a non-managed hook")
+	}
+}
+
+func TestUninstallLocalPrePush_RemovesManagedHook(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	if err := InstallLocalPrePush(); err != nil {
+		t.Fatalf("InstallLocalPrePush failed: %v", err)
+	}
+
+	if err := UninstallLocalPrePush(); err != nil {
+		t.Fatalf("UninstallLocalPrePush failed: %v", err)
+	}
+
+	hookPath, err := localPrePushPath()
+	if err != nil {
+		t.Fatalf("failed to get local pre-push path: %v", err)
+	}
+	if _, err := os.Stat(hookPath); !errors.Is(err, os.ErrNotExist) {
+		t.Error("expected pre-push hook file to be removed after UninstallLocalPrePush")
+	}
+}
+
+func TestIsInstalledLocalPrePush_NotInstalled(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	installed, err := IsInstalledLocalPrePush()
+	if err != nil {
+		t.Fatalf("IsInstalledLocalPrePush failed: %v", err)
+	}
+	if installed {
+		t.Error("expected IsInstalledLocalPrePush=false when no hook installed")
+	}
+}
+
+func TestIsInstalledLocalPrePush_Installed(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	if err := InstallLocalPrePush(); err != nil {
+		t.Fatalf("InstallLocalPrePush failed: %v", err)
+	}
+
+	installed, err := IsInstalledLocalPrePush()
+	if err != nil {
+		t.Fatalf("IsInstalledLocalPrePush failed: %v", err)
+	}
+	if !installed {
+		t.Error("expected IsInstalledLocalPrePush=true after install")
+	}
+}
+
+func TestInstallGlobal_IncludesPrePushHook(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	if err := InstallGlobal(); err != nil {
+		t.Fatalf("InstallGlobal failed: %v", err)
+	}
+
+	hooksPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	if err != nil {
+		t.Fatalf("failed to get core.hooksPath: %v", err)
+	}
+
+	prePushFile := filepath.Join(hooksPath, "pre-push")
+	data, err := os.ReadFile(prePushFile)
+	if err != nil {
+		t.Fatalf("failed to read pre-push hook file: %v", err)
+	}
+	if !strings.Contains(string(data), managedHookMarker) {
+		t.Error("global pre-push hook should contain managed marker")
+	}
+	if !strings.Contains(string(data), "gitch verify") {
+		t.Error("global pre-push hook should call 'gitch verify'")
+	}
+}
+
+func TestUninstallGlobal_RemovesPrePushHook(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	if err := InstallGlobal(); err != nil {
+		t.Fatalf("InstallGlobal failed: %v", err)
+	}
+
+	hooksPath, err := git.GetConfigScoped("core.hooksPath", git.ScopeGlobal)
+	if err != nil {
+		t.Fatalf("failed to get core.hooksPath: %v", err)
+	}
+	prePushFile := filepath.Join(hooksPath, "pre-push")
+
+	if err := UninstallGlobal(); err != nil {
+		t.Fatalf("UninstallGlobal failed: %v", err)
+	}
+
+	if _, err := os.Stat(prePushFile); !errors.Is(err, os.ErrNotExist) {
+		t.Error("expected pre-push hook to be removed after UninstallGlobal")
+	}
+}
