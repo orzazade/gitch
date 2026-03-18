@@ -2,7 +2,7 @@ package audit
 
 import (
 	"os/exec"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -31,7 +31,7 @@ func Test_generateMailmap_MultipleDifferentEmails(t *testing.T) {
 
 	result := generateMailmap(mismatches, "correct@example.com")
 	lines := strings.Split(result, "\n")
-	sort.Strings(lines)
+	slices.Sort(lines)
 
 	if len(lines) != 2 {
 		t.Fatalf("expected 2 lines, got %d: %q", len(lines), result)
