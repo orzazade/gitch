@@ -89,6 +89,23 @@ func TestSave_CreatesDirectory(t *testing.T) {
 	}
 }
 
+func TestLoad_InvalidYAML(t *testing.T) {
+	tmpDir := t.TempDir()
+	configPath := filepath.Join(tmpDir, "config.yaml")
+
+	// Write invalid YAML
+	if err := os.WriteFile(configPath, []byte("{{invalid yaml: [unclosed"), 0644); err != nil {
+		t.Fatalf("failed to write invalid yaml: %v", err)
+	}
+
+	t.Setenv("GITCH_CONFIG_PATH", configPath)
+
+	_, err := Load()
+	if err == nil {
+		t.Fatal("expected error for invalid YAML")
+	}
+}
+
 func TestConfigPath_RespectsGitchConfigPath(t *testing.T) {
 	t.Setenv("GITCH_CONFIG_PATH", "/custom/path/config.yaml")
 
