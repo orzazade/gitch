@@ -69,11 +69,11 @@ func TestGenerateConfigBlock_SingleHost(t *testing.T) {
 	result := GenerateConfigBlock(hosts)
 
 	// Check markers
-	if !strings.HasPrefix(result, MarkerStart) {
-		t.Errorf("Expected output to start with MarkerStart, got:\n%s", result)
+	if !strings.HasPrefix(result, markerStart) {
+		t.Errorf("Expected output to start with markerStart, got:\n%s", result)
 	}
-	if !strings.Contains(result, MarkerEnd) {
-		t.Errorf("Expected output to contain MarkerEnd, got:\n%s", result)
+	if !strings.Contains(result, markerEnd) {
+		t.Errorf("Expected output to contain markerEnd, got:\n%s", result)
 	}
 
 	// Check host block is included
@@ -275,7 +275,7 @@ func TestIdentityToHosts_TildeExpansion(t *testing.T) {
 }
 
 func TestRemoveManagedBlock_OnlyBlock(t *testing.T) {
-	content := MarkerStart + "\nHost gitch-work\n    User git\n\n" + MarkerEnd + "\n"
+	content := markerStart + "\nHost gitch-work\n    User git\n\n" + markerEnd + "\n"
 	result := removeManagedBlock(content)
 	if strings.TrimSpace(result) != "" {
 		t.Errorf("expected empty result when config only has managed block, got: %q", result)

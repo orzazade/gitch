@@ -12,8 +12,8 @@ import (
 
 // SSH config marker constants for identifying gitch-managed blocks
 const (
-	MarkerStart = "# gitch:start - MANAGED BY GITCH, DO NOT EDIT"
-	MarkerEnd   = "# gitch:end"
+	markerStart = "# gitch:start - MANAGED BY GITCH, DO NOT EDIT"
+	markerEnd   = "# gitch:end"
 )
 
 // HostConfig represents an SSH Host block configuration
@@ -38,14 +38,14 @@ func GenerateConfigBlock(hosts []HostConfig) string {
 	}
 
 	var sb strings.Builder
-	sb.WriteString(MarkerStart + "\n")
+	sb.WriteString(markerStart + "\n")
 
 	for _, host := range hosts {
 		sb.WriteString(host.String())
 		sb.WriteString("\n")
 	}
 
-	sb.WriteString(MarkerEnd + "\n")
+	sb.WriteString(markerEnd + "\n")
 
 	return sb.String()
 }
@@ -84,12 +84,12 @@ func IdentityToHosts(identity config.Identity) []HostConfig {
 // removeManagedBlock removes the gitch-managed block from SSH config content
 // Returns content unchanged if markers are not found or malformed
 func removeManagedBlock(content string) string {
-	startIdx := strings.Index(content, MarkerStart)
+	startIdx := strings.Index(content, markerStart)
 	if startIdx == -1 {
 		return content
 	}
 
-	endIdx := strings.Index(content, MarkerEnd)
+	endIdx := strings.Index(content, markerEnd)
 	if endIdx == -1 {
 		// Malformed - only start marker, no end marker
 		// Return unchanged for safety
@@ -97,7 +97,7 @@ func removeManagedBlock(content string) string {
 	}
 
 	// Remove from start marker to end of end marker
-	endOfBlock := endIdx + len(MarkerEnd)
+	endOfBlock := endIdx + len(markerEnd)
 
 	// Remove trailing newlines after the block (up to 2)
 	newlinesRemoved := 0
