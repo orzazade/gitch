@@ -386,6 +386,41 @@ func TestSetConfigScoped_InvalidScope(t *testing.T) {
 	}
 }
 
+func TestGetCurrentIdentityScoped_LocalScope(t *testing.T) {
+	env := setupTestEnv(t)
+	defer env.cleanup(t)
+	t.Chdir(env.dir)
+
+	if err := SetConfigScoped("user.name", "Local", ScopeLocal); err != nil {
+		t.Fatalf("failed to set local name: %v", err)
+	}
+	if err := SetConfigScoped("user.email", "local@e.com", ScopeLocal); err != nil {
+		t.Fatalf("failed to set local email: %v", err)
+	}
+
+	name, email, err := GetCurrentIdentityScoped(ScopeLocal)
+	if err != nil {
+		t.Fatalf("GetCurrentIdentityScoped failed: %v", err)
+	}
+	if name != "Local" || email != "local@e.com" {
+		t.Errorf("got (%q, %q), want (%q, %q)", name, email, "Local", "local@e.com")
+	}
+}
+
+func TestGetCurrentIdentityScoped_InvalidScope(t *testing.T) {
+	_, _, err := GetCurrentIdentityScoped(Scope("invalid"))
+	if err == nil {
+		t.Fatal("expected error for invalid scope")
+	}
+}
+
+func TestApplyIdentityScoped_InvalidScope(t *testing.T) {
+	err := ApplyIdentityScoped("Test", "t@e.com", Scope("invalid"))
+	if err == nil {
+		t.Fatal("expected error for invalid scope")
+	}
+}
+
 func TestUnsetConfigScoped_InvalidScope(t *testing.T) {
 	err := UnsetConfigScoped("user.name", Scope("invalid"))
 	if err == nil {
