@@ -12,13 +12,17 @@ import (
 	"github.com/orzazade/gitch/internal/config"
 	gitpkg "github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/hooks"
+	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
 	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
 
-var scanDepth int
+var (
+	scanDepth int
+	scanFix   bool
+)
 
 var scanCmd = &cobra.Command{
 	Use:   "scan [paths...]",
@@ -30,18 +34,24 @@ and whether a pre-commit hook is installed.
 This gives you a birds-eye view across all your repos so you can spot
 misconfigurations before they become wrong commits.
 
+Use --fix to automatically apply the correct identity (from matching rules)
+to all repos with mismatched identities. Only repos with a matching rule
+and a detected mismatch are changed.
+
 By default, scans the current directory up to 3 levels deep.
 
 Examples:
   gitch scan
   gitch scan ~/Projects ~/Work
-  gitch scan --depth 5 ~/code`,
+  gitch scan --depth 5 ~/code
+  gitch scan --fix ~/Projects`,
 	RunE: runScan,
 }
 
 func init() {
 	rootCmd.AddCommand(scanCmd)
 	scanCmd.Flags().IntVar(&scanDepth, "depth", 3, "Maximum directory depth to search")
+	scanCmd.Flags().BoolVar(&scanFix, "fix", false, "Apply correct identity to repos with rule mismatches")
 }
 
 // repoResult holds the scan result for a single git repository.
@@ -90,6 +100,10 @@ func runScan(cmd *cobra.Command, args []string) error {
 
 	results := scanRepos(repos, cfg)
 	printScanResults(results)
+
+	if scanFix {
+		return fixScanMismatches(results, cfg)
+	}
 	return nil
 }
 
@@ -292,4 +306,71 @@ func printScanResults(results []repoResult) {
 			nounPlural(issues, "has", "have") + " issues."))
 		fmt.Println(ui.DimStyle.Render("Run 'gitch doctor' inside a repo for details, or 'gitch use <name>' to fix."))
 	}
+}
+
+// fixScanMismatches applies the correct identity to repos where the active
+// identity does not match the rule. Only repos with RuleMismatch=true and a
+// valid RuleMatch identity are touched. Returns nil even if individual repos
+// fail (errors are printed inline).
+func fixScanMismatches(results []repoResult, cfg *config.Config) error {
+	home, _ := os.UserHomeDir()
+
+	// Collect fixable repos
+	var fixable []repoResult
+	for _, r := range results {
+		if r.RuleMismatch && r.RuleMatch != "" {
+			fixable = append(fixable, r)
+		}
+	}
+
+	if len(fixable) == 0 {
+		fmt.Println()
+		fmt.Println(ui.DimStyle.Render("No rule mismatches to fix."))
+		return nil
+	}
+
+	fmt.Println()
+	fmt.Println(ui.DimStyle.Render("Fixing " + strconv.Itoa(len(fixable)) + " " + nounPlural(len(fixable), "mismatch", "mismatches") + "..."))
+	fmt.Println()
+
+	originalDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
+	defer func() { _ = os.Chdir(originalDir) }()
+
+	fixed := 0
+	for _, r := range fixable {
+		displayPath := r.Path
+		if home != "" && strings.HasPrefix(displayPath, home) {
+			displayPath = "~" + displayPath[len(home):]
+		}
+
+		identity, err := cfg.GetIdentity(r.RuleMatch)
+		if err != nil {
+			fmt.Printf("  %s  %s: identity '%s' not found\n", ui.WarningStyle.Render("!"), displayPath, r.RuleMatch)
+			continue
+		}
+
+		if err := os.Chdir(r.Path); err != nil {
+			fmt.Printf("  %s  %s: %s\n", ui.WarningStyle.Render("!"), displayPath, err)
+			continue
+		}
+
+		if _, err := profile.Apply(identity, gitpkg.ScopeLocal); err != nil {
+			fmt.Printf("  %s  %s: %s\n", ui.WarningStyle.Render("!"), displayPath, err)
+			continue
+		}
+
+		fmt.Printf("  %s  %s -> %s (%s)\n", ui.SuccessStyle.Render("ok"), displayPath, identity.Name, identity.Email)
+		fixed++
+	}
+
+	fmt.Println()
+	if fixed == len(fixable) {
+		fmt.Println(ui.SuccessStyle.Render("Fixed " + strconv.Itoa(fixed) + " " + nounPlural(fixed, "repo", "repos") + "."))
+	} else {
+		fmt.Println(ui.WarningStyle.Render("Fixed " + strconv.Itoa(fixed) + " of " + strconv.Itoa(len(fixable)) + " " + nounPlural(len(fixable), "repo", "repos") + "."))
+	}
+	return nil
 }

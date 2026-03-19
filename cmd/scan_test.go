@@ -266,6 +266,56 @@ func TestRepoResult_HasIssue(t *testing.T) {
 	}
 }
 
+func TestFixScanMismatches(t *testing.T) {
+	// Create a repo with a mismatch: has personal email but rule says work
+	repo := t.TempDir()
+	initGitRepo(t, repo)
+	setGitIdentity(t, repo, "Personal User", "personal@example.com")
+
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", Email: "work@example.com"},
+			{Name: "personal", Email: "personal@example.com"},
+		},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: repo + "/**", Identity: "work"},
+		},
+	}
+
+	// Verify mismatch is detected
+	result := scanSingleRepo(repo, cfg, false)
+	if !result.RuleMismatch {
+		t.Fatal("expected rule mismatch before fix")
+	}
+
+	// Fix the mismatch
+	if err := fixScanMismatches([]repoResult{result}, cfg); err != nil {
+		t.Fatalf("fixScanMismatches: %v", err)
+	}
+
+	// Re-scan: the mismatch should be resolved
+	after := scanSingleRepo(repo, cfg, false)
+	if after.RuleMismatch {
+		t.Errorf("repo still has a mismatch after fix (email=%s)", after.Email)
+	}
+	if after.Email != "work@example.com" {
+		t.Errorf("expected email work@example.com after fix, got %s", after.Email)
+	}
+}
+
+func TestFixScanMismatches_NoMismatches(t *testing.T) {
+	results := []repoResult{
+		{Path: "/tmp/fake", Managed: true, HookGlobal: true, RuleMismatch: false},
+	}
+
+	cfg := &config.Config{}
+
+	// Should succeed silently with no mismatches to fix
+	if err := fixScanMismatches(results, cfg); err != nil {
+		t.Fatalf("fixScanMismatches: %v", err)
+	}
+}
+
 func TestIsGitRepoDir(t *testing.T) {
 	t.Run("valid repo", func(t *testing.T) {
 		dir := t.TempDir()
