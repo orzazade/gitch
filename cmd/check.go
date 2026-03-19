@@ -125,6 +125,7 @@ func runCheck(cmd *cobra.Command, args []string) error {
 
 	// Mismatch detected — fix if requested
 	if checkFix {
+		savePrevIdentity(cfg)
 		scope := defaultApplyScope()
 		if err := applyConfiguredIdentity(expectedIdentity, scope); err != nil {
 			out.OK = false
