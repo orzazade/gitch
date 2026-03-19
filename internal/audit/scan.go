@@ -71,6 +71,32 @@ func GetCommits(limit int) ([]Commit, error) {
 	return parseCommits(string(output)), nil
 }
 
+// GetCommitsSince retrieves commits after a given date using git log --since.
+// The since parameter is passed directly to git (e.g. "1.week", "2024-01-01").
+// Returns empty slice with nil error for empty repos.
+func GetCommitsSince(since string) ([]Commit, error) {
+	formatArg := fmt.Sprintf("--format=%s%%H%s%%an%s%%ae%s%%ai%s%%s",
+		commitDelim, fieldDelim, fieldDelim, fieldDelim, fieldDelim)
+
+	args := []string{"log", formatArg, "--since=" + since}
+
+	cmd := exec.Command("git", args...)
+	output, err := cmd.Output()
+	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			stderr := string(exitErr.Stderr)
+			if strings.Contains(stderr, "fatal: your current branch") ||
+				strings.Contains(stderr, "does not have any commits") {
+				return []Commit{}, nil
+			}
+		}
+		return nil, fmt.Errorf("failed to run git log: %w", err)
+	}
+
+	return parseCommits(string(output)), nil
+}
+
 // parseCommits parses the git log output into Commit structs.
 // Malformed commit lines are silently skipped.
 func parseCommits(output string) []Commit {
