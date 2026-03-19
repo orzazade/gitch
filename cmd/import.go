@@ -144,7 +144,10 @@ func runImport(cmd *cobra.Command, args []string) error {
 					fmt.Print("  [o]verwrite / [s]kip? ")
 
 					reader := bufio.NewReader(os.Stdin)
-					input, _ := reader.ReadString('\n')
+					input, readErr := reader.ReadString('\n')
+					if readErr != nil {
+						return fmt.Errorf("failed to read input: %w", readErr)
+					}
 					input = strings.TrimSpace(strings.ToLower(input))
 					overwriteKeys[keyPath] = (input == "o" || input == "overwrite")
 				}
