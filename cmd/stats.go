@@ -192,7 +192,7 @@ func runStats(cmd *cobra.Command, args []string) error {
 
 func getStatsCommits() ([]audit.Commit, error) {
 	if statsSince != "" {
-		return getCommitsSince(statsSince)
+		return audit.GetCommitsSince(statsSince)
 	}
 
 	limit := statsLimit
@@ -202,11 +202,6 @@ func getStatsCommits() ([]audit.Commit, error) {
 		limit = 1000
 	}
 	return audit.GetCommits(limit)
-}
-
-// getCommitsSince retrieves commits after a given date using git log --since.
-func getCommitsSince(since string) ([]audit.Commit, error) {
-	return audit.GetCommitsSince(since)
 }
 
 func printStatsHuman(out statsOutput) error {
@@ -236,11 +231,7 @@ func printStatsHuman(out statsOutput) error {
 		} else if out.ExpectedEmail != "" {
 			// There is an expected identity but this isn't it
 			marker = ui.WarningStyle.Render("!")
-			if a.Unknown {
-				display = ui.WarningStyle.Render(display)
-			} else {
-				display = ui.WarningStyle.Render(display)
-			}
+			display = ui.WarningStyle.Render(display)
 		} else if a.Unknown {
 			display = ui.DimStyle.Render(display)
 		}
