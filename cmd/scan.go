@@ -395,12 +395,16 @@ func fixScanMismatches(results []repoResult, cfg *config.Config) error {
 			continue
 		}
 
-		if _, err := profile.Apply(identity, gitpkg.ScopeLocal); err != nil {
+		result, err := profile.Apply(identity, gitpkg.ScopeLocal)
+		if err != nil {
 			fmt.Printf("  %s  %s: %s\n", ui.WarningStyle.Render("!"), displayPath, err)
 			continue
 		}
 
 		fmt.Printf("  %s  %s -> %s (%s)\n", ui.SuccessStyle.Render("ok"), displayPath, identity.Name, identity.Email)
+		for _, w := range result.Warnings {
+			fmt.Fprintf(os.Stderr, "       %s\n", ui.WarningStyle.Render("warning: "+w))
+		}
 		fixed++
 	}
 
