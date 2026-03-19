@@ -16,6 +16,8 @@ import (
 
 var logLimit int
 var logJSON bool
+var logIdentity string
+var logMismatches bool
 
 var logCmd = &cobra.Command{
 	Use:   "log",
@@ -31,9 +33,11 @@ This is a quick way to verify your recent work used the right identity before
 pushing.
 
 Examples:
-  gitch log              # Show last 10 commits with identity info
-  gitch log -n 20        # Show last 20 commits
-  gitch log --json       # Output as JSON for scripting`,
+  gitch log                        # Show last 10 commits with identity info
+  gitch log -n 20                  # Show last 20 commits
+  gitch log --identity work        # Show only commits by the "work" identity
+  gitch log --mismatches           # Show only wrong-identity commits
+  gitch log --mismatches --json    # Wrong-identity commits as JSON`,
 	Args:          cobra.NoArgs,
 	RunE:          runLog,
 	SilenceErrors: true,
@@ -44,6 +48,11 @@ func init() {
 	rootCmd.AddCommand(logCmd)
 	logCmd.Flags().IntVarP(&logLimit, "number", "n", 10, "Number of commits to show")
 	logCmd.Flags().BoolVar(&logJSON, "json", false, "Output in JSON format")
+	logCmd.Flags().StringVar(&logIdentity, "identity", "", "Show only commits by this identity")
+	logCmd.Flags().BoolVar(&logMismatches, "mismatches", false, "Show only wrong-identity commits")
+	_ = logCmd.RegisterFlagCompletionFunc("identity", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return completeIdentityNames()
+	})
 }
 
 type logEntry struct {
@@ -68,6 +77,16 @@ func runLog(cmd *cobra.Command, args []string) error {
 
 	if logLimit < 1 {
 		logLimit = 10
+	}
+
+	// Validate --identity flag
+	var filterIdentity *config.Identity
+	if logIdentity != "" {
+		fi, err := cfg.GetIdentity(logIdentity)
+		if err != nil {
+			return identityNotFoundError(logIdentity, cfg.Identities, "gitch log --identity <name>")
+		}
+		filterIdentity = fi
 	}
 
 	commits, err := audit.GetCommits(logLimit)
@@ -133,6 +152,29 @@ func runLog(cmd *cobra.Command, args []string) error {
 		}
 
 		entries = append(entries, entry)
+	}
+
+	// Apply filters
+	if filterIdentity != nil || logMismatches {
+		filtered := entries[:0]
+		for _, e := range entries {
+			if filterIdentity != nil && !strings.EqualFold(e.Email, filterIdentity.Email) {
+				continue
+			}
+			if logMismatches && e.Match != "mismatch" {
+				continue
+			}
+			filtered = append(filtered, e)
+		}
+		entries = filtered
+	}
+
+	if len(entries) == 0 {
+		if logJSON {
+			return printJSON([]logEntry{})
+		}
+		fmt.Println(ui.DimStyle.Render("No matching commits found."))
+		return nil
 	}
 
 	if logJSON {
