@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
+	"github.com/orzazade/gitch/internal/git"
+	"github.com/orzazade/gitch/internal/prompt"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -61,6 +63,12 @@ func runRename(cmd *cobra.Command, args []string) error {
 	// Update prev-identity file if it references the old name.
 	if prevName, err := config.LoadPreviousIdentity(); err == nil && strings.EqualFold(prevName, actualOldName) {
 		_ = config.SavePreviousIdentity(newName)
+	}
+
+	// Update prompt cache if the renamed identity is currently active,
+	// so the shell prompt shows the new name immediately.
+	if _, activeEmail, _ := git.GetCurrentIdentity(); strings.EqualFold(activeEmail, oldIdentity.Email) {
+		_ = prompt.UpdateCache(newName)
 	}
 
 	fmt.Println(ui.SuccessStyle.Render("Renamed '" + actualOldName + "' to '" + newName + "'"))
