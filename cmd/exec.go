@@ -52,9 +52,6 @@ func runExec(cmd *cobra.Command, args []string) error {
 	}
 
 	subArgs := args[cmdArgs:]
-	if len(subArgs) == 0 {
-		return errors.New("no command specified after '--'")
-	}
 
 	// Load config and find identity
 	cfg, err := config.Load()
