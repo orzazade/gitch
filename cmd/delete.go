@@ -83,6 +83,12 @@ func runDelete(cmd *cobra.Command, args []string) error {
 		_ = prompt.ClearCache() // Best effort
 	}
 
+	// Clear prev-identity file if it references the deleted identity,
+	// so 'gitch prev' doesn't try to switch to a non-existent identity.
+	if prevName, err := config.LoadPreviousIdentity(); err == nil && strings.EqualFold(prevName, identity.Name) {
+		_ = config.SavePreviousIdentity("") // Best effort
+	}
+
 	// Print success
 	fmt.Println(ui.SuccessStyle.Render("Deleted identity '" + identity.Name + "'"))
 
