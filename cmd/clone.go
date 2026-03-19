@@ -52,12 +52,11 @@ func runClone(cmd *cobra.Command, args []string) error {
 	var extraArgs []string
 
 	// Separate our args from git clone args (after --)
-	if cmd.ArgsLenAtDash() >= 0 {
-		dashIdx := cmd.ArgsLenAtDash()
+	if dashIdx := cmd.ArgsLenAtDash(); dashIdx >= 0 {
+		if dashIdx > 1 {
+			targetDir = args[1]
+		}
 		if dashIdx < len(args) {
-			if len(args[:dashIdx]) > 1 {
-				targetDir = args[1]
-			}
 			extraArgs = args[dashIdx:]
 		}
 	} else if len(args) > 1 {
