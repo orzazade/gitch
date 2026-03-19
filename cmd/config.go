@@ -16,7 +16,9 @@ var configCmd = &cobra.Command{
 Subcommands allow you to configure various aspects of gitch behavior.
 
 Examples:
-  gitch config hook-mode work block`,
+  gitch config default work
+  gitch config hook-mode work block
+  gitch config path`,
 }
 
 var configHookModeCmd = &cobra.Command{
@@ -37,9 +39,40 @@ Example:
 	RunE:              runConfigHookMode,
 }
 
+var configDefaultCmd = &cobra.Command{
+	Use:   "default [identity]",
+	Short: "Get or set the default identity",
+	Long: `Get or set the default identity used when no rule matches.
+
+Without arguments, shows the current default identity.
+With an argument, sets the default identity to the given name.
+
+Examples:
+  gitch config default          # Show current default
+  gitch config default work     # Set default to "work"`,
+	Args:              cobra.MaximumNArgs(1),
+	ValidArgsFunction: configDefaultCompletionFunc,
+	RunE:              runConfigDefault,
+}
+
+var configPathCmd = &cobra.Command{
+	Use:   "path",
+	Short: "Show the configuration file path",
+	Long: `Show the path to the gitch configuration file.
+
+Useful for debugging or manually editing the config.
+
+Examples:
+  gitch config path`,
+	Args: cobra.NoArgs,
+	RunE: runConfigPath,
+}
+
 func init() {
 	rootCmd.AddCommand(configCmd)
+	configCmd.AddCommand(configDefaultCmd)
 	configCmd.AddCommand(configHookModeCmd)
+	configCmd.AddCommand(configPathCmd)
 }
 
 // configHookModeCompletionFunc provides tab completion for config hook-mode command
@@ -57,6 +90,52 @@ func configHookModeCompletionFunc(cmd *cobra.Command, args []string, toComplete 
 	default:
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}
+}
+
+func configDefaultCompletionFunc(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	if len(args) != 0 {
+		return nil, cobra.ShellCompDirectiveNoFileComp
+	}
+	return completeIdentityNames()
+}
+
+func runConfigDefault(cmd *cobra.Command, args []string) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// No argument: show current default
+	if len(args) == 0 {
+		if cfg.Default == "" {
+			fmt.Println("No default identity set. Use 'gitch config default <name>' to set one.")
+			return nil
+		}
+		fmt.Println(cfg.Default)
+		return nil
+	}
+
+	// Set default
+	name := args[0]
+	if err := cfg.SetDefault(name); err != nil {
+		return err
+	}
+
+	if err := cfg.Save(); err != nil {
+		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	fmt.Println(ui.SuccessStyle.Render("Default identity set to '" + cfg.Default + "'"))
+	return nil
+}
+
+func runConfigPath(cmd *cobra.Command, args []string) error {
+	path, err := config.ConfigPath()
+	if err != nil {
+		return fmt.Errorf("failed to determine config path: %w", err)
+	}
+	fmt.Println(path)
+	return nil
 }
 
 func runConfigHookMode(cmd *cobra.Command, args []string) error {
