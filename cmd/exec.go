@@ -64,7 +64,11 @@ func runExec(cmd *cobra.Command, args []string) error {
 
 	identity, err := cfg.GetIdentity(identityName)
 	if err != nil {
-		return fmt.Errorf("identity %q not found. Use 'gitch list' to see available identities", identityName)
+		msg := "identity '" + identityName + "' not found"
+		if suggestion := closestIdentityName(identityName, cfg.ListIdentities()); suggestion != "" {
+			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch exec " + suggestion
+		}
+		return errors.New(msg)
 	}
 
 	// Build environment

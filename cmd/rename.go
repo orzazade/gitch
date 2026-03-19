@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -40,7 +41,11 @@ func runRename(cmd *cobra.Command, args []string) error {
 	// Verify old identity exists before renaming (for a better error message)
 	oldIdentity, err := cfg.GetIdentity(oldName)
 	if err != nil {
-		return fmt.Errorf("identity %q not found. Use 'gitch list' to see available identities", oldName)
+		msg := "identity '" + oldName + "' not found"
+		if suggestion := closestIdentityName(oldName, cfg.ListIdentities()); suggestion != "" {
+			msg += "\n\nDid you mean '" + suggestion + "'?"
+		}
+		return errors.New(msg)
 	}
 	actualOldName := oldIdentity.Name
 

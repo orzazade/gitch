@@ -98,6 +98,15 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
+	// Check identity exists first for a helpful error message
+	if _, err := cfg.GetIdentity(name); err != nil {
+		msg := "identity '" + name + "' not found"
+		if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
+			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch edit " + suggestion
+		}
+		return errors.New(msg)
+	}
+
 	identity, err := cfg.UpdateIdentity(name, updates)
 	if err != nil {
 		return err
