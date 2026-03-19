@@ -148,24 +148,12 @@ func printSummary(result *audit.ScanResult) {
 
 	fmt.Printf("Found %d mismatched commit(s):\n", result.MismatchCount)
 
-	// Count local vs pushed mismatches from results
-	var localMismatches, pushedMismatches int
-	for _, r := range result.Results {
-		if r.IsMismatched {
-			if r.IsPushed {
-				pushedMismatches++
-			} else {
-				localMismatches++
-			}
-		}
+	if result.LocalOnlyCount > 0 {
+		fmt.Println(ui.WarningStyle.Render("  " + strconv.Itoa(result.LocalOnlyCount) + " local-only (safe to fix with 'gitch audit --fix')"))
 	}
 
-	if localMismatches > 0 {
-		fmt.Println(ui.WarningStyle.Render("  " + strconv.Itoa(localMismatches) + " local-only (safe to fix with 'gitch audit --fix')"))
-	}
-
-	if pushedMismatches > 0 {
-		fmt.Println(ui.ErrorStyle.Render("  " + strconv.Itoa(pushedMismatches) + " already pushed (requires force-push to fix)"))
+	if result.PushedCount > 0 {
+		fmt.Println(ui.ErrorStyle.Render("  " + strconv.Itoa(result.PushedCount) + " already pushed (requires force-push to fix)"))
 	}
 
 	if result.NoUpstream {
