@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -118,7 +119,11 @@ func runConfigDefault(cmd *cobra.Command, args []string) error {
 	// Set default
 	name := args[0]
 	if err := cfg.SetDefault(name); err != nil {
-		return err
+		msg := "identity '" + name + "' not found"
+		if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
+			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch config default " + suggestion
+		}
+		return errors.New(msg)
 	}
 
 	if err := cfg.Save(); err != nil {
@@ -146,6 +151,15 @@ func runConfigHookMode(cmd *cobra.Command, args []string) error {
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Check identity exists first for a helpful error message
+	if _, err := cfg.GetIdentity(identityName); err != nil {
+		msg := "identity '" + identityName + "' not found"
+		if suggestion := closestIdentityName(identityName, cfg.ListIdentities()); suggestion != "" {
+			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch config hook-mode " + suggestion + " " + mode
+		}
+		return errors.New(msg)
 	}
 
 	// Update identity via UpdateIdentity (validates mode and finds identity)
