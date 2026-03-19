@@ -21,18 +21,18 @@ var (
 var errCleanIssuesFound = errors.New("issues found in gitch configuration")
 
 type cleanIssue struct {
-	Type    string `json:"type"`
-	Name    string `json:"name"`
-	Detail  string `json:"detail"`
-	Fixed   bool   `json:"fixed,omitempty"`
+	Type   string `json:"type"`
+	Name   string `json:"name"`
+	Detail string `json:"detail"`
+	Fixed  bool   `json:"fixed,omitempty"`
 }
 
 type cleanOutput struct {
-	OrphanedRules     []cleanIssue `json:"orphaned_rules"`
-	UnusedIdentities  []cleanIssue `json:"unused_identities"`
-	OrphanedRuleRefs  []cleanIssue `json:"orphaned_rule_refs"`
-	TotalIssues       int          `json:"total_issues"`
-	FixedCount        int          `json:"fixed_count,omitempty"`
+	OrphanedRules    []cleanIssue `json:"orphaned_rules"`
+	UnusedIdentities []cleanIssue `json:"unused_identities"`
+	OrphanedRuleRefs []cleanIssue `json:"orphaned_rule_refs"`
+	TotalIssues      int          `json:"total_issues"`
+	FixedCount       int          `json:"fixed_count,omitempty"`
 }
 
 var cleanCmd = &cobra.Command{

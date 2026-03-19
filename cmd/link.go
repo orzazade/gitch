@@ -117,4 +117,3 @@ func runLink(cmd *cobra.Command, args []string) error {
 
 	return nil
 }
-

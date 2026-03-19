@@ -52,14 +52,14 @@ func init() {
 }
 
 type identityStats struct {
-	Identity string `json:"identity,omitempty"`
-	Email    string `json:"email"`
-	Commits  int    `json:"commits"`
+	Identity string  `json:"identity,omitempty"`
+	Email    string  `json:"email"`
+	Commits  int     `json:"commits"`
 	Percent  float64 `json:"percent"`
-	First    string `json:"first_commit"`
-	Last     string `json:"last_commit"`
-	Expected bool   `json:"expected,omitempty"`
-	Unknown  bool   `json:"unknown,omitempty"`
+	First    string  `json:"first_commit"`
+	Last     string  `json:"last_commit"`
+	Expected bool    `json:"expected,omitempty"`
+	Unknown  bool    `json:"unknown,omitempty"`
 }
 
 type statsOutput struct {
@@ -116,10 +116,10 @@ func runStats(cmd *cobra.Command, args []string) error {
 
 	// Group commits by email
 	type emailData struct {
-		email   string
-		count   int
-		first   string // oldest date
-		last    string // newest date
+		email string
+		count int
+		first string // oldest date
+		last  string // newest date
 	}
 	byEmail := make(map[string]*emailData)
 	for _, c := range commits {
