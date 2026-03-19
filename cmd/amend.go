@@ -149,9 +149,10 @@ func runAmend(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("git commit --amend failed: %s", strings.TrimSpace(string(output)))
 	}
 
-	newCommits, _ := audit.GetCommits(1)
 	newHash := ""
-	if len(newCommits) > 0 {
+	if newCommits, err := audit.GetCommits(1); err != nil {
+		fmt.Fprintln(os.Stderr, "warning: could not read updated commit hash:", err)
+	} else if len(newCommits) > 0 {
 		newHash = newCommits[0].Hash
 	}
 
