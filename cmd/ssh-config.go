@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/ssh"
@@ -151,6 +152,12 @@ func runSSHConfigUpdate(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	// Check if config file has content (UpdateSSHConfig only creates a backup when it does)
+	hadContent := false
+	if info, err := os.Stat(configPath); err == nil && info.Size() > 0 {
+		hadContent = true
+	}
+
 	// Update the SSH config
 	if err := ssh.UpdateSSHConfig(block); err != nil {
 		return fmt.Errorf("failed to update SSH config: %w", err)
@@ -158,7 +165,9 @@ func runSSHConfigUpdate(cmd *cobra.Command, args []string) error {
 
 	// Print success
 	fmt.Printf("Updated %s\n", configPath)
-	fmt.Printf("Backup saved to: %s.gitch.backup\n", configPath)
+	if hadContent {
+		fmt.Printf("Backup saved to: %s.gitch.backup\n", configPath)
+	}
 
 	return nil
 }
