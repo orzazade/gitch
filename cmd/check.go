@@ -13,11 +13,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var checkJSON bool
+var (
+	checkJSON bool
+	checkFix  bool
+)
 
 // checkOutput represents the JSON output structure for gitch check --json
 type checkOutput struct {
 	OK              bool   `json:"ok"`
+	Fixed           bool   `json:"fixed,omitempty"`
 	CurrentName     string `json:"current_name,omitempty"`
 	CurrentEmail    string `json:"current_email,omitempty"`
 	ExpectedName    string `json:"expected_name,omitempty"`
@@ -37,12 +41,17 @@ the best-matching rule for this directory or remote.
 Exit code 0 means the identity is correct or no rule applies.
 Exit code 1 means the active identity does not match the expected rule.
 
+Use --fix to automatically apply the correct identity when a mismatch is detected.
+With --fix, exit code 0 means the identity was already correct or was successfully fixed.
+
 Use this in scripts, CI pipelines, or as a pre-commit guard:
 
   gitch check && git commit -m "safe to commit"
+  gitch check --fix && git commit -m "auto-fixed and safe"
 
 Examples:
   gitch check
+  gitch check --fix
   gitch check --json`,
 	Args:          cobra.NoArgs,
 	RunE:          runCheck,
@@ -53,6 +62,7 @@ Examples:
 func init() {
 	rootCmd.AddCommand(checkCmd)
 	checkCmd.Flags().BoolVar(&checkJSON, "json", false, "Output in JSON format")
+	checkCmd.Flags().BoolVar(&checkFix, "fix", false, "Automatically apply the correct identity when a mismatch is detected")
 }
 
 func runCheck(cmd *cobra.Command, args []string) error {
@@ -113,6 +123,20 @@ func runCheck(cmd *cobra.Command, args []string) error {
 		return printCheckResult(out)
 	}
 
+	// Mismatch detected — fix if requested
+	if checkFix {
+		scope := defaultApplyScope()
+		if err := applyConfiguredIdentity(expectedIdentity, scope); err != nil {
+			out.OK = false
+			out.Reason = "fix failed: " + err.Error()
+			return printCheckResult(out)
+		}
+		out.OK = true
+		out.Fixed = true
+		out.Reason = "identity mismatch fixed"
+		return printCheckResult(out)
+	}
+
 	out.OK = false
 	out.Reason = "identity does not match rule"
 	return printCheckResult(out)
@@ -130,7 +154,14 @@ func printCheckResult(out checkOutput) error {
 	}
 
 	if out.OK {
-		if out.ExpectedProfile != "" {
+		if out.Fixed {
+			fmt.Printf("%s Applied identity '%s' (%s) to match %s rule '%s'.\n",
+				ui.SuccessStyle.Render("FIXED"),
+				out.ExpectedProfile,
+				out.ExpectedEmail,
+				out.RuleType,
+				out.RulePattern)
+		} else if out.ExpectedProfile != "" {
 			fmt.Printf("%s Identity '%s' (%s) matches %s rule '%s'.\n",
 				ui.SuccessStyle.Render("OK"),
 				out.ExpectedProfile,

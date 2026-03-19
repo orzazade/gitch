@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -13,12 +14,17 @@ import (
 
 func captureCheckOutput(t *testing.T) (string, error) {
 	t.Helper()
+	return captureCheckOutputWithFlags(t, false, false)
+}
+
+func captureCheckOutputWithFlags(t *testing.T, json, fix bool) (string, error) {
+	t.Helper()
 	old := os.Stdout
 	r, w, _ := os.Pipe()
 	os.Stdout = w
 
-	// Reset flag for each test invocation
-	checkJSON = false
+	checkJSON = json
+	checkFix = fix
 	cmd := checkCmd
 	err := cmd.RunE(cmd, []string{})
 
@@ -32,20 +38,7 @@ func captureCheckOutput(t *testing.T) (string, error) {
 
 func captureCheckJSONOutput(t *testing.T) (string, error) {
 	t.Helper()
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-
-	checkJSON = true
-	cmd := checkCmd
-	err := cmd.RunE(cmd, []string{})
-
-	w.Close()
-	os.Stdout = old
-
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
-	return buf.String(), err
+	return captureCheckOutputWithFlags(t, true, false)
 }
 
 func TestCheck_NoRule(t *testing.T) {
@@ -234,5 +227,171 @@ func TestCheck_JSON_Mismatch(t *testing.T) {
 	}
 	if !strings.Contains(output, `"expected_email": "work@example.com"`) {
 		t.Errorf("expected expected email in JSON, got: %s", output)
+	}
+}
+
+func TestCheck_Fix_AppliesCorrectIdentity(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	// Set wrong identity
+	env.Run(t, "git", "config", "user.email", "personal@gmail.com")
+	env.Run(t, "git", "config", "user.name", "Personal")
+
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", Email: "work@example.com", GitName: "Worker"},
+			{Name: "personal", Email: "personal@gmail.com", GitName: "Personal"},
+		},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: env.Dir, Identity: "work"},
+		},
+	}
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("save config: %v", err)
+	}
+
+	output, err := captureCheckOutputWithFlags(t, false, true)
+	if err != nil {
+		t.Fatalf("expected no error with --fix, got: %v", err)
+	}
+	if !strings.Contains(output, "FIXED") {
+		t.Errorf("expected FIXED in output, got: %s", output)
+	}
+	if !strings.Contains(output, "work") {
+		t.Errorf("expected identity name in output, got: %s", output)
+	}
+
+	// Verify git config was actually updated
+	cmd := exec.Command("git", "config", "user.email")
+	cmd.Dir = env.Dir
+	out, _ := cmd.Output()
+	if got := strings.TrimSpace(string(out)); got != "work@example.com" {
+		t.Errorf("expected git email to be work@example.com after fix, got: %s", got)
+	}
+}
+
+func TestCheck_Fix_AlreadyCorrect(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	// Set correct identity
+	env.Run(t, "git", "config", "user.email", "work@example.com")
+	env.Run(t, "git", "config", "user.name", "Worker")
+
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", Email: "work@example.com", GitName: "Worker"},
+		},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: env.Dir, Identity: "work"},
+		},
+	}
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("save config: %v", err)
+	}
+
+	output, err := captureCheckOutputWithFlags(t, false, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// Should show OK (not FIXED) since identity already matches
+	if !strings.Contains(output, "OK") {
+		t.Errorf("expected OK in output, got: %s", output)
+	}
+	if strings.Contains(output, "FIXED") {
+		t.Errorf("should not show FIXED when identity already matches, got: %s", output)
+	}
+}
+
+func TestCheck_Fix_NoRule(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", Email: "work@example.com"},
+		},
+	}
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("save config: %v", err)
+	}
+
+	output, err := captureCheckOutputWithFlags(t, false, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// No rule = nothing to fix, should be OK
+	if !strings.Contains(output, "No rule matches") {
+		t.Errorf("expected no-rule message, got: %s", output)
+	}
+}
+
+func TestCheck_Fix_NoIdentityConfigured(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	// No git identity set — rule expects one, --fix should apply it
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", Email: "work@example.com", GitName: "Worker"},
+		},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: env.Dir, Identity: "work"},
+		},
+	}
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("save config: %v", err)
+	}
+
+	output, err := captureCheckOutputWithFlags(t, false, true)
+	if err != nil {
+		t.Fatalf("expected no error with --fix, got: %v", err)
+	}
+	if !strings.Contains(output, "FIXED") {
+		t.Errorf("expected FIXED in output, got: %s", output)
+	}
+
+	// Verify git config was set
+	cmd := exec.Command("git", "config", "user.email")
+	cmd.Dir = env.Dir
+	out, _ := cmd.Output()
+	if got := strings.TrimSpace(string(out)); got != "work@example.com" {
+		t.Errorf("expected git email to be work@example.com after fix, got: %s", got)
+	}
+}
+
+func TestCheck_Fix_JSON(t *testing.T) {
+	env := testutil.SetupGitEnv(t)
+	env.Chdir(t)
+
+	// Set wrong identity
+	env.Run(t, "git", "config", "user.email", "personal@gmail.com")
+	env.Run(t, "git", "config", "user.name", "Personal")
+
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", Email: "work@example.com", GitName: "Worker"},
+		},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: env.Dir, Identity: "work"},
+		},
+	}
+	if err := cfg.Save(); err != nil {
+		t.Fatalf("save config: %v", err)
+	}
+
+	output, err := captureCheckOutputWithFlags(t, true, true)
+	if err != nil {
+		t.Fatalf("expected no error with --fix --json, got: %v", err)
+	}
+	if !strings.Contains(output, `"ok": true`) {
+		t.Errorf("expected ok:true in JSON after fix, got: %s", output)
+	}
+	if !strings.Contains(output, `"fixed": true`) {
+		t.Errorf("expected fixed:true in JSON, got: %s", output)
+	}
+	if !strings.Contains(output, `"reason": "identity mismatch fixed"`) {
+		t.Errorf("expected fix reason in JSON, got: %s", output)
 	}
 }
