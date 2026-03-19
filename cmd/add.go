@@ -220,6 +220,8 @@ func generateSSHKeyForIdentity(name, email, keyTypeStr string, force bool) (stri
 		if !force {
 			return "", fmt.Errorf("SSH key already exists at %s; use --force to overwrite", keyPath)
 		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("cannot access SSH key path %s: %w", keyPath, err)
 	}
 
 	// Determine key type
