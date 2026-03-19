@@ -109,7 +109,10 @@ func runScan(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	results := scanRepos(repos, cfg)
+	results, err := scanRepos(repos, cfg)
+	if err != nil {
+		return err
+	}
 
 	if scanJSON {
 		return printScanJSON(results)
@@ -187,13 +190,13 @@ func isGitRepoDir(dir string) bool {
 }
 
 // scanRepos inspects each repo and builds results.
-func scanRepos(repoPaths []string, cfg *config.Config) []repoResult {
+func scanRepos(repoPaths []string, cfg *config.Config) ([]repoResult, error) {
 	// Check global hook status once (same for all repos)
 	globalHook, _ := hooks.IsInstalled()
 
 	originalDir, err := os.Getwd()
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("failed to get working directory: %w", err)
 	}
 	defer func() { _ = os.Chdir(originalDir) }()
 
@@ -204,7 +207,7 @@ func scanRepos(repoPaths []string, cfg *config.Config) []repoResult {
 		results = append(results, result)
 	}
 
-	return results
+	return results, nil
 }
 
 func scanSingleRepo(repoPath string, cfg *config.Config, globalHook bool) repoResult {
