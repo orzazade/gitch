@@ -136,6 +136,24 @@ func resolveRoots(args []string) ([]string, error) {
 	return roots, nil
 }
 
+// savePrevIdentity resolves the current active identity and saves its name
+// as the "previous identity" for use by `gitch prev`. Errors are silently
+// ignored — saving prev state should never block a switch.
+func savePrevIdentity(cfg *config.Config) {
+	state, err := resolveCurrentProfileState(cfg)
+	if err != nil {
+		return
+	}
+	match := state.ExactMatch
+	if match == nil {
+		match = state.EmailMatch
+	}
+	if match == nil {
+		return
+	}
+	_ = config.SavePreviousIdentity(match.Name)
+}
+
 func resolveCurrentProfileState(cfg *config.Config) (*currentProfileState, error) {
 	currentName, currentEmail, err := gitpkg.GetCurrentIdentity()
 	if err != nil {

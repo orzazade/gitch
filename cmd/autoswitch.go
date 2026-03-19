@@ -107,6 +107,9 @@ func tryAutoSwitch(cfg *config.Config) (*autoSwitchResult, error) {
 		}, nil
 	}
 
+	// Save the current identity as "previous" before switching.
+	savePrevIdentity(cfg)
+
 	if err := applyConfiguredIdentity(expectedIdentity, scope); err != nil {
 		return nil, err
 	}

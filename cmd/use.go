@@ -136,6 +136,9 @@ func runUse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Save the current identity as "previous" before switching.
+	savePrevIdentity(cfg)
+
 	// Apply the full profile to git config, signing config, ssh-agent, and prompt cache.
 	if err := applyConfiguredIdentity(identity, scope); err != nil {
 		return fmt.Errorf("failed to switch identity: %w", err)
