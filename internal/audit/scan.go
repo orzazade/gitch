@@ -43,42 +43,28 @@ type Result struct {
 // If limit > 0, limits the number of commits returned.
 // Returns empty slice with nil error for empty repos.
 func GetCommits(limit int) ([]Commit, error) {
-	// Build git log command with custom format
-	// Format: <<<COMMIT>>>hash|||name|||email|||date|||subject
-	formatArg := fmt.Sprintf("--format=%s%%H%s%%an%s%%ae%s%%ai%s%%s",
-		commitDelim, fieldDelim, fieldDelim, fieldDelim, fieldDelim)
-
-	args := []string{"log", formatArg}
+	var extraArgs []string
 	if limit > 0 {
-		args = append(args, "--max-count="+strconv.Itoa(limit))
+		extraArgs = append(extraArgs, "--max-count="+strconv.Itoa(limit))
 	}
-
-	cmd := exec.Command("git", args...)
-	output, err := cmd.Output()
-	if err != nil {
-		// Check stderr for empty repo / no commits (git sends fatal messages to stderr)
-		var exitErr *exec.ExitError
-		if errors.As(err, &exitErr) {
-			stderr := string(exitErr.Stderr)
-			if strings.Contains(stderr, "fatal: your current branch") ||
-				strings.Contains(stderr, "does not have any commits") {
-				return []Commit{}, nil
-			}
-		}
-		return nil, fmt.Errorf("failed to run git log: %w", err)
-	}
-
-	return parseCommits(string(output)), nil
+	return runGitLog(extraArgs)
 }
 
 // GetCommitsSince retrieves commits after a given date using git log --since.
 // The since parameter is passed directly to git (e.g. "1.week", "2024-01-01").
 // Returns empty slice with nil error for empty repos.
 func GetCommitsSince(since string) ([]Commit, error) {
+	return runGitLog([]string{"--since=" + since})
+}
+
+// runGitLog executes git log with the standard commit format and any extra
+// arguments (e.g. --max-count, --since). Returns empty slice with nil error
+// for repos that have no commits yet.
+func runGitLog(extraArgs []string) ([]Commit, error) {
 	formatArg := fmt.Sprintf("--format=%s%%H%s%%an%s%%ae%s%%ai%s%%s",
 		commitDelim, fieldDelim, fieldDelim, fieldDelim, fieldDelim)
 
-	args := []string{"log", formatArg, "--since=" + since}
+	args := append([]string{"log", formatArg}, extraArgs...)
 
 	cmd := exec.Command("git", args...)
 	output, err := cmd.Output()
