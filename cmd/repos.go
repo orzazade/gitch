@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -74,11 +73,7 @@ func runRepos(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	identity, err := cfg.GetIdentity(name)
 	if err != nil {
-		msg := "identity '" + name + "' not found"
-		if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
-			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch repos " + suggestion
-		}
-		return errors.New(msg)
+		return identityNotFoundError(name, cfg.ListIdentities(), "gitch repos "+name)
 	}
 
 	roots, err := resolveRoots(args[1:])

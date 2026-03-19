@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -54,11 +53,7 @@ func runLink(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	identity, err := cfg.GetIdentity(name)
 	if err != nil {
-		msg := "identity '" + name + "' not found"
-		if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
-			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch link " + suggestion
-		}
-		return errors.New(msg)
+		return identityNotFoundError(name, cfg.ListIdentities(), "gitch link "+name)
 	}
 
 	repoRoot, err := gitpkg.Toplevel()

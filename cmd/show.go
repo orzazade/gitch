@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -76,11 +75,7 @@ func runShow(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	identity, err := cfg.GetIdentity(name)
 	if err != nil {
-		msg := "identity '" + name + "' not found"
-		if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
-			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch show " + suggestion
-		}
-		return errors.New(msg)
+		return identityNotFoundError(name, cfg.ListIdentities(), "gitch show "+name)
 	}
 
 	// Check if this is the active identity

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -44,11 +43,7 @@ func runRename(cmd *cobra.Command, args []string) error {
 	// Verify old identity exists before renaming (for a better error message)
 	oldIdentity, err := cfg.GetIdentity(oldName)
 	if err != nil {
-		msg := "identity '" + oldName + "' not found"
-		if suggestion := closestIdentityName(oldName, cfg.ListIdentities()); suggestion != "" {
-			msg += "\n\nDid you mean '" + suggestion + "'?"
-		}
-		return errors.New(msg)
+		return identityNotFoundError(oldName, cfg.ListIdentities(), "")
 	}
 	actualOldName := oldIdentity.Name
 

@@ -184,6 +184,20 @@ func closestIdentityName(input string, identities []config.Identity) string {
 	return best
 }
 
+// identityNotFoundError builds a user-friendly error when an identity name
+// doesn't match any configured identity. If hint is non-empty it is appended
+// as a usage suggestion (e.g. "Run: gitch show <name>").
+func identityNotFoundError(name string, identities []config.Identity, hint string) error {
+	msg := "identity '" + name + "' not found"
+	if suggestion := closestIdentityName(name, identities); suggestion != "" {
+		msg += "\n\nDid you mean '" + suggestion + "'?"
+		if hint != "" {
+			msg += "  Run: " + hint
+		}
+	}
+	return errors.New(msg)
+}
+
 // levenshtein computes the edit distance between two strings.
 func levenshtein(a, b string) int {
 	ra, rb := []rune(a), []rune(b)

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -60,11 +59,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 	name := args[0]
 	identity, err := cfg.GetIdentity(name)
 	if err != nil {
-		msg := "identity '" + name + "' not found"
-		if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
-			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch diff " + suggestion
-		}
-		return errors.New(msg)
+		return identityNotFoundError(name, cfg.ListIdentities(), "gitch diff "+name)
 	}
 
 	fields, err := buildDiffFields(identity)
