@@ -82,13 +82,15 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	globalOK, _ := hooks.IsInstalled()
-	localOK, _ := hooks.IsInstalledLocal()
+	globalOK, globalErr := hooks.IsInstalled()
+	localOK, localErr := hooks.IsInstalledLocal()
 	switch {
 	case globalOK:
 		checks = append(checks, doctorCheck{true, "pre-commit hook installed (global)", ""})
 	case localOK:
 		checks = append(checks, doctorCheck{true, "pre-commit hook installed (local)", ""})
+	case globalErr != nil || localErr != nil:
+		checks = append(checks, doctorCheck{false, "could not check hook status — verify git config and permissions", "run: git config --get core.hooksPath"})
 	default:
 		checks = append(checks, doctorCheck{false, "no pre-commit hook installed — commits are unguarded", "run: gitch hook install"})
 	}
