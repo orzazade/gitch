@@ -152,7 +152,8 @@ func showVerboseRuleInfo(cfg *config.Config, currentEmail string) {
 	// Get current directory and remote
 	cwd, err := os.Getwd()
 	if err != nil {
-		cwd = ""
+		fmt.Fprintln(os.Stderr, ui.WarningStyle.Render("Warning: could not determine working directory: "+err.Error()))
+		return
 	}
 	remoteURL, _ := rules.GetGitRemoteURL()
 
