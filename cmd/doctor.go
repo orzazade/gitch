@@ -96,9 +96,11 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(cfg.Rules) > 0 {
-		cwd, _ := os.Getwd()
+		cwd, cwdErr := os.Getwd()
 		remoteURL, _ := rules.GetGitRemoteURL()
-		if matched := rules.FindBestMatch(cfg.Rules, cwd, remoteURL); matched != nil {
+		if cwdErr != nil {
+			checks = append(checks, doctorCheck{false, "cannot determine working directory — rule check skipped", "check filesystem permissions"})
+		} else if matched := rules.FindBestMatch(cfg.Rules, cwd, remoteURL); matched != nil {
 			checks = append(checks, doctorCheck{true, "auto-switch rule matched: " + matched.Pattern + " → " + matched.Identity, ""})
 		} else {
 			checks = append(checks, doctorCheck{false, "no auto-switch rule matches current directory", "run: gitch rule add"})
