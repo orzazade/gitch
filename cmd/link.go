@@ -74,7 +74,10 @@ func runLink(cmd *cobra.Command, args []string) error {
 	printSwitchSuccess(identity)
 
 	// 2. Create a directory rule if no rule already matches this repo.
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
 	remoteURL, _ := rules.GetGitRemoteURL()
 	matched := rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
 
