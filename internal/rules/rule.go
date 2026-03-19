@@ -72,6 +72,14 @@ func validateRemotePattern(pattern string) error {
 		return fmt.Errorf("invalid host in remote pattern: %s", pattern)
 	}
 
+	// Validate glob syntax so malformed patterns (e.g. unclosed '[') are
+	// caught at rule creation time rather than silently failing to match.
+	if strings.ContainsAny(pattern, "*?[") {
+		if _, err := filepath.Match(pattern, ""); err != nil {
+			return fmt.Errorf("invalid glob syntax in remote pattern: %w", err)
+		}
+	}
+
 	return nil
 }
 
