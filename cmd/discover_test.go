@@ -19,7 +19,7 @@ func TestDiscoverIdentities_GroupsByEmail(t *testing.T) {
 
 	cfg := &config.Config{Identities: []config.Identity{}}
 
-	identities := discoverIdentities([]string{repoA, repoB}, cfg)
+	identities, _ := discoverIdentities([]string{repoA, repoB}, cfg)
 
 	if len(identities) != 1 {
 		t.Fatalf("expected 1 unique identity, got %d", len(identities))
@@ -46,7 +46,7 @@ func TestDiscoverIdentities_DistinguishesDifferentEmails(t *testing.T) {
 
 	cfg := &config.Config{Identities: []config.Identity{}}
 
-	identities := discoverIdentities([]string{repoWork, repoPersonal}, cfg)
+	identities, _ := discoverIdentities([]string{repoWork, repoPersonal}, cfg)
 
 	if len(identities) != 2 {
 		t.Fatalf("expected 2 unique identities, got %d", len(identities))
@@ -66,7 +66,7 @@ func TestDiscoverIdentities_MarksManagedIdentities(t *testing.T) {
 		},
 	}
 
-	identities := discoverIdentities([]string{repo}, cfg)
+	identities, _ := discoverIdentities([]string{repo}, cfg)
 
 	if len(identities) != 1 {
 		t.Fatalf("expected 1 identity, got %d", len(identities))
@@ -89,7 +89,7 @@ func TestDiscoverIdentities_UnmanagedIdentity(t *testing.T) {
 		},
 	}
 
-	identities := discoverIdentities([]string{repo}, cfg)
+	identities, _ := discoverIdentities([]string{repo}, cfg)
 
 	if len(identities) != 1 {
 		t.Fatalf("expected 1 identity, got %d", len(identities))
@@ -115,7 +115,7 @@ func TestDiscoverIdentities_SortedByRepoCount(t *testing.T) {
 	cfg := &config.Config{Identities: []config.Identity{}}
 	repos := []string{root + "/a", root + "/b", root + "/c", rareDir}
 
-	identities := discoverIdentities(repos, cfg)
+	identities, _ := discoverIdentities(repos, cfg)
 
 	if len(identities) != 2 {
 		t.Fatalf("expected 2 identities, got %d", len(identities))
@@ -139,7 +139,7 @@ func TestDiscoverIdentities_SkipsReposWithNoEmail(t *testing.T) {
 
 	cfg := &config.Config{Identities: []config.Identity{}}
 
-	identities := discoverIdentities([]string{repo}, cfg)
+	identities, _ := discoverIdentities([]string{repo}, cfg)
 
 	if len(identities) != 0 {
 		t.Fatalf("expected 0 identities for repo with no email, got %d", len(identities))
@@ -160,7 +160,7 @@ func TestDiscoverIdentities_CaseInsensitiveEmailGrouping(t *testing.T) {
 
 	cfg := &config.Config{Identities: []config.Identity{}}
 
-	identities := discoverIdentities([]string{repoA, repoB}, cfg)
+	identities, _ := discoverIdentities([]string{repoA, repoB}, cfg)
 
 	if len(identities) != 1 {
 		t.Fatalf("expected 1 identity (case-insensitive grouping), got %d", len(identities))

@@ -67,7 +67,10 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	identities := discoverIdentities(repos, cfg)
+	identities, err := discoverIdentities(repos, cfg)
+	if err != nil {
+		return err
+	}
 
 	if discoverJSON {
 		return printJSON(identities)
@@ -79,7 +82,7 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 
 // discoverIdentities scans each repo for its local git identity and groups
 // results by unique (name, email) pairs.
-func discoverIdentities(repoPaths []string, cfg *config.Config) []discoveredIdentity {
+func discoverIdentities(repoPaths []string, cfg *config.Config) ([]discoveredIdentity, error) {
 	type identityKey struct {
 		name  string
 		email string
@@ -90,7 +93,7 @@ func discoverIdentities(repoPaths []string, cfg *config.Config) []discoveredIden
 
 	originalDir, err := os.Getwd()
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("failed to get working directory: %w", err)
 	}
 	defer func() { _ = os.Chdir(originalDir) }()
 
@@ -140,7 +143,7 @@ func discoverIdentities(repoPaths []string, cfg *config.Config) []discoveredIden
 		return strings.Compare(strings.ToLower(a.Email), strings.ToLower(b.Email))
 	})
 
-	return result
+	return result, nil
 }
 
 func printDiscoverResults(identities []discoveredIdentity, totalRepos int) {
