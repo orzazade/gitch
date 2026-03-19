@@ -21,6 +21,7 @@ import (
 var (
 	scanDepth int
 	scanFix   bool
+	scanJSON  bool
 )
 
 var scanCmd = &cobra.Command{
@@ -43,7 +44,8 @@ Examples:
   gitch scan
   gitch scan ~/Projects ~/Work
   gitch scan --depth 5 ~/code
-  gitch scan --fix ~/Projects`,
+  gitch scan --fix ~/Projects
+  gitch scan --json ~/Projects`,
 	RunE: runScan,
 }
 
@@ -51,6 +53,27 @@ func init() {
 	rootCmd.AddCommand(scanCmd)
 	scanCmd.Flags().IntVar(&scanDepth, "depth", 3, "Maximum directory depth to search")
 	scanCmd.Flags().BoolVar(&scanFix, "fix", false, "Apply correct identity to repos with rule mismatches")
+	scanCmd.Flags().BoolVar(&scanJSON, "json", false, "Output in JSON format")
+}
+
+// scanOutput represents the JSON output structure for gitch scan --json.
+type scanOutput struct {
+	Repos  []scanRepoOutput `json:"repos"`
+	Total  int              `json:"total"`
+	Issues int              `json:"issues"`
+}
+
+// scanRepoOutput represents a single repo in JSON output.
+type scanRepoOutput struct {
+	Path         string `json:"path"`
+	Identity     string `json:"identity,omitempty"`
+	Email        string `json:"email,omitempty"`
+	Managed      bool   `json:"managed"`
+	HookGlobal   bool   `json:"hook_global"`
+	HookLocal    bool   `json:"hook_local"`
+	RuleMatch    string `json:"rule_match,omitempty"`
+	RuleMismatch bool   `json:"rule_mismatch"`
+	HasIssue     bool   `json:"has_issue"`
 }
 
 // repoResult holds the scan result for a single git repository.
@@ -87,6 +110,11 @@ func runScan(cmd *cobra.Command, args []string) error {
 	}
 
 	results := scanRepos(repos, cfg)
+
+	if scanJSON {
+		return printScanJSON(results)
+	}
+
 	printScanResults(results)
 
 	if scanFix {
@@ -291,6 +319,33 @@ func printScanResults(results []repoResult) {
 			nounPlural(issues, "has", "have") + " issues."))
 		fmt.Println(ui.DimStyle.Render("Run 'gitch doctor' inside a repo for details, or 'gitch use <name>' to fix."))
 	}
+}
+
+func printScanJSON(results []repoResult) error {
+	issues := 0
+	repos := make([]scanRepoOutput, len(results))
+	for i, r := range results {
+		hasIssue := r.hasIssue()
+		if hasIssue {
+			issues++
+		}
+		repos[i] = scanRepoOutput{
+			Path:         r.Path,
+			Identity:     r.Identity,
+			Email:        r.Email,
+			Managed:      r.Managed,
+			HookGlobal:   r.HookGlobal,
+			HookLocal:    r.HookLocal,
+			RuleMatch:    r.RuleMatch,
+			RuleMismatch: r.RuleMismatch,
+			HasIssue:     hasIssue,
+		}
+	}
+	return printJSON(scanOutput{
+		Repos:  repos,
+		Total:  len(results),
+		Issues: issues,
+	})
 }
 
 // fixScanMismatches applies the correct identity to repos where the active

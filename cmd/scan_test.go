@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -313,6 +314,84 @@ func TestFixScanMismatches_NoMismatches(t *testing.T) {
 	// Should succeed silently with no mismatches to fix
 	if err := fixScanMismatches(results, cfg); err != nil {
 		t.Fatalf("fixScanMismatches: %v", err)
+	}
+}
+
+func TestPrintScanJSON(t *testing.T) {
+	results := []repoResult{
+		{
+			Path:       "/home/user/work/project-a",
+			Identity:   "work",
+			Email:      "work@company.com",
+			Managed:    true,
+			HookGlobal: true,
+			RuleMatch:  "work",
+		},
+		{
+			Path:         "/home/user/oss/project-b",
+			Identity:     "Personal",
+			Email:        "personal@gmail.com",
+			Managed:      false,
+			HookGlobal:   false,
+			HookLocal:    false,
+			RuleMatch:    "oss",
+			RuleMismatch: true,
+		},
+	}
+
+	// Capture stdout
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	err := printScanJSON(results)
+
+	w.Close()
+	os.Stdout = old
+
+	if err != nil {
+		t.Fatalf("printScanJSON: %v", err)
+	}
+
+	var buf [4096]byte
+	n, _ := r.Read(buf[:])
+	output := string(buf[:n])
+
+	var out scanOutput
+	if err := json.Unmarshal([]byte(output), &out); err != nil {
+		t.Fatalf("failed to parse JSON output: %v\nraw: %s", err, output)
+	}
+
+	if out.Total != 2 {
+		t.Errorf("total: got %d, want 2", out.Total)
+	}
+	if out.Issues != 1 {
+		t.Errorf("issues: got %d, want 1", out.Issues)
+	}
+	if len(out.Repos) != 2 {
+		t.Fatalf("repos: got %d, want 2", len(out.Repos))
+	}
+
+	repoA := out.Repos[0]
+	if repoA.Path != "/home/user/work/project-a" {
+		t.Errorf("repo[0].path: got %q", repoA.Path)
+	}
+	if repoA.HasIssue {
+		t.Error("repo[0] should not have issue")
+	}
+	if !repoA.Managed {
+		t.Error("repo[0] should be managed")
+	}
+
+	repoB := out.Repos[1]
+	if !repoB.HasIssue {
+		t.Error("repo[1] should have issue")
+	}
+	if !repoB.RuleMismatch {
+		t.Error("repo[1] should have rule mismatch")
+	}
+	if repoB.RuleMatch != "oss" {
+		t.Errorf("repo[1].rule_match: got %q, want %q", repoB.RuleMatch, "oss")
 	}
 }
 
