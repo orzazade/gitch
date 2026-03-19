@@ -14,7 +14,6 @@ import (
 	"github.com/orzazade/gitch/internal/hooks"
 	"github.com/orzazade/gitch/internal/profile"
 	"github.com/orzazade/gitch/internal/rules"
-	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -76,20 +75,9 @@ func runScan(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	roots := args
-	if len(roots) == 0 {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("failed to get working directory: %w", err)
-		}
-		roots = []string{cwd}
-	}
-
-	// Expand tildes and env vars in paths
-	for i, root := range roots {
-		if expanded, err := sshpkg.ExpandPath(root); err == nil {
-			roots[i] = expanded
-		}
+	roots, err := resolveRoots(args)
+	if err != nil {
+		return err
 	}
 
 	repos := findGitRepos(roots, scanDepth)
@@ -252,10 +240,7 @@ func printScanResults(results []repoResult) {
 	fmt.Println()
 
 	for _, r := range results {
-		displayPath := r.Path
-		if home != "" && strings.HasPrefix(displayPath, home) {
-			displayPath = "~" + displayPath[len(home):]
-		}
+		displayPath := shortenHome(r.Path, home)
 
 		// Status indicator
 		if r.hasIssue() {
@@ -341,10 +326,7 @@ func fixScanMismatches(results []repoResult, cfg *config.Config) error {
 
 	fixed := 0
 	for _, r := range fixable {
-		displayPath := r.Path
-		if home != "" && strings.HasPrefix(displayPath, home) {
-			displayPath = "~" + displayPath[len(home):]
-		}
+		displayPath := shortenHome(r.Path, home)
 
 		identity, err := cfg.GetIdentity(r.RuleMatch)
 		if err != nil {

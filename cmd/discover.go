@@ -9,7 +9,6 @@ import (
 
 	"github.com/orzazade/gitch/internal/config"
 	gitpkg "github.com/orzazade/gitch/internal/git"
-	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -57,20 +56,9 @@ func runDiscover(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	roots := args
-	if len(roots) == 0 {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return fmt.Errorf("failed to get working directory: %w", err)
-		}
-		roots = []string{cwd}
-	}
-
-	// Expand tildes and env vars in paths
-	for i, root := range roots {
-		if expanded, err := sshpkg.ExpandPath(root); err == nil {
-			roots[i] = expanded
-		}
+	roots, err := resolveRoots(args)
+	if err != nil {
+		return err
 	}
 
 	repos := findGitRepos(roots, discoverDepth)
@@ -117,10 +105,7 @@ func discoverIdentities(repoPaths []string, cfg *config.Config) []discoveredIden
 			continue
 		}
 
-		displayPath := repoPath
-		if home != "" && strings.HasPrefix(displayPath, home) {
-			displayPath = "~" + displayPath[len(home):]
-		}
+		displayPath := shortenHome(repoPath, home)
 
 		key := identityKey{name: name, email: strings.ToLower(email)}
 		if group, ok := groups[key]; ok {

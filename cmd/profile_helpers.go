@@ -10,6 +10,7 @@ import (
 	"github.com/orzazade/gitch/internal/config"
 	gitpkg "github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/profile"
+	sshpkg "github.com/orzazade/gitch/internal/ssh"
 	"github.com/orzazade/gitch/internal/ui"
 )
 
@@ -107,6 +108,32 @@ func truncateSubject(subject string, maxLen int) string {
 		return subject
 	}
 	return string(runes[:maxLen-3]) + "..."
+}
+
+// shortenHome replaces a leading home directory prefix with "~" for display.
+func shortenHome(path, home string) string {
+	if home != "" && strings.HasPrefix(path, home) {
+		return "~" + path[len(home):]
+	}
+	return path
+}
+
+// resolveRoots returns expanded absolute paths from CLI args, defaulting to cwd.
+func resolveRoots(args []string) ([]string, error) {
+	roots := args
+	if len(roots) == 0 {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get working directory: %w", err)
+		}
+		roots = []string{cwd}
+	}
+	for i, root := range roots {
+		if expanded, err := sshpkg.ExpandPath(root); err == nil {
+			roots[i] = expanded
+		}
+	}
+	return roots, nil
 }
 
 func resolveCurrentProfileState(cfg *config.Config) (*currentProfileState, error) {
