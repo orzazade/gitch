@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/ui"
@@ -55,6 +56,11 @@ func runRename(cmd *cobra.Command, args []string) error {
 
 	if err := cfg.Save(); err != nil {
 		return fmt.Errorf("failed to save config: %w", err)
+	}
+
+	// Update prev-identity file if it references the old name.
+	if prevName, err := config.LoadPreviousIdentity(); err == nil && strings.EqualFold(prevName, actualOldName) {
+		_ = config.SavePreviousIdentity(newName)
 	}
 
 	fmt.Println(ui.SuccessStyle.Render("Renamed '" + actualOldName + "' to '" + newName + "'"))
