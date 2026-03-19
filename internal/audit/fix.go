@@ -54,43 +54,24 @@ func runFilterRepo(mailmapPath string) error {
 	return nil
 }
 
-// getRemotes returns a list of remote names configured in the repository.
-func getRemotes() ([]string, error) {
-	cmd := exec.Command("git", "remote")
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get remotes: %w", err)
-	}
-
-	// Split output by newlines and filter empty strings
-	var remotes []string
-	for _, line := range strings.Split(strings.TrimSpace(string(output)), "\n") {
-		if line = strings.TrimSpace(line); line != "" {
-			remotes = append(remotes, line)
-		}
-	}
-
-	return remotes, nil
-}
-
 // removeRemotes removes all configured remotes from the repository.
 // This prevents accidental force-push after history rewrite.
 // Ignores "remote does not exist" errors.
 func removeRemotes() error {
-	remotes, err := getRemotes()
+	remotes, err := git.Remotes()
 	if err != nil {
 		return err
 	}
 
-	for _, remote := range remotes {
-		cmd := exec.Command("git", "remote", "remove", remote)
+	for _, r := range remotes {
+		cmd := exec.Command("git", "remote", "remove", r.Name)
 		if err := cmd.Run(); err != nil {
 			// Ignore "remote does not exist" errors (exit code 2)
 			var exitErr *exec.ExitError
 			if errors.As(err, &exitErr) && exitErr.ExitCode() == 2 {
 				continue
 			}
-			return fmt.Errorf("failed to remove remote %s: %w", remote, err)
+			return fmt.Errorf("failed to remove remote %s: %w", r.Name, err)
 		}
 	}
 
@@ -181,7 +162,7 @@ func Fix(scanResult *ScanResult) error {
 	}
 
 	// Step 9: Remove remotes (AUDIT-06)
-	remotesBefore, remotesErr := getRemotes()
+	remotesBefore, remotesErr := git.Remotes()
 	if remotesErr != nil {
 		fmt.Println(ui.WarningStyle.Render("\nWarning: failed to list remotes: " + remotesErr.Error()))
 	}

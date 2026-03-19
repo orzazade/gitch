@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/orzazade/gitch/internal/git"
 )
 
 func Test_generateMailmap_SingleMismatch(t *testing.T) {
@@ -107,7 +109,7 @@ func initTempGitRepo(t *testing.T) string {
 	return tmpDir
 }
 
-func Test_getRemotes_InRepoWithOrigin(t *testing.T) {
+func Test_Remotes_InRepoWithOrigin(t *testing.T) {
 	tmpDir := initTempGitRepo(t)
 
 	cmd := exec.Command("git", "-C", tmpDir, "remote", "add", "origin", "https://example.com/repo.git")
@@ -115,22 +117,22 @@ func Test_getRemotes_InRepoWithOrigin(t *testing.T) {
 		t.Fatalf("git remote add failed: %v", err)
 	}
 
-	remotes, err := getRemotes()
+	remotes, err := git.Remotes()
 	if err != nil {
-		t.Fatalf("getRemotes failed: %v", err)
+		t.Fatalf("Remotes failed: %v", err)
 	}
 
-	if len(remotes) != 1 || remotes[0] != "origin" {
+	if len(remotes) != 1 || remotes[0].Name != "origin" {
 		t.Errorf("expected [origin], got %v", remotes)
 	}
 }
 
-func Test_getRemotes_NoRemotes(t *testing.T) {
+func Test_Remotes_NoRemotes(t *testing.T) {
 	initTempGitRepo(t)
 
-	remotes, err := getRemotes()
+	remotes, err := git.Remotes()
 	if err != nil {
-		t.Fatalf("getRemotes failed: %v", err)
+		t.Fatalf("Remotes failed: %v", err)
 	}
 
 	if len(remotes) != 0 {
@@ -152,9 +154,9 @@ func Test_removeRemotes_RemovesAll(t *testing.T) {
 		t.Fatalf("removeRemotes failed: %v", err)
 	}
 
-	remotes, err := getRemotes()
+	remotes, err := git.Remotes()
 	if err != nil {
-		t.Fatalf("getRemotes after removal failed: %v", err)
+		t.Fatalf("Remotes after removal failed: %v", err)
 	}
 
 	if len(remotes) != 0 {
