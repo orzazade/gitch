@@ -242,11 +242,9 @@ func scanSingleRepo(repoPath string, cfg *config.Config, globalHook bool) repoRe
 	remoteURL, _ := rules.GetGitRemoteURL()
 	if matched := rules.FindBestMatch(cfg.Rules, repoPath, remoteURL); matched != nil {
 		result.RuleMatch = matched.Identity
-		if email != "" {
-			expected, err := cfg.GetIdentity(matched.Identity)
-			if err == nil && !strings.EqualFold(expected.Email, email) {
-				result.RuleMismatch = true
-			}
+		expected, err := cfg.GetIdentity(matched.Identity)
+		if err == nil && !strings.EqualFold(expected.Email, email) {
+			result.RuleMismatch = true
 		}
 	}
 

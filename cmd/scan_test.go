@@ -203,6 +203,30 @@ func TestScanSingleRepo_RuleMismatch(t *testing.T) {
 	}
 }
 
+func TestScanSingleRepo_NoIdentityWithRule(t *testing.T) {
+	repo := t.TempDir()
+	initGitRepo(t, repo)
+	// No identity set — email is empty
+
+	cfg := &config.Config{
+		Identities: []config.Identity{
+			{Name: "work", Email: "work@example.com"},
+		},
+		Rules: []rules.Rule{
+			{Type: rules.DirectoryRule, Pattern: repo + "/**", Identity: "work"},
+		},
+	}
+
+	result := scanSingleRepo(repo, cfg, false)
+
+	if !result.RuleMismatch {
+		t.Error("expected rule mismatch when no identity is configured but a rule matches")
+	}
+	if result.RuleMatch != "work" {
+		t.Errorf("expected rule match 'work', got %q", result.RuleMatch)
+	}
+}
+
 func TestScanSingleRepo_GlobalHookCovered(t *testing.T) {
 	repo := t.TempDir()
 	initGitRepo(t, repo)
