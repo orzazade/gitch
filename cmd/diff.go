@@ -126,8 +126,12 @@ func buildDiffFields(identity *config.Identity) ([]diffField, error) {
 	targetSSH := ""
 	if identity.SSHKeyPath != "" {
 		keyPath, err := sshpkg.ExpandPath(identity.SSHKeyPath)
-		if err == nil {
-			targetSSH, _ = sshpkg.GitSSHCommand(keyPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to expand SSH key path: %w", err)
+		}
+		targetSSH, err = sshpkg.GitSSHCommand(keyPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to build SSH command: %w", err)
 		}
 	}
 	fields = append(fields, diffField{

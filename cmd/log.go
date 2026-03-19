@@ -95,7 +95,10 @@ func runLog(cmd *cobra.Command, args []string) error {
 		remoteURL, _ := rules.GetGitRemoteURL()
 		matchedRule = rules.FindBestMatch(cfg.Rules, cwd, remoteURL)
 		if matchedRule != nil {
-			expectedIdentity, _ = cfg.GetIdentity(matchedRule.Identity)
+			expectedIdentity, err = cfg.GetIdentity(matchedRule.Identity)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "warning: rule '%s' references unknown identity '%s'\n", matchedRule.Pattern, matchedRule.Identity)
+			}
 		}
 	}
 
