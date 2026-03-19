@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/ui"
 )
 
@@ -154,7 +155,7 @@ func Fix(scanResult *ScanResult) error {
 	}
 
 	// Step 6: Create backup (AUDIT-05)
-	root, err := repoRoot()
+	root, err := git.Toplevel()
 	if err != nil {
 		return fmt.Errorf("failed to get repository root: %w", err)
 	}

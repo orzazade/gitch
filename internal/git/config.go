@@ -162,6 +162,16 @@ func ClearSigningConfigScoped(scope Scope) error {
 	return nil
 }
 
+// Toplevel returns the absolute path of the top-level directory of the current
+// git repository (i.e. the directory containing .git).
+func Toplevel() (string, error) {
+	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
+	if err != nil {
+		return "", errors.New("not in a git repository")
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
 // IsGitRepository reports whether the current working directory is inside a git repository.
 func IsGitRepository() bool {
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")

@@ -178,11 +178,11 @@ func TestGitToplevel(t *testing.T) {
 	env := testutil.SetupGitEnv(t)
 	env.Chdir(t)
 
-	top, err := gitToplevel()
+	top, err := git.Toplevel()
 	if err != nil {
-		t.Fatalf("gitToplevel: %v", err)
+		t.Fatalf("Toplevel: %v", err)
 	}
 	if top != env.Dir {
-		t.Errorf("gitToplevel() = %q, want %q", top, env.Dir)
+		t.Errorf("Toplevel() = %q, want %q", top, env.Dir)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/orzazade/gitch/internal/config"
@@ -62,7 +61,7 @@ func runLink(cmd *cobra.Command, args []string) error {
 		return errors.New(msg)
 	}
 
-	repoRoot, err := gitToplevel()
+	repoRoot, err := gitpkg.Toplevel()
 	if err != nil {
 		return fmt.Errorf("failed to determine repository root: %w", err)
 	}
@@ -121,11 +120,3 @@ func runLink(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// gitToplevel returns the absolute path of the repository root.
-func gitToplevel() (string, error) {
-	out, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
-	if err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(string(out)), nil
-}

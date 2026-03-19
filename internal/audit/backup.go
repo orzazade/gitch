@@ -1,28 +1,18 @@
 package audit
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
-	"strings"
-)
 
-// repoRoot returns the top-level directory of the current git repository.
-func repoRoot() (string, error) {
-	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
-	output, err := cmd.Output()
-	if err != nil {
-		return "", errors.New("not in a git repository")
-	}
-	return strings.TrimSpace(string(output)), nil
-}
+	"github.com/orzazade/gitch/internal/git"
+)
 
 // createMirrorBackup creates a full mirror backup of the current git repository.
 // The destPath should be an absolute path where the mirror will be created.
 // Uses --no-local to avoid hardlink issues that could cause data loss.
 // Returns error if not in a git repository or if backup fails.
 func createMirrorBackup(destPath string) error {
-	root, err := repoRoot()
+	root, err := git.Toplevel()
 	if err != nil {
 		return err
 	}
