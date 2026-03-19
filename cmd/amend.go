@@ -171,21 +171,13 @@ func runAmend(cmd *cobra.Command, args []string) error {
 
 // isHeadPushed returns true if HEAD has been pushed to the upstream branch.
 func isHeadPushed() bool {
-	// Check if upstream exists
-	cmd := exec.Command("git", "rev-parse", "--abbrev-ref", "@{u}")
-	if err := cmd.Run(); err != nil {
-		// No upstream — treat as not pushed (safe to amend)
-		return false
-	}
-
-	// Check if there are any unpushed commits
-	cmd = exec.Command("git", "log", "--oneline", "@{u}..HEAD")
-	output, err := cmd.Output()
+	// If @{u} doesn't exist, git errors out — treat as not pushed (safe to amend).
+	// If it exists and output is empty, HEAD is already on the remote.
+	out, err := exec.Command("git", "log", "--oneline", "@{u}..HEAD").Output()
 	if err != nil {
 		return false
 	}
-	// If no unpushed commits, HEAD is already pushed
-	return strings.TrimSpace(string(output)) == ""
+	return strings.TrimSpace(string(out)) == ""
 }
 
 func printAmendResult(out amendOutput) error {
