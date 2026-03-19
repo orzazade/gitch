@@ -65,7 +65,7 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 	checks = append(checks, doctorCheck{true, strconv.Itoa(n) + " " + nounPlural(n, "identity", "identities") + " configured", ""})
 
 	state, err := resolveCurrentProfileState(cfg)
-	if err != nil || (state.CurrentName == "" && state.CurrentEmail == "") {
+	if err != nil || state == nil || (state.CurrentName == "" && state.CurrentEmail == "") {
 		checks = append(checks, doctorCheck{false, "no active identity in git config", "run: gitch use <name>"})
 	} else {
 		identity := state.ExactMatch
