@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -72,9 +73,14 @@ func runShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	identity, err := cfg.GetIdentity(args[0])
+	name := args[0]
+	identity, err := cfg.GetIdentity(name)
 	if err != nil {
-		return err
+		msg := "identity '" + name + "' not found"
+		if suggestion := closestIdentityName(name, cfg.ListIdentities()); suggestion != "" {
+			msg += "\n\nDid you mean '" + suggestion + "'?  Run: gitch show " + suggestion
+		}
+		return errors.New(msg)
 	}
 
 	// Check if this is the active identity
