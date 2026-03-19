@@ -180,7 +180,7 @@ func TestSuggestRule(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := suggestRule(cfg, "/some/path", tt.remoteURL, tt.currentEmail)
+			result := suggestRule(cfg, tt.remoteURL, tt.currentEmail)
 			if tt.wantNil {
 				if result != nil {
 					t.Fatalf("expected nil, got suggestion for %q", result.Identity)

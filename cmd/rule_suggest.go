@@ -47,7 +47,7 @@ type ruleSuggestion struct {
 }
 
 // suggestRule analyzes the config, remote, and current identity to produce a suggestion.
-func suggestRule(cfg *config.Config, cwd, remoteURL, currentEmail string) *ruleSuggestion {
+func suggestRule(cfg *config.Config, remoteURL, currentEmail string) *ruleSuggestion {
 	if remoteURL == "" {
 		return nil
 	}
@@ -201,7 +201,7 @@ func runRuleSuggest(cmd *cobra.Command, args []string) error {
 
 	_, currentEmail, _ := gitpkg.GetCurrentIdentity()
 
-	suggestion := suggestRule(cfg, cwd, remoteURL, currentEmail)
+	suggestion := suggestRule(cfg, remoteURL, currentEmail)
 	if suggestion == nil {
 		fmt.Println("Could not determine which identity to suggest.")
 		fmt.Println()
