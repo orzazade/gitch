@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/orzazade/gitch/internal/config"
 	"github.com/orzazade/gitch/internal/git"
 	"github.com/orzazade/gitch/internal/hooks"
 	"github.com/orzazade/gitch/internal/ui"
@@ -233,6 +234,11 @@ func runHookSwitch(cmd *cobra.Command, args []string) error {
 	}
 
 	identity := result.ExpectedIdentity
+
+	// Save prev identity so the user can 'gitch prev' after hook-initiated switch.
+	if cfg, loadErr := config.Load(); loadErr == nil {
+		savePrevIdentity(cfg)
+	}
 
 	// Apply the full profile to git config, signing config, ssh-agent, and prompt cache.
 	if err := applyConfiguredIdentity(identity, git.ScopeLocal); err != nil {
