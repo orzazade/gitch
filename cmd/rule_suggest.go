@@ -52,7 +52,7 @@ func suggestRule(cfg *config.Config, cwd, remoteURL, currentEmail string) *ruleS
 		return nil
 	}
 
-	parsed, err := parseRemoteForSuggest(remoteURL)
+	parsed, err := rules.ParseRemote(remoteURL)
 	if err != nil || parsed == nil {
 		return nil
 	}
@@ -72,7 +72,7 @@ func suggestRule(cfg *config.Config, cwd, remoteURL, currentEmail string) *ruleS
 
 // suggestFromExistingRules finds rules that share the same host/org and suggests
 // using the same identity with a pattern covering this repo's org.
-func suggestFromExistingRules(cfg *config.Config, remote *suggestParsedRemote) *ruleSuggestion {
+func suggestFromExistingRules(cfg *config.Config, remote *rules.ParsedRemote) *ruleSuggestion {
 	type candidate struct {
 		identity string
 		matchOrg bool // true if the existing rule matches at the org level (stronger signal)
@@ -133,7 +133,7 @@ func suggestFromExistingRules(cfg *config.Config, remote *suggestParsedRemote) *
 }
 
 // suggestFromCurrentEmail checks if the current git email matches a gitch identity.
-func suggestFromCurrentEmail(cfg *config.Config, remote *suggestParsedRemote, currentEmail string) *ruleSuggestion {
+func suggestFromCurrentEmail(cfg *config.Config, remote *rules.ParsedRemote, currentEmail string) *ruleSuggestion {
 	if currentEmail == "" {
 		return nil
 	}
@@ -153,71 +153,13 @@ func suggestFromCurrentEmail(cfg *config.Config, remote *suggestParsedRemote, cu
 	}
 }
 
-// suggestParsedRemote is a simple host/org/repo struct for suggestion logic.
-type suggestParsedRemote struct {
-	Host string
-	Org  string
-	Repo string
-}
-
 // buildSuggestPattern builds a remote rule pattern from a parsed remote.
 // Returns "host/org/*" if org is set, or "host/*" otherwise.
-func buildSuggestPattern(remote *suggestParsedRemote) string {
+func buildSuggestPattern(remote *rules.ParsedRemote) string {
 	if remote.Org == "" {
 		return remote.Host + "/*"
 	}
 	return remote.Host + "/" + remote.Org + "/*"
-}
-
-// parseRemoteForSuggest extracts host/org/repo from a remote URL for suggestions.
-// Uses the same git-urls parser as the rules package.
-func parseRemoteForSuggest(rawURL string) (*suggestParsedRemote, error) {
-	// Get the remote URL and strip common prefixes/suffixes to extract host/org/repo.
-	// Delegate to rules package's GetGitRemoteURL for fetching; here we just parse.
-	url := strings.TrimSpace(rawURL)
-	if url == "" {
-		return nil, errors.New("empty remote URL")
-	}
-
-	// Handle SSH format: git@host:org/repo.git
-	if strings.Contains(url, "@") && strings.Contains(url, ":") && !strings.Contains(url, "://") {
-		// SCP-style: git@github.com:org/repo.git
-		_, afterAt, _ := strings.Cut(url, "@")
-		hostPart, pathPart, _ := strings.Cut(afterAt, ":")
-		host := strings.ToLower(hostPart)
-		path := strings.TrimSuffix(pathPart, ".git")
-		org, repo, hasRepo := strings.Cut(path, "/")
-		result := &suggestParsedRemote{Host: host, Org: org}
-		if hasRepo {
-			result.Repo = repo
-		}
-		return result, nil
-	}
-
-	// Handle HTTPS format: https://host/org/repo.git
-	stripped := url
-	for _, prefix := range []string{"https://", "http://", "ssh://", "git://"} {
-		stripped = strings.TrimPrefix(stripped, prefix)
-	}
-	stripped = strings.TrimSuffix(stripped, ".git")
-
-	parts := strings.SplitN(stripped, "/", 3)
-	result := &suggestParsedRemote{}
-	if len(parts) >= 1 {
-		result.Host = strings.ToLower(parts[0])
-	}
-	if len(parts) >= 2 {
-		result.Org = parts[1]
-	}
-	if len(parts) >= 3 {
-		result.Repo = parts[2]
-	}
-
-	if result.Host == "" {
-		return nil, fmt.Errorf("could not parse host from remote URL: %s", rawURL)
-	}
-
-	return result, nil
 }
 
 func runRuleSuggest(cmd *cobra.Command, args []string) error {

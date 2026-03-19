@@ -158,7 +158,7 @@ func Test_matchDirectory_NormalizesSymlinkAliases(t *testing.T) {
 	}
 }
 
-func Test_parseRemote(t *testing.T) {
+func TestParseRemote(t *testing.T) {
 	tests := []struct {
 		name     string
 		rawURL   string
@@ -213,22 +213,22 @@ func Test_parseRemote(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := parseRemote(tt.rawURL)
+			got, err := ParseRemote(tt.rawURL)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("parseRemote() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("ParseRemote() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if tt.wantErr {
 				return
 			}
 			if got.Host != tt.wantHost {
-				t.Errorf("parseRemote() Host = %q, want %q", got.Host, tt.wantHost)
+				t.Errorf("ParseRemote() Host = %q, want %q", got.Host, tt.wantHost)
 			}
 			if got.Org != tt.wantOrg {
-				t.Errorf("parseRemote() Org = %q, want %q", got.Org, tt.wantOrg)
+				t.Errorf("ParseRemote() Org = %q, want %q", got.Org, tt.wantOrg)
 			}
 			if got.Repo != tt.wantRepo {
-				t.Errorf("parseRemote() Repo = %q, want %q", got.Repo, tt.wantRepo)
+				t.Errorf("ParseRemote() Repo = %q, want %q", got.Repo, tt.wantRepo)
 			}
 		})
 	}
@@ -238,49 +238,49 @@ func Test_matchRemote(t *testing.T) {
 	tests := []struct {
 		name    string
 		pattern string
-		remote  *parsedRemote
+		remote  *ParsedRemote
 		want    bool
 	}{
 		{
 			name:    "wildcard matches any repo",
 			pattern: "github.com/company/*",
-			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
+			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
 			want:    true,
 		},
 		{
 			name:    "wildcard matches different repo",
 			pattern: "github.com/company/*",
-			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
+			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
 			want:    true,
 		},
 		{
 			name:    "wildcard does not match different org",
 			pattern: "github.com/company/*",
-			remote:  &parsedRemote{Host: "github.com", Org: "other", Repo: "repo"},
+			remote:  &ParsedRemote{Host: "github.com", Org: "other", Repo: "repo"},
 			want:    false,
 		},
 		{
 			name:    "exact match",
 			pattern: "github.com/company/specific-repo",
-			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "specific-repo"},
+			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "specific-repo"},
 			want:    true,
 		},
 		{
 			name:    "exact match fails on different repo",
 			pattern: "github.com/company/specific-repo",
-			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
+			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "other-repo"},
 			want:    false,
 		},
 		{
 			name:    "org level pattern matches repo",
 			pattern: "github.com/company",
-			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
+			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "any-repo"},
 			want:    true,
 		},
 		{
 			name:    "case insensitive host",
 			pattern: "GitHub.com/company/*",
-			remote:  &parsedRemote{Host: "github.com", Org: "company", Repo: "repo"},
+			remote:  &ParsedRemote{Host: "github.com", Org: "company", Repo: "repo"},
 			want:    true,
 		},
 		{
@@ -292,7 +292,7 @@ func Test_matchRemote(t *testing.T) {
 		{
 			name:    "different host no match",
 			pattern: "github.com/company/*",
-			remote:  &parsedRemote{Host: "gitlab.com", Org: "company", Repo: "repo"},
+			remote:  &ParsedRemote{Host: "gitlab.com", Org: "company", Repo: "repo"},
 			want:    false,
 		},
 	}

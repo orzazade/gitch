@@ -122,7 +122,7 @@ func hasGlobMeta(part string) bool {
 
 // matchRemote checks if a parsed remote matches the given pattern.
 // Pattern format: "host/org/*" or "host/org/repo"
-func matchRemote(pattern string, remote *parsedRemote) bool {
+func matchRemote(pattern string, remote *ParsedRemote) bool {
 	if remote == nil {
 		return false
 	}

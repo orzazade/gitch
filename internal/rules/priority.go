@@ -66,7 +66,7 @@ func (r Rule) Matches(cwd, remoteURL string) bool {
 		if remoteURL == "" {
 			return false
 		}
-		parsed, err := parseRemote(remoteURL)
+		parsed, err := ParseRemote(remoteURL)
 		if err != nil {
 			return false
 		}
