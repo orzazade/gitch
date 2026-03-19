@@ -63,7 +63,7 @@ func runRuleCheck(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check for overlapping rules with different identities.
-	issues = checkConflicts(allRules, issues)
+	issues = checkConflicts(cfg, issues)
 
 	// Report results.
 	if len(issues) == 0 {
@@ -165,70 +165,31 @@ func expandPatternTilde(pattern string) string {
 }
 
 // checkConflicts finds overlapping rules that assign different identities.
-func checkConflicts(allRules []rules.Rule, issues []ruleIssue) []ruleIssue {
-	// Track reported pairs to avoid duplicates.
-	type pair struct{ a, b int }
-	reported := make(map[pair]bool)
+// Reuses config.FindOverlappingRules for overlap detection.
+func checkConflicts(cfg *config.Config, issues []ruleIssue) []ruleIssue {
+	allRules := cfg.ListRules()
+	reported := make(map[string]bool)
 
-	for i, r1 := range allRules {
-		for j := i + 1; j < len(allRules); j++ {
-			r2 := allRules[j]
-			if r1.Type != r2.Type {
-				continue
-			}
-			if strings.EqualFold(r1.Identity, r2.Identity) {
+	for _, rule := range allRules {
+		overlapping := cfg.FindOverlappingRules(rule)
+		for _, overlap := range overlapping {
+			if strings.EqualFold(rule.Identity, overlap.Identity) {
 				continue // same identity — no conflict
 			}
-			if reported[pair{i, j}] {
+			// Deduplicate: only report each pair once.
+			key := rule.Pattern + "\x00" + overlap.Pattern
+			reverseKey := overlap.Pattern + "\x00" + rule.Pattern
+			if reported[key] || reported[reverseKey] {
 				continue
 			}
-
-			overlaps := false
-			switch r1.Type {
-			case rules.DirectoryRule:
-				overlaps = directoryPatternsOverlap(r1.Pattern, r2.Pattern)
-			case rules.RemoteRule:
-				overlaps = remotePatternsOverlap(r1.Pattern, r2.Pattern)
-			}
-
-			if overlaps {
-				reported[pair{i, j}] = true
-				issues = append(issues, ruleIssue{
-					Rule: r1,
-					Problem: fmt.Sprintf("overlaps with %q (identity %q vs %q) — the more specific rule wins at runtime",
-						r2.Pattern, r1.Identity, r2.Identity),
-					Fix: "Ensure the overlap is intentional, or remove one rule",
-				})
-			}
+			reported[key] = true
+			issues = append(issues, ruleIssue{
+				Rule: rule,
+				Problem: fmt.Sprintf("overlaps with %q (identity %q vs %q) — the more specific rule wins at runtime",
+					overlap.Pattern, rule.Identity, overlap.Identity),
+				Fix: "Ensure the overlap is intentional, or remove one rule",
+			})
 		}
 	}
 	return issues
-}
-
-// directoryPatternsOverlap checks if two directory patterns could match the same path.
-func directoryPatternsOverlap(p1, p2 string) bool {
-	b1 := directoryRuleBasePath(p1)
-	b2 := directoryRuleBasePath(p2)
-	if b1 == "" || b2 == "" {
-		return false
-	}
-	return strings.HasPrefix(b1, b2) || strings.HasPrefix(b2, b1)
-}
-
-// remotePatternsOverlap checks if two remote patterns could match the same remote.
-func remotePatternsOverlap(p1, p2 string) bool {
-	host1, path1, hasPath1 := strings.Cut(p1, "/")
-	host2, path2, hasPath2 := strings.Cut(p2, "/")
-
-	if !strings.EqualFold(host1, host2) {
-		return false
-	}
-	if !hasPath1 || !hasPath2 {
-		return true
-	}
-
-	path1 = strings.TrimSuffix(path1, "/*")
-	path2 = strings.TrimSuffix(path2, "/*")
-
-	return strings.HasPrefix(path1, path2) || strings.HasPrefix(path2, path1)
 }

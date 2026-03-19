@@ -352,8 +352,8 @@ func isRemoteOverlap(pattern1, pattern2 string) bool {
 	host1, path1, hasPath1 := strings.Cut(pattern1, "/")
 	host2, path2, hasPath2 := strings.Cut(pattern2, "/")
 
-	// If different hosts, no overlap
-	if host1 != host2 {
+	// If different hosts, no overlap (case-insensitive per DNS)
+	if !strings.EqualFold(host1, host2) {
 		return false
 	}
 
