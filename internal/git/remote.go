@@ -1,10 +1,50 @@
 package git
 
 import (
+	"os/exec"
 	"strings"
 
 	giturls "github.com/whilp/git-urls"
 )
+
+// Remote represents a named git remote with its fetch URL.
+type Remote struct {
+	Name string
+	URL  string
+}
+
+// Remotes returns all configured remotes for the current git repository.
+// Each remote appears once (using its fetch URL).
+func Remotes() ([]Remote, error) {
+	out, err := exec.Command("git", "remote", "-v").Output()
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[string]bool)
+	var remotes []Remote
+
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if line == "" {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) < 2 {
+			continue
+		}
+		name := fields[0]
+		url := fields[1]
+
+		// git remote -v shows each remote twice (fetch/push); take only one.
+		if seen[name] {
+			continue
+		}
+		seen[name] = true
+		remotes = append(remotes, Remote{Name: name, URL: url})
+	}
+
+	return remotes, nil
+}
 
 // isAzureDevOpsRemote checks if the given remote URL is an Azure DevOps repository.
 // Returns true for both modern (dev.azure.com) and legacy (visualstudio.com) URLs.
